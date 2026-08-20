@@ -1,0 +1,48 @@
+# Local model weights and runtime payloads must stay outside this repository.
+*.gguf
+*.safetensors
+*.bin
+*.ckpt
+*.pth
+*.pt
+*.onnx
+*.tflite
+*.mlmodel
+*.npy
+*.npz
+
+# LM Studio/runtime caches and copied model directories.
+.cache/
+.lmstudio/
+models/
+model-data/
+runtime-data/
+
+# Secrets and machine-local credentials.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+
+# Raw logs and captures are local-only. Keep their documentation tracked.
+logs/*
+!logs/README.md
+!logs/.gitignore
+benchmarks/raw/*
+!benchmarks/raw/README.md
+!benchmarks/raw/.gitignore
+*.log
+*.dmp
+
+# Editor and operating-system noise.
+.vscode/settings.json
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.tmp
+*.bak

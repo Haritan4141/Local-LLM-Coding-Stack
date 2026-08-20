@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "record_type": "curated_baseline_summary",
+  "recorded_date": "2026-08-20",
+  "source": "user-provided existing measurements",
+  "model_id": "current-qwen38-27b-uncensored-q6k",
+  "config_path": "configs/current/qwen38-27b-uncensored-q6k.json",
+  "environment": {
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "vram_gib": 32,
+    "lm_studio_version": null,
+    "zoo_code_version": null,
+    "nvidia_driver_version": null
+  },
+  "measurement_conditions": {
+    "prompt": null,
+    "context_tokens": null,
+    "sampling": null,
+    "iterations": null,
+    "condition_note": "Original measurement conditions were not supplied; treat as an operational baseline, not a controlled reproduction."
+  },
+  "results": [
+    {
+      "mode": "MTP ON",
+      "generation_tok_s": 63.92,
+      "mtp_acceptance_percent_approximate_range": [40, 50],
+      "max_draft_tokens": 2
+    },
+    {
+      "mode": "MTP OFF",
+      "generation_tok_s": 48.3,
+      "mtp_acceptance_percent_approximate_range": null,
+      "max_draft_tokens": null
+    }
+  ],
+  "derived_comparison": {
+    "absolute_gain_tok_s": 15.62,
+    "relative_gain_percent": 32.34,
+    "derivation": "(63.92 - 48.30) / 48.30 * 100"
+  },
+  "stability_observations": [
+    {
+      "context_tokens": 98304,
+      "result": "stable"
+    },
+    {
+      "context_tokens": 131072,
+      "kv_cache": "Q8_0/Q8_0",
+      "result": "not suitable for routine use",
+      "reason": "VRAM pressure degraded Windows desktop responsiveness"
+    }
+  ],
+  "missing_metrics": [
+    "time_to_first_token_ms",
+    "vram_baseline_mib",
+    "vram_peak_mib",
+    "vram_delta_mib",
+    "per-run values",
+    "quality score"
+  ]
+}

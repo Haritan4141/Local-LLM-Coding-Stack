@@ -1,0 +1,70 @@
+{
+  "$schema": "../profile.schema.json",
+  "profile_version": 1,
+  "profile_id": "current-qwen38-27b-uncensored-q6k",
+  "status": "Current",
+  "captured_date": "2026-08-20",
+  "stack": {
+    "editor": "VS Code",
+    "coding_extension": "Zoo Code",
+    "runtime": "LM Studio",
+    "connection": "local"
+  },
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "vram_gib": 32
+  },
+  "model": {
+    "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+    "variant": "Q6_K",
+    "file_name": null,
+    "external_path": null
+  },
+  "context_profiles": [
+    {
+      "name": "Normal",
+      "context_tokens": 98304,
+      "role": "default coding"
+    },
+    {
+      "name": "VRChat",
+      "context_tokens": 65536,
+      "role": "VRChat and Unity work"
+    },
+    {
+      "name": "Light",
+      "context_tokens": 32768,
+      "role": "lower-overhead work"
+    }
+  ],
+  "effective_settings": {
+    "kv_cache": {
+      "k": "Q8_0",
+      "v": "Q8_0"
+    },
+    "flash_attention": true,
+    "gpu_offload": {
+      "mode": "all",
+      "offloaded_layers": 65,
+      "total_layers": 65
+    },
+    "mtp": {
+      "enabled": true,
+      "max_draft_tokens": 2
+    },
+    "reasoning_budget_tokens": 8192,
+    "max_concurrent_predictions": 1
+  },
+  "observations": {
+    "normal_96k_stable": true,
+    "mtp_on_tok_s": 63.92,
+    "mtp_off_tok_s": 48.3,
+    "mtp_acceptance_percent_approximate_range": [40, 50],
+    "avoid_routine_128k_q8_kv": true,
+    "avoid_128k_reason": "VRAM pressure caused degraded Windows desktop responsiveness"
+  },
+  "evidence": {
+    "source": "user-provided operating state and measurements",
+    "raw_artifact": null
+  }
+}

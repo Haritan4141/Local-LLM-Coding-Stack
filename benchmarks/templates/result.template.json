@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "record_type": "controlled_run",
+  "run_id": "YYYYMMDD-HHMMSS-model-workload",
+  "measured_at": null,
+  "model_id": "candidate-or-current-model-id",
+  "model_artifact": {
+    "repository": null,
+    "variant": null,
+    "file_name": null,
+    "checksum": null
+  },
+  "config_path": "configs/example.json",
+  "workload": {
+    "id": "speed-fixed-v1",
+    "fixture_version": null,
+    "context_tokens": null,
+    "prompt_tokens": null,
+    "output_tokens": null,
+    "warmup": false,
+    "iteration": 1
+  },
+  "environment": {
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "vram_gib": 32,
+    "lm_studio_version": null,
+    "zoo_code_version": null,
+    "nvidia_driver_version": null
+  },
+  "settings": {
+    "k_cache": null,
+    "v_cache": null,
+    "flash_attention": null,
+    "gpu_offload_layers": null,
+    "mtp_enabled": null,
+    "max_draft_tokens": null,
+    "reasoning_budget_tokens": null,
+    "max_concurrent_predictions": null,
+    "sampling": null
+  },
+  "metrics": {
+    "time_to_first_token_ms": null,
+    "generation_tok_s": null,
+    "mtp_acceptance_percent": null,
+    "vram_baseline_mib": null,
+    "vram_peak_mib": null,
+    "vram_delta_mib": null,
+    "wall_time_seconds": null
+  },
+  "outcome": {
+    "completed": null,
+    "correctness_score": null,
+    "tests_passed": null,
+    "tests_total": null,
+    "desktop_responsiveness": null,
+    "runtime_stability": null
+  },
+  "raw_artifacts": [],
+  "notes": []
+}

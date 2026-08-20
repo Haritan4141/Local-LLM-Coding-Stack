@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/schemas/local-llm-profile.schema.json",
+  "title": "Local LLM management profile",
+  "type": "object",
+  "required": [
+    "profile_version",
+    "profile_id",
+    "status",
+    "model",
+    "context_profiles",
+    "effective_settings"
+  ],
+  "properties": {
+    "profile_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": ["Current", "Candidate", "Watch", "Retired"]
+    },
+    "captured_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "model": {
+      "type": "object",
+      "required": ["repository", "variant"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "variant": { "type": ["string", "null"] },
+        "file_name": { "type": ["string", "null"] },
+        "external_path": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+    "context_profiles": {
+      "type": "array",
+      "minItems": 1
+    },
+    "effective_settings": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": true
+}
