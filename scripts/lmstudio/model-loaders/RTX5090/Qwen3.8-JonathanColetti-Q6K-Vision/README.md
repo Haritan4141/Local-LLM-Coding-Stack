@@ -28,6 +28,19 @@ RTX 5090 32 GBでCurrentのJonathanColetti Q6_K本体を共有し、公式Vision
 
 32K、64K、96Kは固定PNG fixtureでVision 7/7に成功しました。96Kは動作しますが、測定時のGPU残量は約2.87 GBだったため、ゲーム、VR、画像生成などのGPU負荷と併用しません。128K loaderは作成しません。
 
+## Goose one-click startup
+
+RTX5090のgoose Desktopは64K Vision profileをapp-global既定runtimeとして使用します。デスクトップの`Goose Vision 64K`、または`Start-Goose-Jonathan-Vision64K.bat`を起動してください。
+
+launcherは次を行います。
+
+1. Goose provider modelが`qwen3.8-27b-uncensored-vision`か確認する。
+2. `lms ps`とSDK load configから、単一Vision instance、context 65,536、Q8_0/Q8_0、full offload、Flash Attention、MTP draft 2、parallel 1を確認する。
+3. 正しければ再ロードしない。異なるidle runtimeならmanaged reloadする。active / queued predictionは中断しない。
+4. Start MenuのGoose shortcutから現行実行ファイルを解決してDesktopを起動する。
+
+`Start-Goose-Jonathan-Vision64K.ps1 -NoLaunch -InstallDesktopShortcut`でshortcutを再作成できます。Goose configを切り替える必要がある場合は、変更前configをrepository外の`%LOCALAPPDATA%\Local-LLM-Coding-Stack\goose-config-backups\`へ保存します。Secret fileは読み書きしません。
+
 ## Runtime behavior
 
 各BATは現在ロード中の全LM Studioモデルを解除した後、repository rootの`Load-ManagedModel.mjs`を使ってVisionモデル枠をロードします。実行には`npm install`済みの`@lmstudio/sdk` 1.5.0、LM Studio起動、`lms` CLI、外部モデルデータが必要です。

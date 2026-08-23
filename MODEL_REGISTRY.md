@@ -7,7 +7,7 @@ Last updated: 2026-08-23
 | ID | Status | Repository / model | Variant | Key capabilities | Evidence state |
 |---|---|---|---|---|---|
 | `current-qwen38-27b-uncensored-q6k` | Current | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K | Text coding, MTP | Stable at 96K; measured MTP ON/OFF speed supplied |
-| `candidate-jonathan-q6k-vision` | Candidate / Vision profile | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K + official F16 projector | Vision, text coding, MTP | Direct Vision 7/7 at 32K/64K/96K; client transport partially verified |
+| `candidate-jonathan-q6k-vision` | Candidate / Vision profile; goose operational default | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K + official F16 projector | Vision, text coding, MTP | Direct Vision 7/7 at 32K/64K/96K; goose managed 64K startup verified; Desktop image response still pending |
 | `candidate-hauhaucs-aggressive-mtp` | Candidate | `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` | Q6_K_P primary; Q5_K_P fallback | Vision + embedded MTP; custom-patch FastMTP | Local evaluation complete; promotion not recommended |
 | `candidate-rtx3090-jonathan-q4km` | Candidate / Remote Node Default | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q4_K_M | Text coding, embedded MTP, separate Vision projector | Evaluation complete; recommended RTX3090 remote coding role |
 | `candidate-rtx3090-hauhaucs-aggressive-q4kp` | Candidate / Remote Node Optional | `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` | Q4_K_P | Vision + embedded MTP; stock LM Studio path | Evaluation complete; retain for optional/direct Vision use |
@@ -41,6 +41,8 @@ Current remains the rollback point for every Candidate experiment.
 - Direct result: fixed PNG fixture 7/7 at 32K, 64K, and 96K
 - Client result: Kilo transported the image and scored 6/7; goose CLI 1.46.0 did not transport the image; goose Desktop 1.47.0 attached and sent the image under the Vision ID but the first inference hit a text-only LM Studio instance. Direct recovery passed after an explicit Vision reload; Desktop remains conditional and Zoo Code remains pending
 - Recommended runtime preset: 64K. The 96K run passed but peaked at 29,736 MiB and leaves reduced GPU headroom
+- Operational role: RTX5090 goose Desktop app-global default at 64K; this client-specific role does not promote the profile to repository Current
+- One-click startup: desktop shortcut `Goose Vision 64K`, backed by `Start-Goose-Jonathan-Vision64K.ps1`, verifies the single Vision instance and all managed load fields before opening goose
 - Lifecycle decision: retain as an explicit Vision Candidate/runtime profile; do not create a second repository-wide Current
 - Management profile: `configs/candidates/jonathan-q6k-vision.json`
 - Research note: `research/jonathan-q6k-vision-2026-08-23.md`

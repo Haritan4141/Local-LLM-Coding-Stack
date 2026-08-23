@@ -1,8 +1,8 @@
 # Scripts
 
-リポジトリ管理だけを行う非破壊的な PowerShell helper です。LM Studio、Zoo Code、VS Code、モデルファイル、GPU driver の設定は変更しません。
+通常のhelperはリポジトリ管理だけを行い、LM Studio、Zoo Code、VS Code、モデルファイル、GPU driverを変更しません。
 
-`lmstudio/model-loaders/` のBATは例外として、ユーザーが明示的に実行したときにLM Studioのロード状態を変更します。このREADMEに記載するPowerShell helperからBATを自動実行することはありません。
+`lmstudio/model-loaders/`のBATと`Start-Goose-Jonathan-Vision64K.ps1`は明示的なruntime操作です。Goose用launcherは正しいVision runtimeがない場合だけ`lms unload --all`とmanaged loadを行います。active / queued predictionは中断しません。
 
 ## LM Studio model loaders
 
@@ -70,6 +70,29 @@ node .\scripts\lmstudio\Load-ManagedModel.mjs `
 ```
 
 指定値はfull GPU offload、Flash Attention ON、Q8_0/Q8_0、KV GPU offload ON、parallel 1、MTP max draft 2です。loaderとZoo Codeで同じnatural identifierを使い、ロード後は`lms ps`とLM Studio log/APIで実効設定を確認します。indexed repository pathをZoo Codeで選ぶと既定8Kの別instanceが暗黙ロードされる場合があります。
+
+## Test-ManagedModel.mjs
+
+ロード済みinstanceのSDK load configを読み取り、context、full offload、Flash Attention、Q8_0/Q8_0、MTP、draft tokens、parallelを検査します。モデルのload/unloadは行いません。
+
+```powershell
+node .\scripts\lmstudio\Test-ManagedModel.mjs `
+  --identifier 'qwen3.8-27b-uncensored-vision' `
+  --context 65536 `
+  --mtp on
+```
+
+## Goose Vision 64K one-click startup
+
+`lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Start-Goose-Jonathan-Vision64K.ps1`は、Gooseの既定Vision IDとLM Studio runtimeをpreflightし、必要時だけVision 64Kをmanaged reloadしてGoose Desktopを起動します。
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File `
+  .\scripts\lmstudio\model-loaders\RTX5090\Qwen3.8-JonathanColetti-Q6K-Vision\Start-Goose-Jonathan-Vision64K.ps1 `
+  -NoLaunch -InstallDesktopShortcut
+```
+
+通常運用はデスクトップの`Goose Vision 64K`を使用します。`-NoLaunch`はpreflightだけ、`-InstallDesktopShortcut`はショートカット作成、`-ForceReload`は推論中でないことを確認した上で再ロードする保守用です。
 
 ## Export-VisionFixture.ps1
 

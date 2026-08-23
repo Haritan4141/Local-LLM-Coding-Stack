@@ -12,6 +12,7 @@ State captured: 2026-08-23 (Asia/Tokyo)
 - Max concurrent predictions: 1
 - Repository lifecycle Current remains API ID `qwen3.8-27b-uncensored`; its model files and loader presets were not overwritten.
 - Active LM Studio runtime after the 2026-08-23 Vision work: explicit Vision Candidate API ID `qwen3.8-27b-uncensored-vision` at 65,536 context, Q8_0/Q8_0, embedded MTP ON / draft 2, parallel 1. This runtime selection does not promote the profile to Current.
+- goose Desktop operational default on RTX5090: the Vision API ID above with client context limit 64,512. The desktop shortcut `Goose Vision 64K` performs a managed runtime preflight and starts goose without requiring normal model reselection.
 
 ## Effective profiles
 
@@ -57,7 +58,7 @@ Currentと同じQ6_K本体へJonathanColetti公式F16 Vision projectorを組み�
 | 65,536 | 7/7 | 63.34 tok/s | 1,251.68 tok/s | 81.90% | 28,339 MiB |
 | 98,304 | 7/7 | 61.30 tok/s | 1,238.88 tok/s | 81.90% | 29,736 MiB |
 
-64Kを通常のVision presetとして推奨します。96Kも画像認識と生成に成功しましたが、測定後のGPU残量は約2.87 GBで、他のGPU負荷との併用余裕が小さくなります。Kilo CLIは画像転送に成功して6/7です。goose CLI 1.46.0は画像をtext pathとして扱い失敗しました。goose Desktop 1.47.0は添付・custom Vision ID・画像付き送信まで確認しましたが、初回はLM Studioがtext-only instanceをロードしてHTTP 400となりました。Vision 64K明示ロード後の同一ID direct recoveryは正答しており、Desktopは`lms ps`で`vision = true`を確認してから使う条件付き運用です。Zoo Codeは未実施です。詳細は`benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md`を参照してください。
+64Kを通常のVision presetとして推奨します。96Kも画像認識と生成に成功しましたが、測定後のGPU残量は約2.87 GBで、他のGPU負荷との併用余裕が小さくなります。Kilo CLIは画像転送に成功して6/7です。goose CLI 1.46.0は画像をtext pathとして扱い失敗しました。goose Desktop 1.47.0は添付・custom Vision ID・画像付き送信まで確認しましたが、初回はLM Studioがtext-only instanceをロードしてHTTP 400となりました。Vision 64K明示ロード後の同一ID direct recoveryは正答しています。日常起動はmanaged preflight付き`Goose Vision 64K`ショートカットへ統一し、text-only instanceの暗黙選択を避けます。Desktopでの画像付き成功再送は引き続きpending、Zoo Codeは未実施です。詳細は`benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md`を参照してください。
 
 ## Existing measurements
 

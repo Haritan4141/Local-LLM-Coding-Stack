@@ -44,7 +44,8 @@
     "goose_cli": "1.46.0 path attempts remained text-only; bundled 1.47.0 CLI was version-checked but image transport was not rerun",
     "goose_desktop": "1.47.0 image attachment, custom Vision ID selection, and outgoing image request verified; first inference failed because LM Studio loaded the text-only instance; direct recovery passed after managed Vision 64K reload; successful Desktop resend pending",
     "zoo_code": "pending; VS Code was not open during the controlled test",
-    "promotion": "do not replace the text-only Current profile; retain as an explicit Vision Candidate profile"
+    "promotion": "do not replace the text-only Current profile; retain as an explicit Vision Candidate profile",
+    "operational_role": "RTX5090 goose Desktop app-global default runtime at 64K with managed one-click startup"
   },
   "local_results": {
     "32k": { "generation_tok_s": 63.0323, "prompt_tok_s": 1274.73, "ttft_seconds": 0.4958, "mtp_acceptance_percent": 81.149, "peak_vram_mib": 27057, "vision_fields_correct": "7/7" },

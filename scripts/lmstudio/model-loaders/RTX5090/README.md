@@ -15,6 +15,8 @@ RTX5090/
     Qwen3.8-JonathanColetti-Q6K-Vision_96K.bat
     Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat
     Qwen3.8-JonathanColetti-Q6K-Vision_32K.bat
+    Start-Goose-Jonathan-Vision64K.ps1
+    Start-Goose-Jonathan-Vision64K.bat
   Qwen3.8-HauhauCS-Aggressive-Q6KP/
     README.md
     Qwen3.8-HauhauCS-Q6KP_96K.bat
