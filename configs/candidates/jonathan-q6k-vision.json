@@ -1,0 +1,54 @@
+{
+  "$schema": "../profile.schema.json",
+  "profile_version": 1,
+  "profile_id": "candidate-jonathan-q6k-vision",
+  "status": "Candidate",
+  "captured_date": "2026-08-23",
+  "baseline_profile": "../current/qwen38-27b-uncensored-q6k.json",
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "vram_gib": 32
+  },
+  "model": {
+    "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+    "revision": "dee0a3164d9e11bbbebf5b63f52ba99443d14fc3",
+    "variant": "Q6_K + vision-f16 projector",
+    "file_name": "Qwen3.8-27B-Uncensored-Q6_K.gguf",
+    "external_path": null,
+    "size_bytes": 22430999968,
+    "sha256": "a50aa1478295b58ee3d93eabe02c17f6d5fcf6cb787fd8a0ab07ac629a46cae6",
+    "vision_projector": {
+      "file_name": "Qwen3.8-27B-Uncensored-vision-f16.gguf",
+      "size_bytes": 927606912,
+      "sha256": "5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c"
+    },
+    "lm_studio_model_key": "qwen3.8-27b-uncensored-vision-q6k",
+    "api_identifier": "qwen3.8-27b-uncensored-vision"
+  },
+  "context_profiles": [
+    { "name": "Light Vision", "context_tokens": 32768, "status": "verified" },
+    { "name": "Recommended Vision", "context_tokens": 65536, "status": "verified" },
+    { "name": "Long-context Vision", "context_tokens": 98304, "status": "verified with reduced VRAM margin" }
+  ],
+  "effective_settings": {
+    "kv_cache": { "k": "Q8_0", "v": "Q8_0" },
+    "flash_attention": true,
+    "gpu_offload": { "mode": "all", "offloaded_layers": 65, "total_layers": 65 },
+    "mtp": { "enabled": true, "max_draft_tokens": 2 },
+    "reasoning_budget_tokens": 8192,
+    "max_concurrent_predictions": 1
+  },
+  "evaluation_status": {
+    "direct_lm_studio_vision": "verified 7/7 at 32K, 64K, and 96K",
+    "kilo": "image transport verified; 6/7 OCR because one error-code character was misread",
+    "goose_cli": "1.46.0 path attempts remained text-only; bundled 1.47.0 CLI was version-checked but image transport was not rerun",
+    "goose_desktop": "1.47.0 image attachment, custom Vision ID selection, and outgoing image request verified; first inference failed because LM Studio loaded the text-only instance; direct recovery passed after managed Vision 64K reload; successful Desktop resend pending",
+    "zoo_code": "pending; VS Code was not open during the controlled test",
+    "promotion": "do not replace the text-only Current profile; retain as an explicit Vision Candidate profile"
+  },
+  "local_results": {
+    "32k": { "generation_tok_s": 63.0323, "prompt_tok_s": 1274.73, "ttft_seconds": 0.4958, "mtp_acceptance_percent": 81.149, "peak_vram_mib": 27057, "vision_fields_correct": "7/7" },
+    "64k": { "generation_tok_s": 63.3426, "prompt_tok_s": 1251.68, "ttft_seconds": 0.5049, "mtp_acceptance_percent": 81.9, "peak_vram_mib": 28339, "vision_fields_correct": "7/7" },
+    "96k": { "generation_tok_s": 61.3016, "prompt_tok_s": 1238.88, "ttft_seconds": 0.5101, "mtp_acceptance_percent": 81.9, "peak_vram_mib": 29736, "vision_fields_correct": "7/7" }
+  }
+}

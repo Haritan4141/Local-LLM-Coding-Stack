@@ -1,0 +1,60 @@
+{
+  "node_profile_version": 1,
+  "node_id": "rtx3090-remote-pc5700x",
+  "captured_date": "2026-08-20",
+  "computer_name": "DESKTOP-L9HAM1G",
+  "ip": "192.168.0.104",
+  "ssh_alias": "pc5700x",
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "vram_mib": 24576,
+    "ram_gib": 31.93,
+    "nvidia_driver": "591.86"
+  },
+  "lm_studio": {
+    "version": "0.4.21.0",
+    "cli_commit": "71bd99c",
+    "port": 1234,
+    "lan_base_url": "http://192.168.0.104:1234",
+    "listen_address": "0.0.0.0",
+    "lan_status": "ready; main-PC GET /v1/models verified"
+  },
+  "network": {
+    "category": "Private",
+    "firewall_policy": "Inbound TCP 1234 / Private / LocalSubnet / EdgeTraversal Block",
+    "phase1_tcp_1234_rules": 0,
+    "firewall_rule": "Local-LLM-LMStudio-In-TCP-1234-Private-LocalSubnet",
+    "firewall_application_scoped": true,
+    "firewall_backup": "C:\\Users\\Atsuki\\Codex-RTX3090-Setup\\firewall-before-lmstudio-20260820-114203.wfw"
+  },
+  "models": [
+    {
+      "profile_id": "candidate-rtx3090-jonathan-q4km",
+      "status": "recommended remote coding default",
+      "api_identifier": "qwen3.8-27b-uncensored@q4_k_m",
+      "recommended_context_tokens": 32768,
+      "conditional_max_context_tokens": 65536,
+      "measured_peak_vram_mib": 21106,
+      "benchmark_result": "benchmarks/results/2026-08-20-rtx3090-remote-node.md"
+    },
+    {
+      "profile_id": "candidate-rtx3090-hauhaucs-aggressive-q4kp",
+      "status": "optional Candidate",
+      "api_identifier": "qwen3.8-27b-uncensored-hauhaucs-aggressive-mtp",
+      "recommended_context_tokens": 32768,
+      "conditional_max_context_tokens": 65536,
+      "measured_peak_vram_mib": 22156,
+      "benchmark_result": "benchmarks/results/2026-08-20-rtx3090-remote-node.md"
+    }
+  ],
+  "operational_default": {
+    "profile_id": "candidate-rtx3090-jonathan-q4km",
+    "context_tokens": 32768,
+    "reason": "better VRAM margin, slightly faster generation/prompt processing, and no Aggressive-specific Zoo Vision loop"
+  },
+  "zoo_profiles": [
+    "RTX3090 Jonathan Q4KM",
+    "RTX3090 Hauhau Q4KP"
+  ],
+  "main_pc_zoo_active_profile_after_evaluation": "default"
+}

@@ -16,15 +16,46 @@ $requiredPaths = @(
     'benchmarks/templates/result.template.json',
     'configs',
     'configs/current/qwen38-27b-uncensored-q6k.json',
+    'configs/candidates/jonathan-q6k-vision.json',
     'configs/candidates/hauhaucs-qwen38-27b-aggressive-mtp.json',
+    'configs/candidates/rtx3090-jonathan-q4km.json',
+    'configs/candidates/rtx3090-hauhaucs-aggressive-q4kp.json',
+    'profiles/README.md',
+    'profiles/RTX3090-Remote/README.md',
+    'profiles/RTX3090-Remote/node.json',
+    'benchmarks/results/2026-08-20-rtx3090-remote-node.md',
+    'benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md',
+    'research/jonathan-q6k-vision-2026-08-23.md',
+    'package.json',
+    'package-lock.json',
     'research',
     'logs',
     'scripts',
+    'scripts/lmstudio/Load-ManagedModel.mjs',
+    'scripts/lmstudio/model-loaders/RTX3090/README.md',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q4KM/README.md',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q4KM/Qwen3.8-JonathanColetti-Q4KM_32K.bat',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q4KM/Qwen3.8-JonathanColetti-Q4KM_64K.bat',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/README.md',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/Qwen3.8-HauhauCS-Q4KP_32K.bat',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/Qwen3.8-HauhauCS-Q4KP_64K.bat',
     'scripts/lmstudio/model-loaders/RTX5090/README.md',
-    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti/README.md',
-    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti/Qwen3.8_96K_Normal.bat',
-    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti/Qwen3.8_64K_VRChat.bat',
-    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti/Qwen3.8_32K_Light.bat'
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/README.md',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/Qwen3.8-JonathanColetti-Q6K_96K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/Qwen3.8-JonathanColetti-Q6K_64K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/Qwen3.8-JonathanColetti-Q6K_32K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/README.md',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_96K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_32K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q6KP/README.md',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q6KP/Qwen3.8-HauhauCS-Q6KP_96K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q6KP/Qwen3.8-HauhauCS-Q6KP_64K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q6KP/Qwen3.8-HauhauCS-Q6KP_32K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q5KP/README.md',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q5KP/Qwen3.8-HauhauCS-Q5KP_96K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q5KP/Qwen3.8-HauhauCS-Q5KP_64K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q5KP/Qwen3.8-HauhauCS-Q5KP_32K.bat'
 )
 
 foreach ($relativePath in $requiredPaths) {
@@ -34,7 +65,17 @@ foreach ($relativePath in $requiredPaths) {
     }
 }
 
-$jsonFiles = Get-ChildItem -LiteralPath $repoRoot -Recurse -File -Filter '*.json'
+$excludedJsonRoots = @(
+    (Join-Path $repoRoot 'benchmarks\raw'),
+    (Join-Path $repoRoot 'logs'),
+    (Join-Path $repoRoot 'node_modules')
+)
+$jsonFiles = Get-ChildItem -LiteralPath $repoRoot -Recurse -File -Filter '*.json' | Where-Object {
+    $candidatePath = $_.FullName
+    $_.Name -ne 'package-lock.json' -and -not ($excludedJsonRoots | Where-Object {
+        $candidatePath.StartsWith($_ + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)
+    })
+}
 foreach ($jsonFile in $jsonFiles) {
     try {
         $null = Get-Content -LiteralPath $jsonFile.FullName -Raw | ConvertFrom-Json -ErrorAction Stop
@@ -77,6 +118,11 @@ if ($candidateProfile.Count -ne 1 -or $candidateProfile[0].Status -ne 'Candidate
     $failures.Add('HauhauCS Aggressive-MTP must exist exactly once with Candidate status.')
 }
 
+$visionProfile = @($profiles | Where-Object { $_.Id -eq 'candidate-jonathan-q6k-vision' })
+if ($visionProfile.Count -ne 1 -or $visionProfile[0].Status -ne 'Candidate') {
+    $failures.Add('Jonathan Q6_K Vision must exist exactly once with Candidate status.')
+}
+
 $blockedExtensions = @('.gguf', '.safetensors', '.bin', '.ckpt', '.pth', '.pt', '.onnx')
 $blockedFiles = Get-ChildItem -LiteralPath $repoRoot -Recurse -File | Where-Object {
     $blockedExtensions -contains $_.Extension.ToLowerInvariant()
@@ -100,5 +146,5 @@ if ($failures.Count -gt 0) {
     exit 1
 }
 
-Write-Host "Repository validation passed: $($jsonFiles.Count) JSON file(s), one Current profile, no model binaries." -ForegroundColor Green
+Write-Host "Repository validation passed: $($jsonFiles.Count) managed JSON file(s), one Current profile, no model binaries." -ForegroundColor Green
 exit 0

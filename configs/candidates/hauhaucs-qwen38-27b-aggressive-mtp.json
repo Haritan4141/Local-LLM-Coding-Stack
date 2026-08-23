@@ -17,29 +17,56 @@
   },
   "model": {
     "repository": "HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF",
-    "variant": null,
-    "file_name": null,
+    "revision": "993a5971fda8f30dd1b7eb2654792ba4415c7460",
+    "variant": "Q6_K_P",
+    "file_name": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-Q6_K_P.gguf",
     "external_path": null,
+    "size_bytes": 25924151424,
+    "sha256": "70c8139f4dcd05d3818bc9843cde7301faa44f66321e5966965929baa9c24a6a",
+    "fallback_variant": "Q5_K_P, downloaded and evaluated after Q6_K_P proved impractical above 32K",
+    "fallback_artifact": {
+      "variant": "Q5_K_P",
+      "file_name": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-Q5_K_P.gguf",
+      "external_path": null,
+      "size_bytes": 20218177664,
+      "sha256": "a21e22af885bd2f7c430a72b550a78f5445966e6a72d3143b0950baa0bd6d411"
+    },
+    "vision_projector": {
+      "required_for_vision": true,
+      "file_name": "mmproj-Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-BF16.gguf",
+      "size_bytes": 931146624,
+      "sha256": "5681b690bcb8eb10cd28d62d078cb4e01521a3ea4880a3fc7d54de72de2dd142"
+    },
+    "fastmtp": {
+      "sidecar_file_name": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-FastMTP-32K.gguf",
+      "size_bytes": 903453952,
+      "sha256": "115e618e1f73cb50817ed5856f0551c6bf9c3d94df96f440eaca78dc63b8968b",
+      "requires_custom_llama_cpp_patch": true,
+      "stock_lm_studio_status": "not proven"
+    },
     "capabilities_to_verify": [
       "Vision",
-      "FastMTP"
+      "embedded MTP",
+      "FastMTP",
+      "Tool Calling",
+      "Agentic Coding"
     ]
   },
   "context_profiles": [
     {
       "name": "Light A/B",
       "context_tokens": 32768,
-      "status": "planned"
+      "status": "completed; Q6 and Q5 stable"
     },
     {
       "name": "VRChat A/B",
       "context_tokens": 65536,
-      "status": "planned"
+      "status": "completed; Q6 impractical from VRAM pressure, Q5 stable"
     },
     {
       "name": "Normal A/B",
       "context_tokens": 98304,
-      "status": "planned"
+      "status": "completed; Q6 impractical from VRAM pressure, Q5 stable"
     }
   ],
   "effective_settings": {
@@ -51,24 +78,59 @@
     "flash_attention": true,
     "gpu_offload": {
       "mode": "all",
-      "offloaded_layers": null,
-      "total_layers": null
+      "offloaded_layers": 65,
+      "total_layers": 65
     },
     "mtp": {
       "enabled": true,
       "max_draft_tokens": 2,
-      "fastmtp_runtime_requirements": "pending verification"
+      "comparison_path": "embedded MTP for Current parity",
+      "fastmtp_runtime_requirements": "custom HauhauCS llama.cpp patch; do not claim active in stock LM Studio"
     },
     "reasoning_budget_tokens": 8192,
     "max_concurrent_predictions": 1
   },
   "evaluation_status": {
-    "model_downloaded": "not recorded",
-    "lm_studio_load": "pending",
-    "zoo_code_connection": "pending",
-    "vision": "pending",
-    "fastmtp": "pending",
-    "benchmarks": "pending",
+    "hf_model_card_and_files": "verified at recorded revision",
+    "selected_variant": "Q6_K_P primary plus Q5_K_P VRAM fallback",
+    "model_downloaded": "Q6_K_P and Q5_K_P hashes verified outside repository",
+    "lm_studio_load": "verified at 32K, 64K, and 96K",
+    "zoo_code_connection": "verified with separate Candidate profile; profile retained, selection returned to default Current",
+    "vision": "verified through direct LM Studio API and Zoo Code PNG attachment",
+    "fastmtp": "not tested; sidecar not downloaded and required custom llama.cpp patch is absent",
+    "benchmarks": "completed; see ../../benchmarks/results/2026-08-20-hauhaucs-aggressive-ab.md",
+    "promotion_recommendation": "do not promote; keep JonathanColetti Q6_K as Current and wait for Balanced",
     "adopted": false
+  },
+  "local_results": {
+    "q6_k_p": {
+      "generation_tok_s_median": {
+        "32k_mtp_on": 38.3828,
+        "32k_mtp_off": 38.9982,
+        "64k_mtp_on": 15.5863,
+        "96k_mtp_on_single_run": 17.0477
+      },
+      "peak_vram_mib": {
+        "32k_mtp_on": 30423,
+        "64k_mtp_on": 31305,
+        "96k_mtp_on": 31742
+      },
+      "reasoning_8192": "failed to reach final answer; maxPredictedTokensReached"
+    },
+    "q5_k_p": {
+      "generation_tok_s_median": {
+        "32k_mtp_on": 41.0981,
+        "32k_mtp_off": 45.9019,
+        "64k_mtp_on": 38.719,
+        "96k_mtp_on": 38.2353
+      },
+      "peak_vram_mib": {
+        "32k_mtp_on": 25098,
+        "64k_mtp_on": 27452,
+        "96k_mtp_on": 29614
+      }
+    },
+    "zoo_code_agentic": "completed 5/10 to 10/10 isolated fixture without outside edits",
+    "vision": "direct API 6/7 fields; Zoo Code 7/7 fields"
   }
 }

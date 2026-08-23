@@ -1,0 +1,22 @@
+次のTypeScript関数は、途中で`fetchUser`が失敗した場合にcacheを呼び出し前の状態へ戻す仕様です。しかし現状は、もともとcacheに存在した値まで削除し、値が`undefined`だった場合も正しく復元できません。
+
+```ts
+async function cacheUsers(
+  ids: string[],
+  cache: Map<string, User | undefined>,
+  fetchUser: (id: string) => Promise<User | undefined>,
+): Promise<void> {
+  const written: string[] = [];
+  try {
+    for (const id of ids) {
+      cache.set(id, await fetchUser(id));
+      written.push(id);
+    }
+  } catch (error) {
+    for (const id of written) cache.delete(id);
+    throw error;
+  }
+}
+```
+
+重複する`id`、既存値が`undefined`、新規key、2件目以降での例外をすべて考慮し、問題の原因と不変条件を説明した上で最小修正版を提示してください。無関係な再設計は避け、最終回答まで正常に到達してください。

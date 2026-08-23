@@ -1,0 +1,78 @@
+{
+  "$schema": "../profile.schema.json",
+  "profile_version": 1,
+  "profile_id": "candidate-rtx3090-jonathan-q4km",
+  "status": "Candidate",
+  "captured_date": "2026-08-20",
+  "stack": {
+    "editor": "VS Code",
+    "coding_extension": "Zoo Code",
+    "runtime": "LM Studio",
+    "connection": "LAN remote",
+    "base_url": "http://192.168.0.104:1234"
+  },
+  "hardware": {
+    "computer_name": "DESKTOP-L9HAM1G",
+    "ssh_alias": "pc5700x",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "vram_mib": 24576,
+    "ram_gib": 31.93
+  },
+  "model": {
+    "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+    "revision": "dee0a3164d9e11bbbebf5b63f52ba99443d14fc3",
+    "variant": "Q4_K_M",
+    "file_name": "Qwen3.8-27B-Uncensored-Q4_K_M.gguf",
+    "external_path": null,
+    "size_bytes": 16810714528,
+    "sha256": "4c5e2db039e9325ac7724c8846c71356a24ad1cdfa28002d73ecb6be645f9675",
+    "vision_projector": {
+      "file_name": "Qwen3.8-27B-Uncensored-vision-f16.gguf",
+      "size_bytes": 927606912,
+      "sha256": "5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c"
+    }
+  },
+  "api_identifier": "qwen3.8-27b-uncensored@q4_k_m",
+  "context_profiles": [
+    { "name": "32K", "context_tokens": 32768, "status": "recommended remote-node default; stable" },
+    { "name": "64K", "context_tokens": 65536, "status": "stable with approximately 3.2 GiB idle headroom; solo use" },
+    { "name": "96K", "context_tokens": 98304, "status": "not tested; excluded by VRAM safety estimate" }
+  ],
+  "effective_settings": {
+    "kv_cache": { "k": "Q8_0", "v": "Q8_0" },
+    "kv_cache_gpu_offload": true,
+    "flash_attention": true,
+    "gpu_offload": { "mode": "all", "total_layers": 65 },
+    "mtp": { "enabled": true, "max_draft_tokens": 2 },
+    "reasoning_budget_tokens": 8192,
+    "max_concurrent_predictions": 1
+  },
+  "evaluation_status": "complete; recommended as RTX3090 remote coding default without changing the RTX5090 Current",
+  "evaluation": {
+    "generation_tok_s": {
+      "context_32k_mtp_on_median": 36.31,
+      "context_32k_mtp_off_median": 33.37,
+      "context_64k_mtp_on_median": 35.88
+    },
+    "prompt_processing": {
+      "prompt_tokens": 15478,
+      "median_prompt_tokens_per_second": 905.17,
+      "median_ttft_seconds": 17.099597
+    },
+    "mtp_acceptance": {
+      "accepted": 578,
+      "drafted": 782,
+      "percent": 73.91
+    },
+    "peak_vram_mib": {
+      "context_32k_mtp_on": 19737,
+      "context_32k_mtp_off": 18902,
+      "context_64k_mtp_on": 21106
+    },
+    "direct_tool_calling": "pass; exact read_file call",
+    "direct_vision": "pass; 7/7 fixture fields with external F16 projector",
+    "zoo_agentic": "pass; 5/10 to 10/10, file read/edit/create and command execution succeeded",
+    "reasoning_8192": "fail; consumed 8192 tokens without a usable final answer",
+    "result_path": "benchmarks/results/2026-08-20-rtx3090-remote-node.md"
+  }
+}

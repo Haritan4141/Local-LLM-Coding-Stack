@@ -1,0 +1,84 @@
+{
+  "$schema": "../profile.schema.json",
+  "profile_version": 1,
+  "profile_id": "candidate-rtx3090-hauhaucs-aggressive-q4kp",
+  "status": "Candidate",
+  "captured_date": "2026-08-20",
+  "stack": {
+    "editor": "VS Code",
+    "coding_extension": "Zoo Code",
+    "runtime": "LM Studio",
+    "connection": "LAN remote",
+    "base_url": "http://192.168.0.104:1234"
+  },
+  "hardware": {
+    "computer_name": "DESKTOP-L9HAM1G",
+    "ssh_alias": "pc5700x",
+    "gpu": "NVIDIA GeForce RTX 3090",
+    "vram_mib": 24576,
+    "ram_gib": 31.93
+  },
+  "model": {
+    "repository": "HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF",
+    "revision": "993a5971fda8f30dd1b7eb2654792ba4415c7460",
+    "variant": "Q4_K_P",
+    "file_name": "Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-Q4_K_P.gguf",
+    "external_path": null,
+    "size_bytes": 17923393664,
+    "sha256": "ba36dc3c2b2ff5e0aa5d71092a8894546996a6a119ae391803dda07cdc08516d",
+    "vision_projector": {
+      "required": true,
+      "file_name": "mmproj-Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-BF16.gguf",
+      "size_bytes": 931146624,
+      "sha256": "5681b690bcb8eb10cd28d62d078cb4e01521a3ea4880a3fc7d54de72de2dd142"
+    },
+    "fastmtp": {
+      "status": "not planned in stock LM Studio",
+      "reason": "requires separate sidecar and custom HauhauCS llama.cpp patch"
+    }
+  },
+  "api_identifier": "qwen3.8-27b-uncensored-hauhaucs-aggressive-mtp",
+  "context_profiles": [
+    { "name": "32K", "context_tokens": 32768, "status": "stable Candidate default" },
+    { "name": "64K", "context_tokens": 65536, "status": "stable but only approximately 2.1 GiB idle headroom; solo test use" },
+    { "name": "96K", "context_tokens": 98304, "status": "not tested; excluded by VRAM safety estimate" }
+  ],
+  "effective_settings": {
+    "kv_cache": { "k": "Q8_0", "v": "Q8_0" },
+    "kv_cache_gpu_offload": true,
+    "flash_attention": true,
+    "gpu_offload": { "mode": "all", "total_layers": 65 },
+    "mtp": { "enabled": true, "max_draft_tokens": 2 },
+    "reasoning_budget_tokens": 8192,
+    "max_concurrent_predictions": 1
+  },
+  "evaluation_status": "complete; retain as optional Candidate, not the RTX3090 coding default",
+  "evaluation": {
+    "generation_tok_s": {
+      "context_32k_mtp_on_median": 35.47,
+      "context_32k_mtp_off_median": 31.86,
+      "context_64k_mtp_on_median": 36.28
+    },
+    "prompt_processing": {
+      "prompt_tokens": 15478,
+      "median_prompt_tokens_per_second": 897.6,
+      "median_ttft_seconds": 17.24375
+    },
+    "mtp_acceptance": {
+      "accepted": 546,
+      "drafted": 750,
+      "percent": 72.8
+    },
+    "peak_vram_mib": {
+      "context_32k_mtp_on": 20867,
+      "context_32k_mtp_off": 19932,
+      "context_64k_mtp_on": 22156
+    },
+    "direct_tool_calling": "pass; exact read_file call",
+    "direct_vision": "pass; 7/7 fixture fields with external BF16 projector",
+    "zoo_agentic": "pass; 5/10 to 10/10 in approximately 320 seconds after the corrected 32K identifier load",
+    "zoo_vision": "fail; image attached, but Code mode looped over directory and README tool calls and did not answer within 129 seconds",
+    "reasoning_8192": "fail; consumed 8192 tokens without a usable final answer",
+    "result_path": "benchmarks/results/2026-08-20-rtx3090-remote-node.md"
+  }
+}

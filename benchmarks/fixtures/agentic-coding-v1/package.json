@@ -1,0 +1,8 @@
+{
+  "name": "local-llm-agentic-coding-fixture-v1",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node tests/run-tests.js"
+  }
+}

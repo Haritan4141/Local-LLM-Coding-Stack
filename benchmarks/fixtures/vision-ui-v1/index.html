@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vision UI Benchmark v1</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; width: 960px; height: 540px; font-family: "Segoe UI", sans-serif; color: #172033; background: #edf1f7; }
+    .app { display: grid; grid-template-columns: 220px 1fr; height: 100%; }
+    nav { background: #18233a; color: white; padding: 28px 22px; }
+    nav h2 { margin: 0 0 32px; font-size: 20px; letter-spacing: 1px; }
+    nav div { padding: 11px 12px; margin: 6px 0; border-radius: 8px; color: #aebbd2; }
+    nav .active { background: #2f6fed; color: white; }
+    main { padding: 34px 42px; }
+    header { display: flex; justify-content: space-between; align-items: center; }
+    h1 { margin: 0; font-size: 30px; }
+    .status { background: #fff0c2; color: #7a5200; border: 1px solid #e4bd48; border-radius: 999px; padding: 8px 16px; font-weight: 700; }
+    .card { background: white; border-radius: 14px; padding: 26px; margin-top: 28px; box-shadow: 0 8px 24px rgba(35, 52, 85, .12); }
+    .metric { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+    .metric div { background: #f5f7fb; border-left: 5px solid #2f6fed; padding: 16px; }
+    .error { margin-top: 22px; padding: 15px 18px; background: #ffe9ea; border: 1px solid #df6b72; color: #9b1c25; font-family: Consolas, monospace; }
+    button { margin-top: 24px; border: 0; border-radius: 9px; background: #2f6fed; color: white; padding: 13px 24px; font-weight: 700; font-size: 15px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <nav>
+      <h2>LOCAL LLM LAB</h2>
+      <div>Overview</div>
+      <div class="active">Benchmarks</div>
+      <div>Models</div>
+      <div>Settings</div>
+    </nav>
+    <main>
+      <header>
+        <h1>Vision Check — RTX 5090</h1>
+        <span class="status">CANDIDATE</span>
+      </header>
+      <section class="card">
+        <strong>Qwen3.8 Aggressive Evaluation</strong>
+        <div class="metric">
+          <div>Context<br><b>98,304 tokens</b></div>
+          <div>KV Cache<br><b>Q8_0 / Q8_0</b></div>
+        </div>
+        <div class="error">ERROR CODE: VRAM-96K-042</div>
+        <button>RUN VISION TEST</button>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

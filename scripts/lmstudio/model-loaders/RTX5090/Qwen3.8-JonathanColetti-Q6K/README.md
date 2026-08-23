@@ -10,9 +10,9 @@ RTX 5090 32 GB 上の Current モデル `JonathanColetti/Qwen3.8-27B-Uncensored-
 
 | BAT | Context | Use |
 |---|---:|---|
-| `Qwen3.8_96K_Normal.bat` | 98,304 | 通常のZoo Code・コーディング用。Current標準 |
-| `Qwen3.8_64K_VRChat.bat` | 65,536 | VRChat / Unity + Zoo Code用 |
-| `Qwen3.8_32K_Light.bat` | 32,768 | VRAM余裕と軽快さを優先する作業用 |
+| `Qwen3.8-JonathanColetti-Q6K_96K.bat` | 98,304 | 通常のZoo Code・コーディング用。Current標準 |
+| `Qwen3.8-JonathanColetti-Q6K_64K.bat` | 65,536 | VRChat / Unity + Zoo Code用 |
+| `Qwen3.8-JonathanColetti-Q6K_32K.bat` | 32,768 | VRAM余裕と軽快さを優先する作業用 |
 
 128Kプリセットは作成しません。Currentでは128K + Q8 KVによりVRAMが圧迫され、Windows操作性が低下したためです。
 

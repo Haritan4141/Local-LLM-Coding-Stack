@@ -1,38 +1,39 @@
 # HauhauCS Aggressive-MTP Evaluation Plan
 
-Status: Candidate / not adopted
+Status: Candidate evaluated / not adopted
 Created: 2026-08-20
 
 ## Subject
 
 `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF`
 
-Current からの主な比較理由は Vision と FastMTP です。この機能情報はユーザー提供の候補情報であり、このリポジトリ作成時点では upstream metadata やローカル実行で再確認していません。
+Current からの主な比較理由は Vision、embedded MTP、HauhauCS FastMTP、Aggressive uncensoring profile です。Hugging Face revision `993a5971fda8f30dd1b7eb2654792ba4415c7460` のモデルカードとFiles APIを2026-08-20に確認しました。詳細は `hauhaucs-aggressive-mtp-hf-snapshot-2026-08-20.md` に記録しています。
 
 ## Known and unknown
 
 | Item | State | Evidence |
 |---|---|---|
-| Repository name | provided | user-provided |
+| Repository name/revision | verified | Hugging Face model/API |
 | Candidate role | confirmed | local management decision |
-| Vision | to verify | user-provided candidate feature |
-| FastMTP | to verify | user-provided candidate feature |
-| Exact GGUF variant/file | unknown | selection pending |
-| LM Studio requirements | unknown | verification pending |
-| Zoo Code compatibility | unknown | verification pending |
-| Context stability | unknown | benchmark pending |
-| Speed / acceptance / VRAM | unknown | benchmark pending |
+| Vision capability/projector | locally verified | LM Studio API and Zoo Code PNG attachment |
+| Embedded MTP | locally verified | LM Studio runtime draft acceptance logs |
+| FastMTP | not tested; stock LM Studio lacks the required custom patch | model card + patch/provenance |
+| Exact GGUF variant/file | Q6_K_P primary, Q5_K_P VRAM fallback | hashes matched upstream |
+| LM Studio requirements | locally verified on 0.4.21 / llama.cpp CUDA 2.29.1 | load and API runs |
+| Zoo Code compatibility | verified with separate Candidate profile | isolated five-file coding fixture |
+| Context stability | Q6 practical only at 32K; Q5 stable at 32K/64K/96K | controlled runs |
+| Speed / acceptance / VRAM | measured | `benchmarks/results/2026-08-20-hauhaucs-aggressive-ab.md` |
 
 ## Preflight research
 
-Before downloading or loading the model, record:
+Pre-download research completed:
 
-1. Exact upstream repository and revision/date.
-2. Available GGUF files, quantization, size, and checksum.
-3. Vision projector or companion artifact requirements, if any.
-4. LM Studio/llama.cpp version required for Vision and FastMTP.
-5. Chat template, tokenizer, MTP configuration, and known limitations.
-6. License and redistribution constraints. Model files remain outside this repository.
+1. Exact upstream repository, revision, file list, sizes, and checksums recorded.
+2. Q6_K_P selected first; Q5_K_P retained as a VRAM fallback.
+3. BF16 Vision projector identified as required for image/video input.
+4. FastMTP sidecar and custom llama.cpp patch requirement recorded separately from embedded MTP.
+5. Native context, sampling, MTP, Aggressive, agentic, and compatibility cautions recorded.
+6. Apache-2.0 license recorded. Model files remain outside this repository.
 
 ## Controlled comparison
 
@@ -53,3 +54,9 @@ Test sequence:
 ## Decision record requirements
 
 Promotion requires explicit user approval after results are stored under `benchmarks/results/`. The decision must report gains, regressions, failure modes, and rollback steps. If Vision or FastMTP needs a materially different runtime/configuration, compare both the controlled baseline and the best stable candidate configuration rather than presenting them as the same experiment.
+
+## Local result
+
+Evaluation completed on 2026-08-20. Q6_K_P delivered working Vision and faster prompt ingestion, but its model plus BF16 projector left too little RTX 5090 VRAM for practical 64K/96K use. Q5_K_P restored practical 96K headroom, but remained slower than Current and embedded MTP reduced speed on the fixed workload.
+
+The strongest blocker was Reasoning Budget 8192: Candidate Q6_K_P consumed the full budget and stopped without a final answer, while Current converged and returned a correct final answer. Both completed the Zoo Code coding fixture, but Candidate took longer and repeated its internal design discussion. Current therefore remains unchanged. The detailed record is `../benchmarks/results/2026-08-20-hauhaucs-aggressive-ab.md`.

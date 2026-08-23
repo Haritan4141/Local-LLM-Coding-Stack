@@ -1,6 +1,6 @@
 # Current State
 
-State captured: 2026-08-20 (Asia/Tokyo)
+State captured: 2026-08-23 (Asia/Tokyo)
 
 ## Operational status
 
@@ -10,6 +10,8 @@ State captured: 2026-08-20 (Asia/Tokyo)
 - Hardware: NVIDIA GeForce RTX 5090 32 GB
 - Client path: VS Code -> Zoo Code -> LM Studio -> local model
 - Max concurrent predictions: 1
+- Repository lifecycle Current remains API ID `qwen3.8-27b-uncensored`; its model files and loader presets were not overwritten.
+- Active LM Studio runtime after the 2026-08-23 Vision work: explicit Vision Candidate API ID `qwen3.8-27b-uncensored-vision` at 65,536 context, Q8_0/Q8_0, embedded MTP ON / draft 2, parallel 1. This runtime selection does not promote the profile to Current.
 
 ## Effective profiles
 
@@ -35,7 +37,7 @@ State captured: 2026-08-20 (Asia/Tokyo)
 
 ## Managed loader presets
 
-Currentの起動BATは `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti/` で管理します。
+Currentの起動BATは `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/` で管理します。
 
 | Preset | Context tokens | Purpose |
 |---|---:|---|
@@ -44,6 +46,18 @@ Currentの起動BATは `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanC
 | 32K Light | 32,768 | VRAM余裕・軽快さ優先 |
 
 各BATは現在ロード中の全LM Studioモデルを解除してから、API Model ID `qwen3.8-27b-uncensored` で再ロードします。BATの登録は管理上の変更であり、この構築時には実行していません。
+
+## Optional Jonathan Q6_K Vision profile
+
+Currentと同じQ6_K本体へJonathanColetti公式F16 Vision projectorを組み合わせた、明示切替用Candidate profileを追加しました。通常Currentのモデル枠とAPI IDは変更せず、Vision用のmodel key `qwen3.8-27b-uncensored-vision-q6k`、API ID `qwen3.8-27b-uncensored-vision`を使用します。Q6_Kとprojectorは外部モデル領域のNTFSハードリンクで共有し、GGUFをGitへ保存していません。
+
+| Context | Vision fixture | Generation | Prompt processing | MTP acceptance | Peak VRAM |
+|---:|---:|---:|---:|---:|---:|
+| 32,768 | 7/7 | 63.03 tok/s | 1,274.73 tok/s | 81.15% | 27,057 MiB |
+| 65,536 | 7/7 | 63.34 tok/s | 1,251.68 tok/s | 81.90% | 28,339 MiB |
+| 98,304 | 7/7 | 61.30 tok/s | 1,238.88 tok/s | 81.90% | 29,736 MiB |
+
+64Kを通常のVision presetとして推奨します。96Kも画像認識と生成に成功しましたが、測定後のGPU残量は約2.87 GBで、他のGPU負荷との併用余裕が小さくなります。Kilo CLIは画像転送に成功して6/7です。goose CLI 1.46.0は画像をtext pathとして扱い失敗しました。goose Desktop 1.47.0は添付・custom Vision ID・画像付き送信まで確認しましたが、初回はLM Studioがtext-only instanceをロードしてHTTP 400となりました。Vision 64K明示ロード後の同一ID direct recoveryは正答しており、Desktopは`lms ps`で`vision = true`を確認してから使う条件付き運用です。Zoo Codeは未実施です。詳細は`benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md`を参照してください。
 
 ## Existing measurements
 
@@ -59,26 +73,50 @@ Currentの起動BATは `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanC
 - 96K context: 安定運用済み。
 - 128K + Q8 KV: モデル実行で VRAM が圧迫され、Windows 操作がカクついたため常用しない。
 - 128K は「不可能」ではなく「日常運用の安定条件を満たさない」と扱う。
-- VRAM の定量的な baseline/peak/delta は未記録。次回ベンチマークで取得する。
+- text-only Currentの定量的なVRAM baseline/peak/deltaは未記録。Vision profileは32K/64K/96Kのidle/peakを記録済み。
 
 ## Active candidate
 
-`HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` を Candidate として比較予定です。
+`HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` の比較を完了しました。Candidateとして記録を残しますが、Currentへの昇格は推奨しません。
 
-- Claimed/expected comparison features: Vision, FastMTP
+- Verified locally: Vision with separate BF16 projector, embedded MTP, direct Tool Calling, Zoo Code image attachment and Agentic Coding
 - Adoption status: not adopted
-- Quantization/file selection: pending
-- LM Studio compatibility: pending verification
-- Zoo Code integration: pending verification
-- Speed, VRAM, context stability, coding quality: not measured
+- Quantization/file selection: Q6_K_Pを第一候補として測定し、64K/96KのVRAM余裕不足によりQ5_K_Pもfallback測定
+- Hugging Face revision: `993a5971fda8f30dd1b7eb2654792ba4415c7460`
+- LM Studio compatibility: 0.4.21 / llama.cpp CUDA 2.29.1で確認。FastMTP custom patchは未導入・未検証
+- Key result: Q5_K_Pは96Kを安定生成できたがCurrentより約23%遅く、Candidateのembedded MTPは固定fixtureで速度向上なし
+- Blocking regression: Reasoning Budget 8192でQ6_K_Pが上限を使い切り、最終回答へ到達しなかった
+- Full result: `benchmarks/results/2026-08-20-hauhaucs-aggressive-ab.md`
 
-Candidate の評価完了までは Current のモデル・設定を変更しません。
+評価後、LM StudioをCurrentの96K/MTP ONへ戻し、Zoo Codeの選択を`default` Current profileへ戻しました。Candidateのモデルファイルとprofileは比較用に残しています。
 
-## Next decision gates
+## RTX3090 Remote LLM Node
 
-1. Candidate の正確な GGUF variant、Vision 構成、LM Studio/FastMTP 要件を確認する。
-2. Current と近い量子化・同じプロンプト・同じ context/cache 条件で A/B 測定する。
-3. 32K、64K、96K の VRAM と Windows 応答性を確認する。
-4. MTP ON/OFF の throughput、acceptance、品質差を複数回測る。
-5. Vision の正答性と、Zoo Code 経由の Agentic Coding 完遂率を評価する。
-6. HauhauCS Balanced-MTP-GGUF が実際に公開された場合のみ Watch から Candidate へ移す。
+`pc5700x / DESKTOP-L9HAM1G / 192.168.0.104`を、RTX5090 Currentから分離したLAN Remote Nodeとして管理します。これは別のCurrent昇格ではなく、メインPCのZoo Codeから必要時に選択する補助実行先です。
+
+| Item | Value |
+|---|---|
+| GPU / RAM | RTX 3090 24,576 MiB / 31.93 GiB |
+| LM Studio | 0.4.21.0 / CLI commit `71bd99c` |
+| Base URL | `http://192.168.0.104:1234` |
+| Server | `0.0.0.0:1234`; main-PC API reachability verified |
+| Firewall | Inbound TCP 1234 / Private / LocalSubnet / Edge Block / LM Studio executable scoped |
+| Remote coding default | JonathanColetti Q4_K_M / `qwen3.8-27b-uncensored@q4_k_m` |
+| Optional Vision candidate | HauhauCS Aggressive Q4_K_P / `qwen3.8-27b-uncensored-hauhaucs-aggressive-mtp` |
+| Recommended context | 32,768 for routine use; 65,536 for a single long-context task |
+| Excluded context | 98,304; insufficient safe VRAM headroom on both models |
+
+同一条件の32K MTP ON中央値はJonathanが36.31 tok/s・19,737 MiB、HauhauCSが35.47 tok/s・20,867 MiBでした。64Kは両方とも3回連続生成に成功しましたが、idle free VRAMはJonathan約3,238 MiB、HauhauCS約2,188 MiBのため、他モデルとの同時ロードを避けて使用します。MTP acceptanceはそれぞれ73.91%と72.80%です。
+
+両モデルともdirect APIのVision fixtureは7/7でした。HauhauCSはZoo Codeから画像添付できたものの、Code modeが画像回答へ進まずtool loopになったため、画像認識は現時点ではLM Studioまたはdirect APIを使用します。Agentic Coding fixtureは両モデルとも完遂しましたが、JonathanのZoo Code所要時間は意図しないHauhauCS 8K自動ロードとの競合で汚染されたため比較値にはしません。
+
+Zoo Codeには`RTX3090 Jonathan Q4KM`と`RTX3090 Hauhau Q4KP`を保存し、active profileはRTX5090用の`default`へ戻しています。切替後は新しいtaskを開始し、`lms ps`で対象モデル1個・意図したcontext・parallel 1を確認します。RTX3090 LM Studioの評価終了状態はJonathan Q4_K_M / 32K / Q8_0 K+V / embedded MTP ON / max draft 2 / parallel 1です。
+
+Identity、Firewall backup、モデルartifact、context別実測は`profiles/RTX3090-Remote/`、詳細比較は`benchmarks/results/2026-08-20-rtx3090-remote-node.md`を正とします。Remote NodeのidentifierはRTX5090 localhost CurrentのAPI IDを流用しません。
+
+## Next decision
+
+1. JonathanColetti Q6_KをCurrentとして維持する。
+2. Visionが必要なときは、まず同じJonathan Q6_Kを使う64K Vision profileを手動選択する。HauhauCS Aggressiveは比較履歴として保持する。
+3. RTX3090の普段使いはJonathan Q4_K_M / 32Kとし、64Kは単独の長context作業だけに使用する。
+4. HauhauCS Balanced-MTP-GGUFが実際に公開された場合、同じfixtureで再評価してから昇格可否を判断する。

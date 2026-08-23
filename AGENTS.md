@@ -2,14 +2,16 @@
 
 ## Purpose
 
-This repository is the source of truth for the local coding stack built around VS Code, Zoo Code, LM Studio, and local LLMs on the RTX 5090 32 GB workstation. Maintain model selection, effective settings, benchmarks, research notes, and migration history here.
+This repository is the source of truth for the local coding stack built around VS Code, Zoo Code, LM Studio, and local LLMs. It covers the RTX 5090 32 GB workstation Current and separately managed LAN Remote LLM Nodes. Maintain model selection, effective settings, benchmarks, research notes, node profiles, and migration history here.
 
 ## Current baseline
 
 - `current-qwen38-27b-uncensored-q6k` is the only `Current` model.
-- `candidate-hauhaucs-aggressive-mtp` is a `Candidate`; it must not replace Current until its comparison is complete.
+- `candidate-hauhaucs-aggressive-mtp` is an evaluated `Candidate`; its 2026-08-20 comparison did not meet the promotion gate, so it must not replace Current.
 - A future HauhauCS Balanced-MTP release is `Watch`, not an available or validated model.
 - `CURRENT_STATE.md` and `configs/current/` describe the operating baseline.
+- `profiles/RTX3090-Remote/` describes the independent `pc5700x` LAN node. A Remote Node role does not create another repository-wide Current model.
+- The RTX3090 Remote Node coding default is JonathanColetti Q4_K_M at 32K. HauhauCS Aggressive Q4_K_P is an optional Candidate; 64K is single-model use and 96K is excluded.
 
 ## Status semantics
 
@@ -28,9 +30,12 @@ This repository is the source of truth for the local coding stack built around V
 6. Do not download a model or change VS Code, Zoo Code, LM Studio, NVIDIA driver, CUDA, BIOS/UEFI, or firmware settings unless the user explicitly requests it.
 7. Do not change the stable Current profile while testing a Candidate. Create a separate Candidate profile and compare with controlled settings.
 8. Prefer UTF-8 text, ISO 8601 timestamps with timezone, and invariant numeric formats.
-9. Store RTX 5090 loader BAT files under `scripts/lmstudio/model-loaders/RTX5090/<Model-Name>/`; add a new model directory instead of overwriting another model's loaders.
+9. Store loader BAT files under `scripts/lmstudio/model-loaders/<GPU>/<Model-Variant-Quantization>/`; add a new GPU/model directory instead of overwriting another model's loaders.
 10. Never execute a managed loader BAT without explicit user authorization. Current loaders call `lms unload --all` and therefore change LM Studio runtime state.
 11. Every model-loader directory must document its model reference, API Model ID, presets, runtime side effects, shared settings, and external model-data boundary.
+12. For a LAN node, verify SSH Alias, expected IP, and `hostname` before changing runtime state. Keep its Base URL and API identifiers distinct from the RTX5090 localhost Current.
+13. A LAN LM Studio firewall rule must be inbound TCP on the selected port, Private, LocalSubnet, and Edge Traversal Block. Never broaden it to Public or RemoteAddress Any, and do not reset the firewall.
+14. After changing a Zoo Code Remote Node profile, start a new task and verify with `lms ps` that only the intended model is loaded at the intended context with parallel 1. Do not accept measurements from implicit auto-load or multi-model VRAM contention.
 
 ## Required update workflow
 
@@ -66,6 +71,7 @@ When promoting a Candidate to Current:
 - `configs/`: reproducible management profiles.
 - `benchmarks/`: protocol, templates, and curated measurements.
 - `research/`: claims, sources, questions, and evaluation plans.
+- `profiles/`: PC/node identity, connection, capacity, and measured role.
 - `logs/`: ignored local diagnostic output only.
 - `scripts/`: non-destructive repository helpers.
 - `scripts/lmstudio/model-loaders/`: explicitly invoked LM Studio runtime loaders, separated by GPU and model.
