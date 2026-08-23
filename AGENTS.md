@@ -11,7 +11,8 @@ This repository is the source of truth for the local coding stack built around V
 - A future HauhauCS Balanced-MTP release is `Watch`, not an available or validated model.
 - `CURRENT_STATE.md` and `configs/current/` describe the operating baseline.
 - `profiles/RTX3090-Remote/` describes the independent `pc5700x` LAN node. A Remote Node role does not create another repository-wide Current model.
-- The RTX3090 Remote Node coding default is JonathanColetti Q4_K_M at 32K. HauhauCS Aggressive Q4_K_P is an optional Candidate; 64K is single-model use and 96K is excluded.
+- The node hardware is RTX 3090 24 GB + RTX 3060 12 GB. The Remote Node coding default remains JonathanColetti Q4_K_M at 32K. HauhauCS Aggressive Q4_K_P is an optional Candidate; 64K is single-model use and 96K is excluded.
+- Jonathan Vision Q6_K at 8K is an evaluated dual-GPU capacity role, not the Remote coding default: RTX3090 alone is PARTIAL_OFFLOAD even at 2K, while RTX3090+3060 is STRICT_GPU_ONLY at 8K.
 
 ## Status semantics
 

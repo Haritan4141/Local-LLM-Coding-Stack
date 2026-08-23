@@ -41,6 +41,10 @@
 
 fixture や prompt を追加する場合は、秘密情報や第三者の非公開コードを含めず、バージョンを固定してください。
 
+## Cross-hardware result
+
+2026-08-23のJonathan Vision Q6_K比較は、RTX5090、RTX3090単独、RTX3090+RTX3060でLM Studio native API層を統一し、8K / F16 KV / mmap OFF / Text・Vision / MTP OFF・ONを各3回測定しました。RTX3090単独は2Kでもstrict GPU-onlyにならなかったため、同構成の速度は`Supplemental / PARTIAL_OFFLOAD`として主比較から分離しています。curated結果は`results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md`です。raw JSON・GPU CSV・モデルファイルはリポジトリ外に保持します。
+
 ## Promotion gate
 
 Candidate は少なくとも 32K/64K/96K の安定性、MTP ON/OFF、VRAM、coding、agentic、該当時 Vision を完了するまで Current に昇格しません。速度向上があっても、品質退行、VRAM 圧迫、Zoo Code 不安定化、Windows 操作性低下が大きければ不採用または用途限定とします。

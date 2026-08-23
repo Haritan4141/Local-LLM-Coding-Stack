@@ -11,7 +11,7 @@ State captured: 2026-08-23 (Asia/Tokyo)
 - Client path: VS Code -> Zoo Code -> LM Studio -> local model
 - Max concurrent predictions: 1
 - Repository lifecycle Current remains API ID `qwen3.8-27b-uncensored`; its model files and loader presets were not overwritten.
-- Active LM Studio runtime after the 2026-08-23 Vision work: explicit Vision Candidate API ID `qwen3.8-27b-uncensored-vision` at 65,536 context, Q8_0/Q8_0, embedded MTP ON / draft 2, parallel 1. This runtime selection does not promote the profile to Current.
+- LM Studio loaded-model state after the 2026-08-23 cross-hardware benchmark: no model loaded on MAIN or BLUE. The managed goose operational target remains explicit Vision Candidate API ID `qwen3.8-27b-uncensored-vision` at 65,536 context, Q8_0/Q8_0, embedded MTP ON / draft 2, parallel 1; the one-click launcher loads it when needed. This target does not promote the profile to Current.
 - goose Desktop operational default on RTX5090: the Vision API ID above with client context limit 64,512. The desktop shortcut `Goose Vision 64K` performs a managed runtime preflight and starts goose without requiring normal model reselection.
 
 ## Effective profiles
@@ -97,7 +97,8 @@ Currentと同じQ6_K本体へJonathanColetti公式F16 Vision projectorを組み�
 
 | Item | Value |
 |---|---|
-| GPU / RAM | RTX 3090 24,576 MiB / 31.93 GiB |
+| GPU / RAM | RTX 3090 24,576 MiB + RTX 3060 12,288 MiB / 31.93 GiB |
+| GPU links | RTX 3090 Gen3 x16 / RTX 3060 Gen3 x4 |
 | LM Studio | 0.4.21.0 / CLI commit `71bd99c` |
 | Base URL | `http://192.168.0.104:1234` |
 | Server | `0.0.0.0:1234`; main-PC API reachability verified |
@@ -111,7 +112,9 @@ Currentと同じQ6_K本体へJonathanColetti公式F16 Vision projectorを組み�
 
 両モデルともdirect APIのVision fixtureは7/7でした。HauhauCSはZoo Codeから画像添付できたものの、Code modeが画像回答へ進まずtool loopになったため、画像認識は現時点ではLM Studioまたはdirect APIを使用します。Agentic Coding fixtureは両モデルとも完遂しましたが、JonathanのZoo Code所要時間は意図しないHauhauCS 8K自動ロードとの競合で汚染されたため比較値にはしません。
 
-Zoo Codeには`RTX3090 Jonathan Q4KM`と`RTX3090 Hauhau Q4KP`を保存し、active profileはRTX5090用の`default`へ戻しています。切替後は新しいtaskを開始し、`lms ps`で対象モデル1個・意図したcontext・parallel 1を確認します。RTX3090 LM Studioの評価終了状態はJonathan Q4_K_M / 32K / Q8_0 K+V / embedded MTP ON / max draft 2 / parallel 1です。
+Zoo Codeには`RTX3090 Jonathan Q4KM`と`RTX3090 Hauhau Q4KP`を保存し、active profileはRTX5090用の`default`へ戻しています。切替後は新しいtaskを開始し、`lms ps`で対象モデル1個・意図したcontext・parallel 1を確認します。Remote coding defaultはJonathan Q4_K_M / 32K / Q8_0 K+V / embedded MTP ON / max draft 2 / parallel 1のままです。2026-08-23のQ6_K Vision cross-hardware benchmark開始時と終了時はロード済みモデル0件で、global defaultは変更していません。
+
+現在の2GPU構成でJonathan Vision Q6_K / context 8,192 / F16 KVを追加評価しました。RTX 3090単独は2,048でもstrict GPU-onlyにならず、8,192ではShared GPU Memoryへ約6.3 GiB退避してText 4.22 tok/s、Vision 4.22 tok/s（MTP OFF中央値）でした。RTX 3090+3060は8,192でstrict GPU-onlyとなり、Text 22.52 tok/s、Vision 22.38 tok/s、MTP ONでは27.20 / 34.03 tok/sでした。3060は約5.6–6.3 GiBを保持して実処理へ参加します。容量上の価値は確認しましたが、既存Q4_K_M / 32K defaultをQ6_Kへ置き換えません。詳細は`benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md`を参照してください。
 
 Identity、Firewall backup、モデルartifact、context別実測は`profiles/RTX3090-Remote/`、詳細比較は`benchmarks/results/2026-08-20-rtx3090-remote-node.md`を正とします。Remote NodeのidentifierはRTX5090 localhost CurrentのAPI IDを流用しません。
 

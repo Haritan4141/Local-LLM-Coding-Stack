@@ -46,18 +46,20 @@ JonathanColetti版には公式F16 Vision projectorが追加されました。既
 
 ## Remote nodes
 
-RTX5090 localhost Currentを変更せず、`pc5700x / RTX 3090 24 GB`をLAN経由の補助LM Studio nodeとして分離管理します。
+RTX5090 localhost Currentを変更せず、`pc5700x / RTX 3090 24 GB + RTX 3060 12 GB`をLAN経由の補助LM Studio nodeとして分離管理します。
 
 ```text
 Main PC: VS Code -> Zoo Code
   -> http://192.168.0.104:1234
   -> LM Studio on DESKTOP-L9HAM1G
-  -> RTX 3090 24 GB
+  -> RTX 3090 24 GB + RTX 3060 12 GB
 ```
 
 3090用API identifierは`qwen3.8-27b-uncensored@q4_k_m`と`qwen3.8-27b-uncensored-hauhaucs-aggressive-mtp`です。localhost CurrentのIDを流用しません。Zoo Codeには`RTX3090 Jonathan Q4KM`と`RTX3090 Hauhau Q4KP`を保存し、評価後のactive profileは`default`へ戻しています。
 
-3090の普段使いはJonathan Q4_K_M / 32Kを推奨します。64Kは単独の長context作業だけに使い、96KはVRAM安全余裕不足のため対象外です。HauhauCS Q4_K_PはDirect Vision 7/7のoptional Candidateですが、Zoo Code Code modeでは画像質問がtool loopになったため、画像だけの作業はLM Studio/direct APIを使用します。Identity、Firewall scope、実測と切替注意事項は`profiles/RTX3090-Remote/`、全比較は`benchmarks/results/2026-08-20-rtx3090-remote-node.md`に記録します。
+3090の普段使いはJonathan Q4_K_M / 32Kを推奨します。64Kは単独の長context作業だけに使い、96KはVRAM安全余裕不足のため対象外です。HauhauCS Q4_K_PはDirect Vision 7/7のoptional Candidateですが、Zoo Code Code modeでは画像質問がtool loopになったため、画像だけの作業はLM Studio/direct APIを使用します。
+
+現在の36 GB構成ではJonathan Vision Q6_K / 8Kも追加評価済みです。3090単独は2Kでもstrict GPU-onlyになりませんが、3090+3060は8Kでstrictとなり、MTP ON中央値はText 27.20 tok/s、Vision 34.03 tok/sでした。容量面の価値は確認したものの、Q4_K_M / 32K defaultは変更しません。Identity、Firewall scope、実測と切替注意事項は`profiles/RTX3090-Remote/`、既存Remote比較は`benchmarks/results/2026-08-20-rtx3090-remote-node.md`、cross-hardware結果は`benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md`に記録します。
 
 ## Repository map
 

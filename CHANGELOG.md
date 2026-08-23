@@ -6,6 +6,9 @@
 
 ### Added
 
+- Jonathan Vision Q6_KをRTX5090、RTX3090単独、RTX3090+RTX3060で同一native API・8K・F16 KV・mmap OFF条件により36正式run比較。raw成果物はリポジトリ外へ保持し、curated結果を`benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md`へ追加。
+- BLUEの現在ハードウェアをRTX3090 24GB + RTX3060 12GBへ同期し、3090 Gen3 x16 / 3060 Gen3 x4、合計36GB、GPU別VRAM・利用率・電力・温度をnode profileへ記録。
+- 再生成可能な標準ライブラリのみのbenchmark harnessを外部作業ディレクトリへ配置し、Text/Vision、MTP OFF/ON、capacity strict判定、MTP acceptance、TTFT、prompt速度、1秒GPU/RAM telemetry、JSON/CSV/Markdown集計を保存。
 - JonathanColetti公式`vision-f16` projector（927,606,912 bytes）をHugging Faceの固定revisionから外部cacheへ取得し、SHA-256を検証。既存Q6_KとprojectorをNTFSハードリンクで共有する独立LM Studio Vision枠を追加し、22.43 GBのモデル本体を複製していない。
 - API ID `qwen3.8-27b-uncensored-vision`、Q8_0/Q8_0、full offload、Flash Attention ON、embedded MTP draft 2、parallel 1で32K/64K/96Kを測定。固定PNGを全contextで7/7認識し、速度・MTP acceptance・VRAMを`benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md`へ記録。
 - Jonathan Q6_K VisionのCandidate profile、upstream/hash調査、32K/64K/96K managed loader、Kilo用の独立Vision model entryを追加。loader helperを再現可能にするため`@lmstudio/sdk` 1.5.0をrepository dependencyとして固定。
@@ -30,6 +33,8 @@
 
 ### Decision
 
+- RTX3090単独はcontext 8192/4096/2048の全条件でShared GPU Memoryへ約5.7–6.3 GiB退避するため、Jonathan Vision Q6_Kのstrict GPU-only構成として不採用。RTX3090+3060は8K strict GPU-onlyを満たし、品質優先のBLUE Vision用途に有効だが、既存Jonathan Q4_K_M / 32K Remote coding defaultは維持する。
+- RTX5090はstrict dual GPUよりText/Visionで2.27–2.53倍高速。RTX3060追加は3090単独partialより3.89–5.34倍高速化し、Q6_K+projectorをdedicated-residentにする容量上の価値がある。これを理由にCurrentや標準LM Studio設定は変更しない。
 - Jonathan Q6_K text-onlyを唯一のCurrentとして維持する。Visionは同一Q6_Kの明示切替Candidate/runtime profileとして扱い、通常は64Kを推奨、96Kは他のGPU負荷を止めた長context用途に限定する。
 - RTX5090のgoose DesktopだけはJonathan Q6_K Vision 64Kをapp-global既定runtimeとして常用する。これはclient固有のOperational Defaultであり、Vision profileのCurrent昇格ではない。
 - HauhauCS Aggressive Q6_K_P/Q5_K_PはCurrentへ昇格しない。
@@ -40,11 +45,13 @@
 
 ### Runtime impact
 
-- RTX5090評価終了時はJonathan Q6_K Vision / 64K / Q8_0 K+V / full GPU offload / embedded MTP 2 / parallel 1をロード。通常Currentのモデル枠、API ID、loaderは保持しており、BATで明示的に戻せる。
+- BLUEへ欠けていたJonathan Q6_K本体だけを既存SSH経路でコピーし、MAIN/BLUEで本体とVision projectorのSHA-256一致を確認。GGUFはGitへ保存していない。benchmarkはper-load GPU splitだけを使用し、global GPU priority、Power Limit、driver、Firewall、SSH/SMBを変更していない。
+- cross-hardware benchmark開始時と終了時はMAIN/BLUEともロード済みLM Studioモデル0件。CurrentのAPI ID、Goose Vision 64K operational default、Zoo Code profileは変更していない。
+- RTX5090 Vision profile検証直後はJonathan Q6_K Vision / 64K / Q8_0 K+V / full GPU offload / embedded MTP 2 / parallel 1をロードしていた。後続のcross-hardware benchmark終了時は上記のとおりアンロード済みで、通常Currentのモデル枠、API ID、loaderは保持している。
 - Kilo Globalはsibling Vision entryを追加したまま既定text modelを維持。goose app-global modelはユーザー選択済みVision IDを維持し、現行config SHAは`F25BA3CF...269B1F86`。既知text baselineとの差はVision model選択と`0.30`→`0.3`の同値表記だけで、Secret file、MCP、OAuthは変更していない。Zoo Code設定も変更していない。
 - `Goose Vision 64K` launcherのpreflightは、単一Vision instance、65,536 context、full offload、Flash Attention、Q8_0/Q8_0、KV GPU offload、MTP draft 2、parallel 1でPASS。正しいruntimeは再ロードせず、active / queued predictionを中断しない。
 - RTX3090 nodeのLM Studio server bindをlocalhostからLAN待受へ変更し、TCP 1234だけをLAN限定で許可。RTX5090 runtime、Current model、localhost Zoo Code profileは変更していない。
-- RTX3090評価終了時はJonathan Q4_K_M / 32K / Q8_0 K+V / full GPU offload / embedded MTP 2 / parallel 1へ設定。メインPCZoo Codeのactive profileは`default`へ復帰。
+- 2026-08-20のRTX3090評価終了時はJonathan Q4_K_M / 32K / Q8_0 K+V / full GPU offload / embedded MTP 2 / parallel 1へ設定していた。後続の2026-08-23 benchmark終了時はアンロード済みで、メインPC Zoo Codeのactive profileは`default`のまま変更していない。
 - Zoo Code切替時に旧conversationがHauhauCS 8K / parallel 4を暗黙ロードしてVRAM競合したため、Remote profile切替後は新規taskを開始し、`lms ps`で対象モデル1個・意図したcontext・parallel 1を確認する運用規則を追加。
 - Candidate用Per-model DefaultsとZoo Codeの分離profileを追加。Currentのモデルファイル、設定、loaderは上書きしていない。
 - 評価中のみAPI IDを分けてモデルを切り替えた。完了後、Zoo Codeは`default` Current profile、LM StudioはJonathanColetti Q6_K / 98,304 context / embedded MTP ONへ復帰確認済み。

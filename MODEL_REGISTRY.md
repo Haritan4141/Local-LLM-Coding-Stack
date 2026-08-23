@@ -7,10 +7,11 @@ Last updated: 2026-08-23
 | ID | Status | Repository / model | Variant | Key capabilities | Evidence state |
 |---|---|---|---|---|---|
 | `current-qwen38-27b-uncensored-q6k` | Current | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K | Text coding, MTP | Stable at 96K; measured MTP ON/OFF speed supplied |
-| `candidate-jonathan-q6k-vision` | Candidate / Vision profile; goose operational default | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K + official F16 projector | Vision, text coding, MTP | Direct Vision 7/7 at 32K/64K/96K; goose managed 64K startup verified; Desktop image response still pending |
+| `candidate-jonathan-q6k-vision` | Candidate / Vision profile; goose operational default | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K + official F16 projector | Vision, text coding, MTP | Direct Vision validated at 32K/64K/96K on RTX5090; 8K cross-hardware comparison completed on RTX5090, RTX3090 partial, and RTX3090+3060 strict; Desktop image response still pending |
 | `candidate-hauhaucs-aggressive-mtp` | Candidate | `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` | Q6_K_P primary; Q5_K_P fallback | Vision + embedded MTP; custom-patch FastMTP | Local evaluation complete; promotion not recommended |
 | `candidate-rtx3090-jonathan-q4km` | Candidate / Remote Node Default | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q4_K_M | Text coding, embedded MTP, separate Vision projector | Evaluation complete; recommended RTX3090 remote coding role |
 | `candidate-rtx3090-hauhaucs-aggressive-q4kp` | Candidate / Remote Node Optional | `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` | Q4_K_P | Vision + embedded MTP; stock LM Studio path | Evaluation complete; retain for optional/direct Vision use |
+| `candidate-rtx3090-dual-jonathan-q6k-vision` | Candidate / Remote Node Capacity Role | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K + F16 projector | Dual-GPU Vision, embedded MTP | 8K strict on RTX3090+3060; RTX3090-only partial even at 2K; do not replace Q4_K_M default |
 | `watch-hauhaucs-balanced-mtp` | Watch | HauhauCS Balanced-MTP-GGUF (provisional reference) | TBD | Expected balanced MTP profile | Publication and exact repository not yet confirmed |
 
 ## Current: current-qwen38-27b-uncensored-q6k
@@ -47,6 +48,7 @@ Current remains the rollback point for every Candidate experiment.
 - Management profile: `configs/candidates/jonathan-q6k-vision.json`
 - Research note: `research/jonathan-q6k-vision-2026-08-23.md`
 - Controlled result: `benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md`
+- Cross-hardware result: `benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md`; RTX5090 and RTX3090+3060 were strict at 8K, while RTX3090 alone remained PARTIAL_OFFLOAD even at 2K
 - Managed loaders: `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/`
 
 ## Candidate: candidate-hauhaucs-aggressive-mtp
@@ -72,7 +74,7 @@ Promotion is blocked by measured speed, VRAM, MTP, and Reasoning regressions. Cu
 
 ## Remote Node candidates: RTX3090
 
-- Node: `pc5700x / DESKTOP-L9HAM1G / 192.168.0.104 / RTX 3090 24 GB`
+- Node: `pc5700x / DESKTOP-L9HAM1G / 192.168.0.104 / RTX 3090 24 GB + RTX 3060 12 GB`
 - Connection: main-PC Zoo Code -> `http://192.168.0.104:1234`
 - Jonathan artifact: Q4_K_M, 16,810,714,528 bytes, SHA-256 `4c5e2db039e9325ac7724c8846c71356a24ad1cdfa28002d73ecb6be645f9675`
 - HauhauCS artifact: Q4_K_P, 17,923,393,664 bytes, SHA-256 `ba36dc3c2b2ff5e0aa5d71092a8894546996a6a119ae391803dda07cdc08516d`
@@ -84,9 +86,11 @@ Promotion is blocked by measured speed, VRAM, MTP, and Reasoning regressions. Cu
 - Reasoning result: both consumed the 8,192-token budget without reaching a final answer. This role does not replace the reasoning-stable RTX5090 Current.
 - Tool/Vision result: both passed exact direct Tool Calling and direct Vision 7/7. Both completed the isolated Zoo Code Agentic fixture; HauhauCS Zoo Code Code mode did not consume the attached image and entered a tool loop.
 - Role decision: Jonathan Q4_K_M / 32K is the Remote Node coding default. HauhauCS remains an optional Candidate for LM Studio/direct-API Vision. The repository-wide Current remains RTX5090 Jonathan Q6_K.
-- Management profiles: `configs/candidates/rtx3090-jonathan-q4km.json`, `configs/candidates/rtx3090-hauhaucs-aggressive-q4kp.json`
+- Q6_K Vision capacity result: RTX3090 alone is PARTIAL_OFFLOAD at 8K/4K/2K; RTX3090+3060 is STRICT_GPU_ONLY at 8K and measured 27.20 Text / 34.03 Vision tok/s with MTP ON. This confirms a quality-prioritized dual-GPU role without replacing the Q4_K_M / 32K default.
+- Management profiles: `configs/candidates/rtx3090-jonathan-q4km.json`, `configs/candidates/rtx3090-hauhaucs-aggressive-q4kp.json`, `configs/candidates/rtx3090-dual-jonathan-q6k-vision.json`
 - Node profile: `profiles/RTX3090-Remote/`
 - Controlled result: `benchmarks/results/2026-08-20-rtx3090-remote-node.md`
+- Cross-hardware result: `benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md`
 - Lifecycle rule: these entries assign a Remote Node role only. They do not replace `current-qwen38-27b-uncensored-q6k`.
 
 ## Watch: watch-hauhaucs-balanced-mtp

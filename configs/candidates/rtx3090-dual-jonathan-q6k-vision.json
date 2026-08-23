@@ -1,0 +1,106 @@
+{
+  "$schema": "../profile.schema.json",
+  "profile_version": 1,
+  "profile_id": "candidate-rtx3090-dual-jonathan-q6k-vision",
+  "status": "Candidate",
+  "captured_date": "2026-08-23",
+  "stack": {
+    "runtime": "LM Studio",
+    "benchmark_connection": "localhost on the BLUE node over existing SSH administration",
+    "benchmark_base_url": "http://127.0.0.1:1234",
+    "managed_remote_base_url": "http://192.168.0.104:1234",
+    "operational_lan_role": "not activated by this benchmark"
+  },
+  "hardware": {
+    "computer_name": "DESKTOP-L9HAM1G",
+    "ssh_alias": "pc5700x",
+    "ram_gib": 31.93,
+    "gpus": [
+      {
+        "name": "NVIDIA GeForce RTX 3090",
+        "vram_mib": 24576,
+        "observed_pcie": "Gen3 x16",
+        "power_limit_w": 259
+      },
+      {
+        "name": "NVIDIA GeForce RTX 3060",
+        "vram_mib": 12288,
+        "observed_pcie": "Gen3 x4",
+        "power_limit_w": 170
+      }
+    ]
+  },
+  "model": {
+    "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+    "revision": "dee0a3164d9e11bbbebf5b63f52ba99443d14fc3",
+    "variant": "Q6_K + vision-f16 projector",
+    "file_name": "Qwen3.8-27B-Uncensored-Q6_K.gguf",
+    "external_path": null,
+    "size_bytes": 22430999968,
+    "sha256": "a50aa1478295b58ee3d93eabe02c17f6d5fcf6cb787fd8a0ab07ac629a46cae6",
+    "vision_projector": {
+      "file_name": "mmproj-Qwen3.8-27B-Uncensored-vision-f16.gguf",
+      "size_bytes": 927606912,
+      "sha256": "5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c"
+    },
+    "blue_lm_studio_model_key": "qwen3.8-27b-uncensored@q6_k"
+  },
+  "api_identifier": "benchmark-jonathan-q6k-vision",
+  "api_identifier_scope": "temporary benchmark identifier only; no permanent Zoo Code or LAN profile was created",
+  "context_profiles": [
+    {
+      "name": "Controlled benchmark",
+      "context_tokens": 8192,
+      "status": "STRICT_GPU_ONLY with RTX3090+RTX3060; PARTIAL_OFFLOAD with RTX3090 only"
+    },
+    {
+      "name": "RTX3090-only capacity floor",
+      "context_tokens": 2048,
+      "status": "PARTIAL_OFFLOAD; not suitable as a strict Q6_K role"
+    }
+  ],
+  "effective_settings": {
+    "kv_cache": {
+      "k": "F16",
+      "v": "F16",
+      "quantization": "disabled"
+    },
+    "kv_cache_gpu_offload": true,
+    "flash_attention": true,
+    "gpu_offload": {
+      "mode": "max",
+      "strict_validation": "dedicated residency plus shared-memory delta threshold"
+    },
+    "mmap": false,
+    "keep_model_in_memory": true,
+    "eval_batch_size": 512,
+    "mtp": {
+      "modes_tested": [false, true],
+      "max_draft_tokens": 2
+    },
+    "reasoning": "off",
+    "temperature": 0,
+    "max_concurrent_predictions": 1
+  },
+  "evaluation_status": "complete; optional quality-prioritized dual-GPU capacity role; do not replace the Q4_K_M / 32K Remote coding default",
+  "evaluation": {
+    "rtx3090_only": {
+      "classification": "PARTIAL_OFFLOAD",
+      "context_8192_shared_delta_mib": 6480,
+      "text_mtp_off_median_tok_s": 4.218,
+      "text_mtp_on_median_tok_s": 6.994,
+      "vision_mtp_off_median_tok_s": 4.218,
+      "vision_mtp_on_median_tok_s": 8.608
+    },
+    "rtx3090_rtx3060": {
+      "classification": "STRICT_GPU_ONLY",
+      "context_8192_shared_delta_mib": 2266,
+      "text_mtp_off_median_tok_s": 22.522,
+      "text_mtp_on_median_tok_s": 27.198,
+      "vision_mtp_off_median_tok_s": 22.382,
+      "vision_mtp_on_median_tok_s": 34.034,
+      "vision_formal_runs_correct": "6/6"
+    },
+    "result_path": "benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md"
+  }
+}

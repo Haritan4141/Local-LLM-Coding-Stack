@@ -9,7 +9,9 @@
 | COMPUTERNAME | `DESKTOP-L9HAM1G` |
 | IP | `192.168.0.104` |
 | SSH Alias | `pc5700x` |
-| GPU | NVIDIA GeForce RTX 3090, 24,576 MiB |
+| GPU | NVIDIA GeForce RTX 3090 24,576 MiB + RTX 3060 12,288 MiB |
+| GPU links | RTX 3090 Gen3 x16; RTX 3060 Gen3 x4 |
+| Total physical VRAM | 36,864 MiB |
 | RAM | 31.93 GiB |
 | NVIDIA driver | 591.86 |
 | LM Studio | 0.4.21.0 / CLI commit `71bd99c` |
@@ -54,6 +56,25 @@
 | HauhauCS Q4_K_P / 64K / ON | 36.28 tok/s | 22,156 MiB | not sampled | stable; narrow margin |
 
 15,478-token promptの中央値はJonathan 905.17 prompt tok/s、HauhauCS 897.60 prompt tok/sで実質同等です。Direct Tool Callingは両方pass、Direct Visionも各projectorで両方7/7でした。Reasoning Budget 8,192は両方とも上限を使い切り、usable final answerへ到達しませんでした。
+
+## Dual-GPU Jonathan Q6_K Vision capacity evaluation
+
+2026-08-23に、現在のBLUE構成であるRTX 3090 + RTX 3060を実機照合し、Jonathan Vision Q6_Kをcontext 8,192、F16/F16 KV、mmap OFF、parallel 1でRTX5090と比較しました。既存のQ4_K_M / 32K Remote coding defaultは変更していません。
+
+| Configuration / workload | MTP | Median generation | Classification |
+|---|---:|---:|---|
+| RTX 3090 only / Text | OFF | 4.22 tok/s | `PARTIAL_OFFLOAD` |
+| RTX 3090 only / Text | ON | 6.99 tok/s | `PARTIAL_OFFLOAD` |
+| RTX 3090 only / Vision | OFF | 4.22 tok/s | `PARTIAL_OFFLOAD` |
+| RTX 3090 only / Vision | ON | 8.61 tok/s | `PARTIAL_OFFLOAD` |
+| RTX 3090+3060 / Text | OFF | 22.52 tok/s | `STRICT_GPU_ONLY` |
+| RTX 3090+3060 / Text | ON | 27.20 tok/s | `STRICT_GPU_ONLY` |
+| RTX 3090+3060 / Vision | OFF | 22.38 tok/s | `STRICT_GPU_ONLY` |
+| RTX 3090+3060 / Vision | ON | 34.03 tok/s | `STRICT_GPU_ONLY` |
+
+RTX 3090単独は8,192、4,096、2,048のすべてで約5.7–6.3 GiBをShared GPU Memoryへ退避し、strict GPU-onlyになりませんでした。2GPUでは本体+projectorがdedicated-residentとなり、3060は正式run中に約5.6–6.3 GiB、平均38–47%利用、約95–99 Wを使用しました。Visionは両構成・MTP両条件の全runで固定画像を正しく認識しています。
+
+36 GB構成はQ6_K Visionの容量面で有効ですが、RTX5090はdualより2.27–2.53倍高速です。BLUEの普段使いは引き続きJonathan Q4_K_M / 32Kとし、Q6_K Vision dualは品質優先の明示的な評価・実行用途に限定します。詳細は`benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md`を参照してください。評価後はLM Studioロード済みモデル0件です。
 
 Zoo Codeの同一multi-file fixtureは両モデルとも5/10から10/10へ修正し、read/command/edit/createを完遂しました。HauhauCSはcorrected 32K load後約320秒です。Jonathanも完遂しましたが、途中で旧HauhauCS会話が8K/parallel 4モデルを暗黙ロードしてVRAMを圧迫したため、所要時間は比較値に採用しません。
 

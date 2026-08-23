@@ -1,13 +1,29 @@
 {
   "node_profile_version": 1,
   "node_id": "rtx3090-remote-pc5700x",
-  "captured_date": "2026-08-20",
+  "captured_date": "2026-08-23",
   "computer_name": "DESKTOP-L9HAM1G",
   "ip": "192.168.0.104",
   "ssh_alias": "pc5700x",
   "hardware": {
-    "gpu": "NVIDIA GeForce RTX 3090",
-    "vram_mib": 24576,
+    "gpu": "NVIDIA GeForce RTX 3090 + NVIDIA GeForce RTX 3060",
+    "vram_mib": 36864,
+    "vram_is_pooled": false,
+    "vram_note": "36,864 MiB is the sum of two physical devices; usable allocation depends on LM Studio model splitting",
+    "gpus": [
+      {
+        "name": "NVIDIA GeForce RTX 3090",
+        "vram_mib": 24576,
+        "observed_pcie": "Gen3 x16",
+        "power_limit_w": 259
+      },
+      {
+        "name": "NVIDIA GeForce RTX 3060",
+        "vram_mib": 12288,
+        "observed_pcie": "Gen3 x4",
+        "power_limit_w": 170
+      }
+    ],
     "ram_gib": 31.93,
     "nvidia_driver": "591.86"
   },
@@ -45,6 +61,17 @@
       "conditional_max_context_tokens": 65536,
       "measured_peak_vram_mib": 22156,
       "benchmark_result": "benchmarks/results/2026-08-20-rtx3090-remote-node.md"
+    },
+    {
+      "profile_id": "candidate-rtx3090-dual-jonathan-q6k-vision",
+      "status": "cross-hardware benchmark only; dual GPU required for strict residency",
+      "api_identifier": "benchmark-jonathan-q6k-vision",
+      "benchmark_context_tokens": 8192,
+      "rtx3090_only_classification": "PARTIAL_OFFLOAD",
+      "rtx3090_rtx3060_classification": "STRICT_GPU_ONLY",
+      "dual_mtp_text_median_tok_s": 27.198,
+      "dual_mtp_vision_median_tok_s": 34.034,
+      "benchmark_result": "benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md"
     }
   ],
   "operational_default": {
@@ -56,5 +83,6 @@
     "RTX3090 Jonathan Q4KM",
     "RTX3090 Hauhau Q4KP"
   ],
-  "main_pc_zoo_active_profile_after_evaluation": "default"
+  "main_pc_zoo_active_profile_after_evaluation": "default",
+  "lm_studio_loaded_models_after_2026_08_23_benchmark": 0
 }
