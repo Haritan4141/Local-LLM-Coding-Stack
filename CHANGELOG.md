@@ -55,6 +55,10 @@
 - Zoo Codeの画像mentionと、managed startup後のgoose Desktop画像付き成功再送を次回sessionで完了する。goose CLI 1.46.0のWindows path指定は画像を送信せずtext扱いとなるため、現時点ではDesktop paperclip添付と`Goose Vision 64K` launcherを使用する。
 - Balanced-MTP-GGUFの公開を確認できた場合のみ、同じfixtureで新しいCandidate評価を開始する。
 
+### Fixed
+
+- Windows PowerShell 5.1で`lms ps --json`がモデル未ロード時に返す`[]`をnested object 1件と誤認し、one-click launcherが存在しない`.type`で停止する問題を修正。空配列を0モデルとして扱い、未知のmodel fieldもreload判定前に安全に拒否する。
+
 ## [2026-08-20] - Initial management baseline
 
 ### Added

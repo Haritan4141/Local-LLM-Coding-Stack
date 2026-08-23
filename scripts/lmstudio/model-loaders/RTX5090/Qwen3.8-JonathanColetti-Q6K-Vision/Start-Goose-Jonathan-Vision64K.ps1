@@ -82,14 +82,23 @@ function Ensure-GooseDefaultModel {
 }
 
 function Get-LoadedModels {
-    $json = & lms ps --json
+    $jsonLines = @(& lms ps --json)
     if ($LASTEXITCODE -ne 0) {
         throw "lms ps failed with exit code $LASTEXITCODE. Start LM Studio and its local server first."
     }
-    if (-not $json) {
-        return @()
+    $json = $jsonLines -join [Environment]::NewLine
+    if ([string]::IsNullOrWhiteSpace($json)) {
+        return
     }
-    return @($json | ConvertFrom-Json)
+
+    # Windows PowerShell 5.1 returns an empty Object[] for JSON `[]`. Wrapping
+    # that value in @() produces one nested array item, which then has no model
+    # properties. Return the parsed value directly so PowerShell enumerates an
+    # empty array as zero pipeline objects and a model array as its items.
+    $parsed = $json | ConvertFrom-Json
+    if ($null -ne $parsed) {
+        return $parsed
+    }
 }
 
 function Test-VisionRuntime {
@@ -99,6 +108,14 @@ function Test-VisionRuntime {
     }
 
     $model = $loadedModels[0]
+    $requiredModelProperties = @('type', 'modelKey', 'identifier', 'vision', 'contextLength', 'parallel')
+    $missingModelProperties = @($requiredModelProperties | Where-Object {
+        $null -eq $model.PSObject.Properties[$_]
+    })
+    if ($missingModelProperties.Count -gt 0) {
+        return $false
+    }
+
     $coreMatches =
         $model.type -eq 'llm' -and
         $model.modelKey -eq $modelKey -and
@@ -146,10 +163,15 @@ function Test-VisionRuntime {
 function Assert-NoActiveConflictingPrediction {
     $loadedModels = @(Get-LoadedModels)
     $activeModels = @($loadedModels | Where-Object {
-        $_.status -notin @('idle', 'loaded') -or [int]$_.queued -gt 0
+        $null -eq $_.PSObject.Properties['status'] -or
+        $null -eq $_.PSObject.Properties['queued'] -or
+        $_.status -notin @('idle', 'loaded') -or
+        [int]$_.queued -gt 0
     })
     if ($activeModels.Count -gt 0) {
-        $activeIdentifiers = ($activeModels | ForEach-Object { $_.identifier }) -join ', '
+        $activeIdentifiers = ($activeModels | ForEach-Object {
+            if ($null -ne $_.PSObject.Properties['identifier']) { $_.identifier } else { '<unknown>' }
+        }) -join ', '
         throw "An LM Studio prediction is active or queued ($activeIdentifiers). It was not interrupted."
     }
 }
