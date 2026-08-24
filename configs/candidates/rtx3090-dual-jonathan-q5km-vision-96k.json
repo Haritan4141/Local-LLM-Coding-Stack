@@ -1,0 +1,135 @@
+{
+  "$schema": "../profile.schema.json",
+  "profile_version": 1,
+  "profile_id": "candidate-rtx3090-dual-jonathan-q5km-vision-96k",
+  "status": "Candidate",
+  "captured_date": "2026-08-25",
+  "operational_role": "BLUE Recommended Production; independent Remote Node role, not repository Current",
+  "stack": {
+    "runtime": "LM Studio 0.4.21.0 / CLI 71bd99c",
+    "local_base_url": "http://127.0.0.1:1234",
+    "managed_remote_base_url": "http://192.168.0.104:1234"
+  },
+  "hardware": {
+    "computer_name": "DESKTOP-L9HAM1G",
+    "ssh_alias": "pc5700x",
+    "ram_gib": 31.93,
+    "gpus": [
+      {
+        "name": "NVIDIA GeForce RTX 3090",
+        "pci_bus_id": "00000000:0B:00.0",
+        "vram_mib": 24576,
+        "power_limit_w": 259
+      },
+      {
+        "name": "NVIDIA GeForce RTX 3060",
+        "pci_bus_id": "00000000:01:00.0",
+        "vram_mib": 12288,
+        "power_limit_w": 170
+      }
+    ],
+    "vram_is_pooled": false
+  },
+  "model": {
+    "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+    "revision": "dee0a3164d9e11bbbebf5b63f52ba99443d14fc3",
+    "variant": "Q5_K_M + vision-f16 projector",
+    "file_name": "Qwen3.8-27B-Uncensored-Q5_K_M.gguf",
+    "size_bytes": 19535701408,
+    "sha256": "24780644a95f759a9aeeb228c3d852028f2fd40ce0b74d68134246ec4a959547",
+    "vision_projector": {
+      "file_name": "mmproj-Qwen3.8-27B-Uncensored-vision-f16.gguf",
+      "size_bytes": 927606912,
+      "sha256": "5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c"
+    },
+    "blue_lm_studio_model_key": "qwen3.8-27b-uncensored-vision-q5km"
+  },
+  "api_identifier": "qwen3.8-27b-uncensored-vision-q5km-blue",
+  "context_profiles": [
+    {
+      "name": "Recommended Production",
+      "context_tokens": 98304,
+      "status": "selected; Strict PASS"
+    }
+  ],
+  "effective_settings": {
+    "context_tokens": 98304,
+    "kv_cache": {
+      "k": "Q8_0",
+      "v": "Q8_0"
+    },
+    "kv_cache_gpu_offload": true,
+    "flash_attention": true,
+    "gpu_offload": "max",
+    "gpu_split": {
+      "strategy": "priorityOrder",
+      "priority_by_name": [
+        "NVIDIA GeForce RTX 3090",
+        "NVIDIA GeForce RTX 3060"
+      ],
+      "runtime_device_ids": "resolved by GPU name on every load"
+    },
+    "gpu_strict_vram_cap": false,
+    "mmap": false,
+    "keep_model_in_memory": true,
+    "eval_batch_size": 1024,
+    "effective_ubatch_size": 512,
+    "mtp": {
+      "enabled": true,
+      "max_draft_tokens": 3
+    },
+    "max_concurrent_predictions": 1
+  },
+  "capacity_gate": {
+    "combined_shared_limit_gib": 4.0,
+    "per_gpu_shared_limit_gib": 2.0,
+    "result": "PASS",
+    "load_shared_gib": 3.515,
+    "maximum_observed_shared_gib": 3.527,
+    "maximum_observed_per_gpu_shared_gib": 1.773,
+    "rtx3090_loaded_used_mib": 17870,
+    "rtx3090_loaded_headroom_mib": 6706,
+    "rtx3060_loaded_used_mib": 8879,
+    "rtx3060_loaded_headroom_mib": 3409,
+    "dedicated_delta_mib": 26023,
+    "oom": false
+  },
+  "quality_gate": {
+    "text": "3/3 PASS",
+    "coding": "3/3 PASS; syntax 3/3; public 30/30; hidden and edge 48/48",
+    "vision": "3/3 PASS; seven checks each run",
+    "tool_calling": "3/3 PASS; exact name and arguments; no prose",
+    "long_context": "PASS at 76880 input tokens; six facts recovered; 512 output tokens",
+    "reasoning": "OFF",
+    "temperature": 0
+  },
+  "selection": {
+    "mtp_draft": 3,
+    "mtp_reason": "MTP3 preserved most of the MTP4 coding gain while avoiding MTP4's lower acceptance and lack of meaningful aggregate gain",
+    "eval_batch_size": 1024,
+    "batch_reason": "versus batch512, Long Prompt processing improved 23.9 percent and TTFT improved 19.3 percent; coding generation declined about 5.2 percent without a quality failure"
+  },
+  "fresh_q6_balanced_comparison": {
+    "reference_profile_id": "candidate-rtx3090-dual-jonathan-q6k-vision",
+    "q5_vs_q6_generation_percent": {
+      "text": 12.5,
+      "coding": 3.3,
+      "vision": 7.5,
+      "long_prompt": 0.05
+    },
+    "q5_vs_q6_long_prompt_processing_percent": 5.7,
+    "q5_vs_q6_long_ttft_percent": -5.4,
+    "q5_dedicated_vram_peak_saving_mib": 754,
+    "decision": "Q5_K_M Vision 96K promoted to BLUE Recommended Production; Q6_K Balanced retained as Quality/Performance Reference"
+  },
+  "preserved_profiles": {
+    "q6_balanced": "Quality/Performance Reference",
+    "q6_safe": "permanent known-good rollback",
+    "q6_coding_fast": "explicit workload-specific selection only",
+    "q6_performance_370w": "explicit independent override only"
+  },
+  "evaluation_status": "complete; promotion gate PASS",
+  "result_paths": [
+    "benchmarks/results/2026-08-25-blue-q5km-vision-96k-qualification.md"
+  ]
+}

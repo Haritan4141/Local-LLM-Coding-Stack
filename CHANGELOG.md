@@ -6,6 +6,11 @@
 
 ### Added
 
+- BLUEへMAINのexact Jonathan Q5_K_M artifactを既存SMB経路で安全転送し、SHA-256一致後に独立LM Studio model key/API IDとして登録。既存projectorは同一SHAのNTFS hardlinkで再利用し、GGUF/projector/rawはGitへ保存していない。
+- BLUE Q5_K_M Vision 96Kをunchanged Strict gate、MTP OFF/2/3/4、batch512/1024、Text/Coding/Vision/Long Prompt、Tool Calling、76,880-token入力、fresh Q6 Balanced comparisonでqualification。MTP3/Q8/batch1024をRecommended Productionへ採用し、curated結果を`benchmarks/results/2026-08-25-blue-q5km-vision-96k-qualification.md`へ追加。
+- Q5_K_M 96K local/REMOTE loaderを追加。identity、active prediction、GPU名+PCI Bus ID、Power Limit、effective config、Vision、IDLEに加え、combined `<4 GiB`とper-GPU `<=2 GiB`のShared gateをpost-loadでfail closed監査する。
+- BLUE local/REMOTE selectorへQ5 Recommendedを先頭追加し、Q6 Balanced、Q6 Safe、Q6 Coding-Fast、Q6 370W Performanceの既存個別BATを削除・上書きせず保持。
+- Q5 promotion後に公式Visual Studio Build Tools 2022 17.14.39のC++ workload、MSVC v143、Windows SDK 26100、CMake/Ninjaを`--norestart`でBLUEへ導入。cl 19.44、CMake 3.31.6、Ninja 1.12.1、既存nvcc 12.9.41、sm_86をDeveloper環境で確認し、DFlash2 clone/build等は開始していない。
 - RTX5090とBLUEへQwen3.8 Vision 64KのSafe / Balanced / Coding-Fast個別loaderとselectorを追加。既存Safe loader、BLUE 370W Performance、Standard16K / Long32Kは変更せず独立維持した。BLUEにはlocal/REMOTE双方のBalanced/Coding-Fast launcherとREMOTE selectorを追加した。
 - managed loader/helperを後方互換で拡張し、MTP draft 2/3/4、独立K/V Q8_0/Q4_0/F16、eval batchを明示指定・effective readbackできるようにした。未指定時は従来のdraft2/Q8/default batchを維持し、unsupported option/valueとF16/quantized mixed KVはfail closedする。ubatch設定機能は追加していない。
 - Phase 1/1.5のRTX5090/BLUE結果、品質境界、Q4 caveat、実機profile switchingを`benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md`へcurated記録した。
@@ -46,14 +51,15 @@
 
 ### Decision
 
+- BLUE Recommended ProductionをJonathan Q5_K_M Vision / 96K / Q8_0 / MTP3 / batch1024 / RTX3090 259W + RTX3060 170Wへ昇格する。Q6_K BalancedはQuality/Performance Reference、Q6_K Safeはknown-good fallback、Q6 Coding-Fast/370Wは明示選択profileとして永久保持する。Repository lifecycle Currentは変更しない。
 - RTX5090 Vision 64KはMTP4 / Q8_0 / batch2048をBalanced / Operational Recommendedとする。MTP2 / Q8_0 / batch2048はSafeとして永久保持し、MTP4 / Q4_0 / batch2048はCoding-Fastとして明示選択時だけ使用する。
-- BLUE Vision 64K / 259WはMTP3 / Q8_0 / batch1024をBalanced / Operational Recommendedとする。MTP2 / Q8_0 / batch512はSafeとして永久保持し、MTP3 / Q4_0 / batch512はCoding-Fastとして明示選択時だけ使用する。Q4のfixture外品質同等性は保証しない。
+- BLUE Q6 Vision 64K / 259WはMTP3 / Q8_0 / batch1024 Balancedの実測値をQuality/Performance Referenceとして保持する。MTP2 / Q8_0 / batch512はSafeとして永久保持し、MTP3 / Q4_0 / batch512はCoding-Fastとして明示選択時だけ使用する。Q4のfixture外品質同等性は保証しない。
 - BLUE 370W PerformanceへMTP3/batch1024またはQ4を組み合わせるloaderは作成しない。Repository lifecycle Currentは`current-qwen38-27b-uncensored-q6k`の1件から変更しない。
 - Jonathan Q5_K_M Vision / 96K / Q8_0 / MTP OFF / parallel 1を、64Kを超えるGoose作業の推奨explicit Candidateとする。同条件Q6_K / MTP ONより11.6%遅いがPeak VRAMを3,844 MiB節約し、予約420 MiB差引後6,311 MiB / 約6.16 GiBのeffective headroomを得た。CurrentはQ6_Kのまま維持する。
 - Q5_K_MではMTP ONが45.5164 tok/s・27,265 MiB、OFFが53.7446 tok/s・25,876 MiBだったため、Candidate loaderはMTP OFFへ統一する。78.2548% acceptanceだけを理由にMTPを有効化しない。
 - BLUE RTX3090は259WをPrimary Operational Power Limitへ採用し、370Wは明示的Performance overrideへ変更。RTX3060は170Wのまま維持する。Repository lifecycle Currentとモデルartifactは変更しない。後続のPhase 1/1.5 integrationはPower方針を変えず、Q6_K Vision 64KのOperational tierだけを追加する。
-- BLUEはJonathan Q6_K Vision / 64K / Q8_0 / dual GPUをOperational Defaultとし、Jonathan Q4_K_M / 32Kをfallbackへ変更。repository-wide CurrentはRTX5090 Jonathan Q6_K textの1件だけを維持する。
-- 80K～88Kは最大値探索の証拠として保持するが、Shared gate marginが0.469～0.343 GiBしかないため常用しない。96K Q8のShared 5.021 GiB、128K Q8 8.065 GiB、128K F16 15.044 GiBを理由にOperational loaderを作成しない。
+- BLUEの旧Q6_K Vision / 64K Operational DefaultはQ5昇格後もReferenceとして保持し、Jonathan Q4_K_M / 32Kもlegacy fallbackとして残す。repository-wide CurrentはRTX5090 Jonathan Q6_K textの1件だけを維持する。
+- Q6_Kの80K～88Kは最大値探索の証拠として保持するが、Shared gate marginが0.469～0.343 GiBしかないため常用しない。Q6_K 96K Q8のShared 5.021 GiB、128K Q8 8.065 GiB、128K F16 15.044 GiBを理由にQ6 operational 96K/128K loaderを作成しない。Q5_K_M 96Kは別量子化として独立Strict PASSした。
 - 64K F16はQ8と同速でDedicated headroomが1,494 MiB少ないため、Q8_0を採用する。
 - 2026-08-23時点では、RTX3090単独がcontext 8192/4096/2048の全条件でShared GPU Memoryへ約5.7–6.3 GiB退避するため、Jonathan Vision Q6_Kのstrict GPU-only構成として不採用。RTX3090+3060は8K strict GPU-onlyを満たし、品質優先のBLUE Vision用途に有効と判断し、当時のJonathan Q4_K_M / 32K defaultを維持した。2026-08-24の64K capacity評価で上記Operational Default判断へ更新。
 - RTX5090はstrict dual GPUよりText/Visionで2.27–2.53倍高速。RTX3060追加は3090単独partialより3.89–5.34倍高速化し、Q6_K+projectorをdedicated-residentにする容量上の価値がある。これを理由にCurrentや標準LM Studio設定は変更しない。
@@ -67,6 +73,7 @@
 
 ### Runtime impact
 
+- 2026-08-25 Q5 promotion終了時、BLUEはQ6 Safe→Q5 Recommended→Q6 Balanced→Q5 Recommendedの実機切替にPASS。Q5 REMOTE launcherもMAINからexit0となり、対象1件がIDLE / queued0 / 98,304 / Q8_0-Q8_0 / MTP3 / batch1024 / physical batch512 readback / parallel1 / Vision true / RTX3090 259W / RTX3060 170Wで常駐する。Firewall、SSH、SMB、driver、BIOS、LM Studio global settingsは変更していない。
 - 2026-08-24 profile integration終了時、MAINはSafe→Balanced→Coding-Fast→Safeを実機切替後に0 loaded modelsへ復帰。BLUEは同じ切替回帰後、Balanced / MTP3 / Q8_0 / batch1024 / effective ubatch512 / 64K / priorityOrder / mmap OFF / parallel1 / Vision true / RTX3090 259W / RTX3060 170Wを1件だけIDLEで常駐。MAINからnative API到達とreasoning OFF Coding fixtureを確認した。この項目が同日中の旧runtime終了記録を更新する。
 - MAIN BalancedでText/Coding/Vision smoke、両PCのCoding-FastでPhase 1 Coding fixture必須5マーカー・両関数・code blockを確認。Safe復帰後はQ4、draft3/4、batch1024の残留なし。Firewall、SSH、driver、BIOS、global LM Studio設定、モデル重量、client output profileは変更していない。
 - MAIN RTX5090の終了時runtimeはJonathan Q5_K_M Vision Candidate / 98,304 / Q8_0-Q8_0 / MTP OFF / parallel 1 / Vision true / IDLE。既存Goose Desktop processはユーザー操作を中断しないため閉じず、Candidate shortcutの実起動はGoose完全終了後に行う。永続Goose modelはQ6_K Visionのまま、repository Current、Zoo Code、Kilo、driver、global LM Studio設定は変更していない。

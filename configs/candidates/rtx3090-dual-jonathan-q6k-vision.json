@@ -3,8 +3,8 @@
   "profile_version": 1,
   "profile_id": "candidate-rtx3090-dual-jonathan-q6k-vision",
   "status": "Candidate",
-  "captured_date": "2026-08-24",
-  "operational_role": "BLUE Operational Recommended (Balanced); independent Remote Node role, not repository Current",
+  "captured_date": "2026-08-25",
+  "operational_role": "BLUE Quality/Performance Reference (Balanced); independent Remote Node role, not repository Current",
   "stack": {
     "runtime": "LM Studio 0.4.21.0 / CLI 71bd99c",
     "local_base_url": "http://127.0.0.1:1234",
@@ -111,7 +111,7 @@
       "effective_ubatch_size": 512,
       "rtx3090_power_limit_w": 259,
       "rtx3060_power_limit_w": 170,
-      "status": "Operational Recommended"
+      "status": "Quality/Performance Reference; preserved and directly selectable"
     },
     "coding_fast": {
       "name": "Coding-Fast",
@@ -215,11 +215,12 @@
     "zoo_code": "manual UI profile required; do not invent repository schema"
   },
   "fallback_profile_id": "candidate-rtx3090-jonathan-q4km",
-  "evaluation_status": "complete; Balanced selected as BLUE Operational Recommended at 259W Primary, Safe and 370W Performance preserved, Q4_K_M 32K preserved as fallback",
+  "evaluation_status": "complete; Balanced retained as BLUE Quality/Performance Reference after Q5_K_M Vision 96K promotion; Safe, Coding-Fast, and 370W Performance preserved",
   "result_paths": [
     "benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md",
     "benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md",
     "benchmarks/results/2026-08-24-blue-rtx3090-power-limit-ab.md",
-    "benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md"
+    "benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md",
+    "benchmarks/results/2026-08-25-blue-q5km-vision-96k-qualification.md"
   ]
 }

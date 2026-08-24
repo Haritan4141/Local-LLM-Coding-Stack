@@ -21,6 +21,7 @@ function Assert-Contains {
 
 $mainRoot = 'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision'
 $blueRoot = 'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision'
+$blueQ5Root = 'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q5KM-Vision'
 $requiredPaths = @(
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat",
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat",
@@ -37,7 +38,12 @@ $requiredPaths = @(
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Coding-Fast_REMOTE.ps1",
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_370W-Performance.bat",
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat",
-    "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_REMOTE-Profile-Selector.bat"
+    "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_REMOTE-Profile-Selector.bat",
+    "$blueQ5Root/README.md",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W.bat",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W.ps1",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_REMOTE.bat",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_REMOTE.ps1"
 )
 foreach ($relativePath in $requiredPaths) {
     if (-not (Test-Path -LiteralPath (Get-RepoPath $relativePath) -PathType Leaf)) {
@@ -60,6 +66,7 @@ foreach ($check in @(
 
 $mainProfile = Get-Content -LiteralPath (Get-RepoPath 'configs/candidates/jonathan-q6k-vision.json') -Raw | ConvertFrom-Json
 $blueProfile = Get-Content -LiteralPath (Get-RepoPath 'configs/candidates/rtx3090-dual-jonathan-q6k-vision.json') -Raw | ConvertFrom-Json
+$blueQ5Profile = Get-Content -LiteralPath (Get-RepoPath 'configs/candidates/rtx3090-dual-jonathan-q5km-vision-96k.json') -Raw | ConvertFrom-Json
 $nodeProfile = Get-Content -LiteralPath (Get-RepoPath 'profiles/RTX3090-Remote/node.json') -Raw | ConvertFrom-Json
 if ($mainProfile.status -ne 'Candidate' -or $mainProfile.operational_profiles.recommended -ne 'Balanced' -or
     $mainProfile.operational_profiles.safe.mtp_max_draft_tokens -ne 2 -or
@@ -73,10 +80,19 @@ if ($blueProfile.status -ne 'Candidate' -or $blueProfile.operational_profiles.re
     $blueProfile.operational_profiles.coding_fast.kv_cache -ne 'Q4_0/Q4_0') {
     $failures.Add('BLUE management profile does not preserve Candidate lifecycle and Safe/Balanced/Coding-Fast metadata.')
 }
-if ($nodeProfile.operational_default.operational_profile -ne 'Balanced' -or
+if ($blueQ5Profile.status -ne 'Candidate' -or $blueQ5Profile.effective_settings.context_tokens -ne 98304 -or
+    $blueQ5Profile.effective_settings.kv_cache.k -ne 'Q8_0' -or
+    $blueQ5Profile.effective_settings.kv_cache.v -ne 'Q8_0' -or
+    $blueQ5Profile.effective_settings.mtp.max_draft_tokens -ne 3 -or
+    $blueQ5Profile.effective_settings.eval_batch_size -ne 1024 -or
+    $blueQ5Profile.capacity_gate.result -ne 'PASS') {
+    $failures.Add('BLUE Q5_K_M management profile does not preserve Candidate lifecycle and the qualified 96K Recommended settings.')
+}
+if ($nodeProfile.operational_default.profile_id -ne 'candidate-rtx3090-dual-jonathan-q5km-vision-96k' -or
+    $nodeProfile.operational_default.operational_profile -ne 'Recommended Production' -or
     $nodeProfile.operational_default.mtp -ne 'on / draft 3' -or
     $nodeProfile.operational_default.eval_batch_size -ne 1024) {
-    $failures.Add('BLUE node profile does not select Balanced as the operational recommendation.')
+    $failures.Add('BLUE node profile does not select Q5_K_M 96K as Recommended Production.')
 }
 
 $blueCore = Get-Content -LiteralPath (Get-RepoPath "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K.ps1") -Raw
@@ -91,6 +107,24 @@ foreach ($check in @(
     Assert-Contains @check
 }
 
+$blueQ5Core = Get-Content -LiteralPath (Get-RepoPath "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W.ps1") -Raw
+foreach ($check in @(
+    @{ Text = $blueQ5Core; Pattern = [regex]::Escape("`$ModelKey = 'qwen3.8-27b-uncensored-vision-q5km'"); Description = 'BLUE Q5_K_M model key' },
+    @{ Text = $blueQ5Core; Pattern = [regex]::Escape("`$Identifier = 'qwen3.8-27b-uncensored-vision-q5km-blue'"); Description = 'BLUE Q5_K_M API identifier' },
+    @{ Text = $blueQ5Core; Pattern = [regex]::Escape('$ContextLength = 98304'); Description = 'BLUE Q5_K_M 96K context' },
+    @{ Text = $blueQ5Core; Pattern = [regex]::Escape('$DraftTokens = 3'); Description = 'BLUE Q5_K_M MTP3' },
+    @{ Text = $blueQ5Core; Pattern = [regex]::Escape('$EvalBatch = 1024'); Description = 'BLUE Q5_K_M batch1024' },
+    @{ Text = $blueQ5Core; Pattern = [regex]::Escape("'--kv-k', 'q8_0'"); Description = 'BLUE Q5_K_M Q8 K cache' },
+    @{ Text = $blueQ5Core; Pattern = [regex]::Escape("'--kv-v', 'q8_0'"); Description = 'BLUE Q5_K_M Q8 V cache' },
+    @{ Text = $blueQ5Core; Pattern = [regex]::Escape("'--mmap', 'off'"); Description = 'BLUE Q5_K_M mmap OFF' },
+    @{ Text = $blueQ5Core; Pattern = [regex]::Escape('$CombinedSharedLimitBytes = [int64]4GB'); Description = 'BLUE Q5_K_M combined Shared gate' },
+    @{ Text = $blueQ5Core; Pattern = [regex]::Escape('$PerGpuSharedLimitBytes = [int64]2GB'); Description = 'BLUE Q5_K_M per-GPU Shared gate' },
+    @{ Text = $blueQ5Core; Pattern = [regex]::Escape("& lms unload `$Identifier"); Description = 'BLUE Q5_K_M fail-closed unload' },
+    @{ Text = $blueQ5Core; Pattern = [regex]::Escape("'--priority', `$priorityArg"); Description = 'BLUE Q5_K_M priorityOrder argument' }
+)) {
+    Assert-Contains @check
+}
+
 $selectorExpectations = @{
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat" = @(
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat',
@@ -98,14 +132,16 @@ $selectorExpectations = @{
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_Coding-Fast.bat'
     )
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat" = @(
-        'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W.bat',
+        '..\Qwen3.8-JonathanColetti-Q5KM-Vision\Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced.bat',
+        'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Coding-Fast.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_370W-Performance.bat'
     )
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_REMOTE-Profile-Selector.bat" = @(
-        'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W_REMOTE.bat',
+        '..\Qwen3.8-JonathanColetti-Q5KM-Vision\Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_REMOTE.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced_REMOTE.bat',
+        'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W_REMOTE.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Coding-Fast_REMOTE.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_370W-Performance_REMOTE.bat'
     )
@@ -126,7 +162,10 @@ foreach ($entry in $selectorExpectations.GetEnumerator()) {
     }
 }
 
-$powerShellFiles = Get-ChildItem -LiteralPath (Get-RepoPath $blueRoot) -File -Filter '*.ps1'
+$powerShellFiles = @(
+    Get-ChildItem -LiteralPath (Get-RepoPath $blueRoot) -File -Filter '*.ps1'
+    Get-ChildItem -LiteralPath (Get-RepoPath $blueQ5Root) -File -Filter '*.ps1'
+)
 foreach ($file in $powerShellFiles) {
     $tokens = $null
     $errors = $null

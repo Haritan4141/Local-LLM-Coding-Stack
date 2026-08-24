@@ -1,4 +1,4 @@
-# JonathanColetti Q6_K Vision 64K — BLUE Operational Profiles
+# JonathanColetti Q6_K Vision 64K — BLUE Reference and Fallback Profiles
 
 BLUE (`pc5700x / DESKTOP-L9HAM1G / 192.168.0.104`)専用の、RTX 3090 24 GB + RTX 3060 12 GB dual-GPU loaderです。repository-wide CurrentはRTX5090 JonathanColetti Q6_Kのままで、このnode roleは別管理です。
 
@@ -18,14 +18,14 @@ BLUE (`pc5700x / DESKTOP-L9HAM1G / 192.168.0.104`)専用の、RTX 3090 24 GB + R
 | MTP / eval batch | profile-specific; see Operational profiles |
 | Power Limit | Primary: RTX3090 `259W` / RTX3060 `170W`; Performance override: RTX3090 `370W` / RTX3060 `170W` |
 | Client output profiles | Standard `16,384` / Long `32,768` |
-| Use | BLUEの通常coding、agent、Vision、長文脈。BalancedがRecommended |
+| Use | BalancedはQuality/Performance Reference、Safeはknown-good fallback。既存の特殊profileも保持 |
 
 ## Operational profiles
 
 | Profile | MTP draft | KV K/V | Eval / effective ubatch | Power | Role |
 |---|---:|---|---:|---|---|
 | Safe | 2 | Q8_0/Q8_0 | 512 / 512 | 259W / 170W | permanent known-good rollback; existing BAT preserved |
-| **Balanced** | 3 | Q8_0/Q8_0 | 1024 / 512 | 259W / 170W | **Operational Recommended** |
+| **Balanced** | 3 | Q8_0/Q8_0 | 1024 / 512 | 259W / 170W | **Quality/Performance Reference** |
 | Coding-Fast | 3 | Q4_0/Q4_0 | 512 / 512 | 259W / 170W | explicit coding-speed selection only |
 | 370W Performance | 2 | Q8_0/Q8_0 | 512 / 512 | 370W / 170W | existing independent override |
 
@@ -37,13 +37,13 @@ All profiles use context 65,536, priorityOrder RTX3090→RTX3060, full offload, 
 |---|---|---|
 | `Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W.bat` | BLUE | existing Safe。RTX3090を259Wへ設定・検証してロード |
 | `Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W_REMOTE.bat` | MAIN | `pc5700x`を照合し、BLUEのSafe loaderを起動 |
-| `Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced.bat` | BLUE | Balanced / Recommendedをロード |
+| `Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced.bat` | BLUE | Balanced / Quality-Performance Referenceをロード |
 | `Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced_REMOTE.bat` | MAIN | BLUE BalancedをREMOTE起動 |
 | `Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Coding-Fast.bat` | BLUE | Coding-Fastを明示ロード |
 | `Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Coding-Fast_REMOTE.bat` | MAIN | BLUE Coding-FastをREMOTE起動 |
 | `Qwen3.8-JonathanColetti-Q6K-Vision_64K_370W-Performance.bat` | BLUE | 明示選択時だけRTX3090を370Wへ変更するPerformance override |
 | `Qwen3.8-JonathanColetti-Q6K-Vision_64K_370W-Performance_REMOTE.bat` | MAIN | `pc5700x`を照合し、BLUEの370W Performance loaderを起動 |
-| `Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat` | BLUE | Safe/Balanced/Coding-Fast/370Wの個別BATだけをCALL |
+| `Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat` | BLUE | Q5 Recommendedと既存Q6 Safe/Balanced/Coding-Fast/370Wの個別BATだけをCALL |
 | `Qwen3.8-JonathanColetti-Q6K-Vision_REMOTE-Profile-Selector.bat` | MAIN | 対応REMOTE BATだけをCALL |
 | `Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat` | BLUE | 旧ファイル名の互換エイリアス。259W Safeを起動 |
 | `Qwen3.8-JonathanColetti-Q6K-Vision_64K_REMOTE.bat` | MAIN | 旧ファイル名の互換エイリアス。259W Safeを起動 |
@@ -72,7 +72,7 @@ GGUF、projector、LM Studio application data、SDK dependencyはrepositoryへ�
 
 ## Selection rationale
 
-Phase 1でMTP2/Q8/batch512からMTP3/Q8/batch512へ変更すると、Text `+2.81%`、Coding `+7.70%`、Vision `+6.24%`、Long `+4.26%`で、品質は3/3、safetyは4/4でした。MTP3/Q8のbatch512→1024はLong prompt processing `+24.80%`、TTFT `-19.81%`で、generationはText `-0.60%`、Coding `-2.04%`、Vision `+0.61%`、Long `+0.25%`でした。Phase 1.5でも12/12 qualityとsafety 4/4のため、MTP3/Q8/batch1024をBalanced / Recommendedとしました。
+Phase 1でMTP2/Q8/batch512からMTP3/Q8/batch512へ変更すると、Text `+2.81%`、Coding `+7.70%`、Vision `+6.24%`、Long `+4.26%`で、品質は3/3、safetyは4/4でした。MTP3/Q8のbatch512→1024はLong prompt processing `+24.80%`、TTFT `-19.81%`で、generationはText `-0.60%`、Coding `-2.04%`、Vision `+0.61%`、Long `+0.25%`でした。Phase 1.5でも12/12 qualityとsafety 4/4のためMTP3/Q8/batch1024をBalancedへ採用しました。2026-08-25のQ5_K_M 96K昇格後も、この実測profileをQuality/Performance Referenceとして保持します。
 
 Q4はPhase 1.5 fresh matrixでQ4固有failureを再現せず、Q8/batch1024比でCoding `+10.25%`、Long `-7.13%`でした。ただしPhase 1 Coding failure replayではQ4/batch1024のfailure履歴が再現し、fixture外同等性は証明されていません。そのためQ4/MTP3/batch512をCoding-Fastへ隔離し、General Defaultにしません。
 
@@ -80,4 +80,4 @@ Q4はPhase 1.5 fresh matrixでQ4固有failureを再現せず、Q8/batch1024比�
 
 2026-08-24の同一モデル・同一64K設定A/Bでは、259Wは370Wに対してText `-4.43%`、Vision `-4.97%`、Long-prompt processing `-6.45%`、Sustained generation `-3.27%`でした。一方、Sustained dual-GPU平均電力は`380.9W`から`326.7W`へ`14.23%`低下し、RTX3090 peak temperatureは`83C`から`79C`、tok/s per GPU wattは`12.78%`改善しました。この結果を受け、259WをPrimary、370Wを明示的Performance overrideとして採用しました。
 
-Profile選定の全比較と2026-08-24のSafe→Balanced→Coding-Fast→Safe実機回帰は`benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md`にあります。
+Profile選定の全比較と2026-08-24のSafe→Balanced→Coding-Fast→Safe実機回帰は`benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md`にあります。Q5_K_M 96Kとのfresh comparisonと後続の切替回帰は`benchmarks/results/2026-08-25-blue-q5km-vision-96k-qualification.md`に記録します。

@@ -1,6 +1,6 @@
 # Model Registry
 
-Last updated: 2026-08-24
+Last updated: 2026-08-25
 
 ## Registry
 
@@ -12,7 +12,8 @@ Last updated: 2026-08-24
 | `candidate-hauhaucs-aggressive-mtp` | Candidate | `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` | Q6_K_P primary; Q5_K_P fallback | Vision + embedded MTP; custom-patch FastMTP | Local evaluation complete; promotion not recommended |
 | `candidate-rtx3090-jonathan-q4km` | Candidate / Remote Node Fallback | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q4_K_M | Text coding, embedded MTP, separate Vision projector | Evaluation complete; retained as BLUE 32K fallback |
 | `candidate-rtx3090-hauhaucs-aggressive-q4kp` | Candidate / Remote Node Optional | `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` | Q4_K_P | Vision + embedded MTP; stock LM Studio path | Evaluation complete; retain for optional/direct Vision use |
-| `candidate-rtx3090-dual-jonathan-q6k-vision` | Candidate / BLUE Operational Recommended | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K + F16 projector | Dual-GPU Vision, embedded MTP, 64K | Phase 1/1.5 selected MTP3/Q8/batch1024 Balanced at 259W; MTP2/Q8/batch512 Safe and explicit Q4 Coding-Fast retained; 370W stays separate |
+| `candidate-rtx3090-dual-jonathan-q5km-vision-96k` | Candidate / BLUE Recommended Production | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q5_K_M + F16 projector | Dual-GPU Vision, embedded MTP, 96K | Strict gate, Text/Coding/Vision/Tool/76,880-token quality, and fresh Q6 comparison PASS; MTP3/Q8/batch1024 at 259W selected |
+| `candidate-rtx3090-dual-jonathan-q6k-vision` | Candidate / BLUE Quality-Performance Reference | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K + F16 projector | Dual-GPU Vision, embedded MTP, 64K | Phase 1/1.5 selected MTP3/Q8/batch1024 Balanced at 259W; MTP2/Q8/batch512 Safe and explicit Q4 Coding-Fast retained; 370W stays separate |
 | `watch-hauhaucs-balanced-mtp` | Watch | HauhauCS Balanced-MTP-GGUF (provisional reference) | TBD | Expected balanced MTP profile | Publication and exact repository not yet confirmed |
 
 ## Current: current-qwen38-27b-uncensored-q6k
@@ -98,24 +99,27 @@ Promotion is blocked by measured speed, VRAM, MTP, and Reasoning regressions. Cu
 
 - Node: `pc5700x / DESKTOP-L9HAM1G / 192.168.0.104 / RTX 3090 24 GB + RTX 3060 12 GB`
 - Connection: main-PC Zoo Code -> `http://192.168.0.104:1234`
+- Recommended Production artifact: Q5_K_M, 19,535,701,408 bytes, SHA-256 `24780644a95f759a9aeeb228c3d852028f2fd40ce0b74d68134246ec4a959547`; projector SHA-256 `5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c`.
 - Jonathan artifact: Q4_K_M, 16,810,714,528 bytes, SHA-256 `4c5e2db039e9325ac7724c8846c71356a24ad1cdfa28002d73ecb6be645f9675`
 - HauhauCS artifact: Q4_K_P, 17,923,393,664 bytes, SHA-256 `ba36dc3c2b2ff5e0aa5d71092a8894546996a6a119ae391803dda07cdc08516d`
-- Operational API identifier: Q6_K Vision `qwen3.8-27b-uncensored-vision-blue`; fallback Jonathan Q4_K_M `qwen3.8-27b-uncensored@q4_k_m`; optional HauhauCS `qwen3.8-27b-uncensored-hauhaucs-aggressive-mtp`.
+- Operational API identifier: Q5_K_M Vision `qwen3.8-27b-uncensored-vision-q5km-blue`; Q6_K Vision reference/fallback `qwen3.8-27b-uncensored-vision-blue`; legacy Jonathan Q4_K_M `qwen3.8-27b-uncensored@q4_k_m`; optional HauhauCS `qwen3.8-27b-uncensored-hauhaucs-aggressive-mtp`.
 - Vision projectors are separate external GGUF artifacts; model weights and projectors remain outside this repository.
 - 32K result: Jonathan 36.31 tok/s / 19,737 MiB / MTP acceptance 73.91%; HauhauCS 35.47 tok/s / 20,867 MiB / 72.80%.
 - 64K result: both completed three controlled generations; Jonathan retained about 3,238 MiB idle free VRAM and HauhauCS about 2,188 MiB. Use only as a single-model long-context profile.
-- 96K result: excluded without a load attempt because Q8_0 KV and the measured 64K headroom do not leave a safe Windows/VRAM margin.
+- Q5_K_M 96K result: load Shared 3.515 GiB, maximum observed 3.527 GiB, RTX3090 headroom 6,706 MiB, RTX3060 headroom 3,409 MiB, no OOM, unchanged Strict gate PASS. Q6_K 96K remains excluded because its own Q8 Shared result was 5.021 GiB.
 - Reasoning result: both consumed the 8,192-token budget without reaching a final answer. This role does not replace the reasoning-stable RTX5090 Current.
 - Tool/Vision result: both passed exact direct Tool Calling and direct Vision 7/7. Both completed the isolated Zoo Code Agentic fixture; HauhauCS Zoo Code Code mode did not consume the attached image and entered a tool loop.
-- Role decision: Jonathan Q6_K Vision / 64K / Q8_0 / MTP3 / batch1024 / RTX3090→RTX3060 is the BLUE Operational Recommended profile. Existing MTP2 / batch512 is Safe; Q4/MTP3/batch512 is explicit Coding-Fast. RTX3090 259W is Primary and 370W is an independent explicit Performance override; RTX3060 remains 170W. Jonathan Q4_K_M / 32K is the fallback; HauhauCS remains optional. The repository-wide Current remains RTX5090 Jonathan Q6_K.
+- Role decision: Jonathan Q5_K_M Vision / 96K / Q8_0 / MTP3 / batch1024 / RTX3090→RTX3060 is BLUE Recommended Production. Q6_K Balanced is the Quality/Performance Reference, Q6_K Safe the known-good fallback, and Q6 Coding-Fast/370W remain explicit-only. RTX3090 259W is Primary; RTX3060 remains 170W. The repository-wide Current remains RTX5090 Jonathan Q6_K.
+- Fresh comparison: Q5 versus Q6 Balanced improved Text/Coding/Vision generation by about 12.5/3.3/7.5 percent, Long prompt processing by 5.7 percent, Long TTFT by 5.4 percent, and reduced Dedicated peak by about 754 MiB without a quality failure.
 - Q6_K Vision result: 64K Shared 3.281 GiB and total Dedicated headroom 9,720 MiB. 80K/84K/88K passed with narrowing Shared-gate margin; 96K/128K failed. The 64K F16 comparison had equivalent speed and 1,494 MiB less Dedicated headroom, so Q8_0 was selected.
 - Output/Vision: Standard16K stops at 16,384 by design; native Long32K naturally completed at 30,803 output tokens with exact fixture hash; the actual Kilo Long32K client path completed a 29,001-token first step before its automatic continuation; Vision PNG scored 7/7. Kilo exposes both aliases without changing its localhost default.
-- Management profiles: `configs/candidates/rtx3090-jonathan-q4km.json`, `configs/candidates/rtx3090-hauhaucs-aggressive-q4kp.json`, `configs/candidates/rtx3090-dual-jonathan-q6k-vision.json`
+- Management profiles: `configs/candidates/rtx3090-dual-jonathan-q5km-vision-96k.json`, `configs/candidates/rtx3090-dual-jonathan-q6k-vision.json`, `configs/candidates/rtx3090-jonathan-q4km.json`, `configs/candidates/rtx3090-hauhaucs-aggressive-q4kp.json`
 - Node profile: `profiles/RTX3090-Remote/`
 - Controlled result: `benchmarks/results/2026-08-20-rtx3090-remote-node.md`
 - Cross-hardware result: `benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md`
 - Operational selection: `benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md`
 - Phase 1/1.5 profiles: `benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md`
+- Q5_K_M 96K qualification: `benchmarks/results/2026-08-25-blue-q5km-vision-96k-qualification.md`
 - Shared memory investigation: `research/2026-08-24-blue-shared-gpu-memory-investigation.md`
 - Lifecycle rule: these entries assign a Remote Node role only. They do not replace `current-qwen38-27b-uncensored-q6k`.
 

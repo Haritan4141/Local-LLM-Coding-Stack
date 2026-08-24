@@ -39,6 +39,19 @@
     "listen_address": "0.0.0.0",
     "lan_status": "ready; MAIN API reachability and managed remote launcher verified"
   },
+  "build_toolchain": {
+    "status": "DFLASH2 TOOLCHAIN READY; no DFlash2 source or build started",
+    "visual_studio_build_tools": "2022 17.14.39",
+    "workload": "Desktop development with C++ / Microsoft.VisualStudio.Workload.VCTools",
+    "msvc": "v143 / cl 19.44.35228 x64",
+    "windows_sdk": "Windows 11 SDK 26100 component installed",
+    "cmake": "3.31.6-msvc6",
+    "ninja": "1.12.1",
+    "cuda": "12.9 / nvcc 12.9.41",
+    "target_gpu_code": "sm_86 available for both GPUs",
+    "install_exit_code": 0,
+    "reboot_required": false
+  },
   "network": {
     "category": "Private",
     "firewall_policy": "Inbound TCP 1234 / Private / LocalSubnet / EdgeTraversal Block",
@@ -48,8 +61,20 @@
   },
   "models": [
     {
+      "profile_id": "candidate-rtx3090-dual-jonathan-q5km-vision-96k",
+      "status": "BLUE Recommended Production",
+      "api_identifier": "qwen3.8-27b-uncensored-vision-q5km-blue",
+      "context_tokens": 98304,
+      "kv_cache": "Q8_0/Q8_0",
+      "gpu_split": "priorityOrder RTX3090 then RTX3060",
+      "loaded_shared_gpu_memory_gib": 3.515,
+      "maximum_observed_shared_gpu_memory_gib": 3.527,
+      "total_dedicated_headroom_mib": 10115,
+      "benchmark_result": "benchmarks/results/2026-08-25-blue-q5km-vision-96k-qualification.md"
+    },
+    {
       "profile_id": "candidate-rtx3090-dual-jonathan-q6k-vision",
-      "status": "BLUE Operational Recommended (Balanced)",
+      "status": "Quality/Performance Reference (Balanced); Safe rollback and specialized profiles preserved",
       "api_identifier": "qwen3.8-27b-uncensored-vision-blue",
       "context_tokens": 65536,
       "kv_cache": "Q8_0/Q8_0",
@@ -78,11 +103,11 @@
     }
   ],
   "operational_default": {
-    "operational_profile": "Balanced",
-    "profile_id": "candidate-rtx3090-dual-jonathan-q6k-vision",
-    "model_key": "qwen3.8-27b-uncensored@q6_k",
-    "api_identifier": "qwen3.8-27b-uncensored-vision-blue",
-    "context_tokens": 65536,
+    "operational_profile": "Recommended Production",
+    "profile_id": "candidate-rtx3090-dual-jonathan-q5km-vision-96k",
+    "model_key": "qwen3.8-27b-uncensored-vision-q5km",
+    "api_identifier": "qwen3.8-27b-uncensored-vision-q5km-blue",
+    "context_tokens": 98304,
     "kv_cache": "Q8_0/Q8_0",
     "gpu_split": "RTX3090 then RTX3060 by runtime GPU name",
     "mmap": false,
@@ -101,15 +126,15 @@
         "explicit_selection_required": true
       }
     },
-    "fallback_profile_id": "candidate-rtx3090-jonathan-q4km",
-    "reason": "Phase 1/1.5 quality-pass recommendation with improved general performance; 259W selected by controlled Power Limit A/B; 80K+ retained only as capacity evidence"
+    "fallback_profile_id": "candidate-rtx3090-dual-jonathan-q6k-vision",
+    "reason": "Q5_K_M passed the 96K strict Shared gate, Text/Coding/Vision/tool/76880-token quality gates, and fresh same-condition Q6_K comparison while improving general throughput and dedicated VRAM headroom"
   },
   "operational_profiles": {
-    "recommended": "Balanced",
-    "safe": "MTP2 / Q8_0-Q8_0 / eval batch512 / ubatch512 / 64K / 259W-170W",
-    "balanced": "MTP3 / Q8_0-Q8_0 / eval batch1024 / ubatch512 / 64K / 259W-170W",
-    "coding_fast": "MTP3 / Q4_0-Q4_0 / eval batch512 / ubatch512 / 64K / 259W-170W; explicit selection only",
-    "performance_370w": "existing separate override; not combined with Balanced or Coding-Fast"
+    "recommended": "Q5_K_M Vision 96K / MTP3 / Q8_0-Q8_0 / eval batch1024 / ubatch512 / 259W-170W",
+    "q6_balanced_reference": "Q6_K Vision 64K / MTP3 / Q8_0-Q8_0 / eval batch1024 / ubatch512 / 259W-170W; Quality/Performance Reference",
+    "q6_safe": "Q6_K Vision 64K / MTP2 / Q8_0-Q8_0 / eval batch512 / ubatch512 / 259W-170W; permanent known-good rollback",
+    "q6_coding_fast": "Q6_K Vision 64K / MTP3 / Q4_0-Q4_0 / eval batch512 / ubatch512 / 259W-170W; explicit selection only",
+    "q6_performance_370w": "existing separate Q6_K override; not combined with Balanced or Coding-Fast"
   },
   "client_profiles": {
     "kilo": [
@@ -119,12 +144,12 @@
     "zoo_code": "manual profile pending",
     "goose": "unchanged"
   },
-  "runtime_state_after_2026_08_24_setup": {
+  "runtime_state_after_2026_08_25_qualification": {
     "loaded_model_count": 1,
-    "identifier": "qwen3.8-27b-uncensored-vision-blue",
+    "identifier": "qwen3.8-27b-uncensored-vision-q5km-blue",
     "status": "IDLE",
-    "context_tokens": 65536,
-    "operational_profile": "Balanced",
+    "context_tokens": 98304,
+    "operational_profile": "Recommended Production",
     "kv_cache": "Q8_0/Q8_0",
     "mtp_max_draft_tokens": 3,
     "eval_batch_size": 1024,
