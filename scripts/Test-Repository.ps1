@@ -14,10 +14,12 @@ $requiredPaths = @(
     'benchmarks',
     'benchmarks/results',
     'benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md',
+    'benchmarks/results/2026-08-25-rtx5090-q5km-vision-96k-production.md',
     'benchmarks/templates/result.template.json',
     'configs',
     'configs/current/qwen38-27b-uncensored-q6k.json',
     'configs/candidates/jonathan-q6k-vision.json',
+    'configs/candidates/jonathan-q5km-vision.json',
     'configs/candidates/hauhaucs-qwen38-27b-aggressive-mtp.json',
     'configs/candidates/rtx3090-jonathan-q4km.json',
     'configs/candidates/rtx3090-hauhaucs-aggressive-q4kp.json',
@@ -81,6 +83,9 @@ $requiredPaths = @(
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Start-Goose-Jonathan-Vision64K.bat',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Set-Goose-Profile-Q6K-Vision64K.bat',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision/README.md',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision/Qwen3.8-JonathanColetti-Q5KM-Vision_96K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision/Start-Goose-Jonathan-Q5KM-Vision96K-Candidate.ps1',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision/Start-Goose-Jonathan-Q5KM-Vision96K-Candidate.bat',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision/Set-Goose-Profile-Q5KM-Vision96K.bat',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q6KP/README.md',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q6KP/Qwen3.8-HauhauCS-Q6KP_96K.bat',
@@ -155,6 +160,11 @@ if ($candidateProfile.Count -ne 1 -or $candidateProfile[0].Status -ne 'Candidate
 $visionProfile = @($profiles | Where-Object { $_.Id -eq 'candidate-jonathan-q6k-vision' })
 if ($visionProfile.Count -ne 1 -or $visionProfile[0].Status -ne 'Candidate') {
     $failures.Add('Jonathan Q6_K Vision must exist exactly once with Candidate status.')
+}
+
+$mainQ5VisionProfile = @($profiles | Where-Object { $_.Id -eq 'candidate-jonathan-q5km-vision' })
+if ($mainQ5VisionProfile.Count -ne 1 -or $mainQ5VisionProfile[0].Status -ne 'Candidate') {
+    $failures.Add('RTX5090 Jonathan Q5_K_M Vision 96K must exist exactly once with Candidate lifecycle status.')
 }
 
 $blueVisionProfile = @($profiles | Where-Object { $_.Id -eq 'candidate-rtx3090-dual-jonathan-q6k-vision' })

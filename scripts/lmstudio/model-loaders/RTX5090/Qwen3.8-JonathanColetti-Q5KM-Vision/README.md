@@ -1,6 +1,6 @@
-# Qwen3.8 JonathanColetti Q5_K_M Vision Candidate loaders
+# Qwen3.8 JonathanColetti Q5_K_M Vision loaders
 
-RTX 5090 32 GBで96K contextとWindows操作余裕の両立を評価する、JonathanColetti Q5_K_M専用Candidateです。CurrentのQ6_K本体、Q6_K Vision model枠、loader、API IDは変更しません。
+RTX 5090 32 GBのRecommended Production / Operational ProfileはJonathanColetti Q5_K_M Vision 96Kです。Repository lifecycleは`Candidate`のままとし、唯一の`Current`であるQ6_K本体、Q6_K Vision model枠、loader、API IDを変更・削除しません。
 
 | Item | Value |
 |---|---|
@@ -17,8 +17,9 @@ RTX 5090 32 GBで96K contextとWindows操作余裕の両立を評価する、Jon
 | KV cache | `Q8_0 / Q8_0`, GPU offload ON |
 | Flash Attention | ON |
 | GPU offload | maximum / all layers |
-| MTP | OFF（Q5_K_M 96K実測でONより18.1%高速） |
-| Draft setting | max draft tokens 2（MTP OFF時は非使用） |
+| 96K Production MTP | ON / max draft tokens 3（96K final sweepで選定） |
+| 96K Production eval / effective ubatch | 1024 / 512 |
+| 96K Production mmap / keep in memory | ON / ON（既存mmap+mlock運用） |
 | Parallel | 1 |
 | Vision | LM Studio catalogで`vision = true`を確認 |
 
@@ -28,13 +29,17 @@ RTX 5090 32 GBで96K contextとWindows操作余裕の両立を評価する、Jon
 |---|---:|---|---|
 | `Qwen3.8-JonathanColetti-Q5KM-Vision_32K.bat` | 32,768 | 軽量比較・fallback評価 | Loader検査済み / 推論未実測 |
 | `Qwen3.8-JonathanColetti-Q5KM-Vision_64K.bat` | 65,536 | Q6_K Vision 64Kとの同Context比較 | Loader検査済み / 推論未実測 |
-| `Qwen3.8-JonathanColetti-Q5KM-Vision_96K.bat` | 98,304 | 通常利用Candidate。長いGoose agent loop向け | 実測PASS / 推奨Candidate |
+| `Qwen3.8-JonathanColetti-Q5KM-Vision_96K.bat` | 98,304 | 通常利用・長いGoose agent loop | **Recommended Production** |
 
-96Kの固定text fixtureでは、MTP OFFが53.74 tok/s・Peak 25,876 MiB、MTP ONが45.52 tok/s・Peak 27,265 MiBでした。MTP ONのdraft acceptanceは78.25%でしたが、この量子化では速度とVRAMの両方で不利なため、全Candidate loaderをMTP OFFに統一します。同条件のQ6_K Vision / MTP ONは60.82 tok/s・Peak 29,720 MiBで、Q5_K_Mは約11.6%遅い代わりに3,844 MiBのPeak VRAMを節約しました。
+32K/64Kは過去比較用のMTP OFF loaderとしてそのまま保持し、Production defaultにはしません。最終設定変更は96K loaderだけに適用します。
 
-96Kでは70,081 input tokensのneedle test、Vision fixture 7/7、direct Tool Calling、Gooseの複数ファイルAgentic Coding fixture（最終10/10）に成功しました。Reasoning Budget 8,192ではQ5_K_Mと同条件Q6_Kの双方が最終回答前に上限へ達したため、量子化固有の回帰とは断定せず未解決事項として残します。詳細は`benchmarks/results/2026-08-24-rtx5090-jonathan-q5km-vision.md`を参照してください。
+最終sweepは98,304 context、Q8_0/Q8_0、eval batch 2048、effective ubatch 512、parallel 1、Flash Attention/full offload、PL 402W、temperature 0、reasoning OFFを固定し、MTP OFF→2→3→4→OFF sentinelを各workload warm-up 1 + formal 3で比較しました。draft 3はText 46.54、Coding 63.09、Vision 59.10、Long 53.42 tok/s、4-workload geomean 55.18 tok/s、weighted acceptance 84.06%、formal quality 12/12でした。OFF比でTextは8.88%低下しましたが、Coding/Vision/Longは24.03%/16.05%/15.55%向上し、geomeanは約10.97%向上しました。draft 4はgeomean 55.06 tok/s、acceptance 79.93%、Peak 26,692 MiBで、draft 3より総合優位を示さなかったため採用していません。OFF sentinel driftは全workload 0.5%未満です。
 
-`Start-Goose-Jonathan-Q5KM-Vision96K-Candidate.bat`は、Goose Desktopが閉じていることを確認し、96K/Q8_0/Q8_0/MTP OFF/Vision/parallel 1をpreflightしてから、子プロセス限定で`GOOSE_CONTEXT_LIMIT=90112`と`GOOSE_MAX_TOKENS=16384`を渡します。Gooseの永続configと既存`Goose Vision 64K`ショートカットは変更しません。
+draft 3固定のbatch 1024/2048比較では、約24Kの固有nonce付きLong Promptで1024が2,132.05 tok/s・TTFT 11.3648秒、2048が2,129.33 tok/s・11.3727秒でした。速度差がなく1024の方がShared/RAMをわずかに抑えたため、Productionはbatch 1024を採用します。最終設定のload時Dedicated使用量は26,432 MiB、raw headroom 6,175 MiB、420 MiB reserve差引後5,755 MiB（約5.62 GiB）、Shared増分0.309 GiBです。
+
+最終設定ではText/Coding/Vision、69,139 input tokensのLong Context、exact Tool Calling、Gooseの隔離multi-file Agentic Coding（最終10/10）にPASSしました。今回の実用fixtureではPromotionを妨げる品質差を観測していない、という範囲の結論であり、Q5とQ6の完全な品質同等性は主張しません。詳細は`benchmarks/results/2026-08-25-rtx5090-q5km-vision-96k-production.md`を参照してください。過去のCandidate qualificationは`benchmarks/results/2026-08-24-rtx5090-jonathan-q5km-vision.md`に保持します。
+
+互換性のため既存名を保持する`Start-Goose-Jonathan-Q5KM-Vision96K-Candidate.bat`は、Goose Desktopが閉じていることを確認し、96K/Q8_0/Q8_0/MTP3/batch1024/mmap+mlock/Vision/parallel 1をpreflightしてから、子プロセス限定で`GOOSE_CONTEXT_LIMIT=90112`と`GOOSE_MAX_TOKENS=16384`を渡します。Gooseの永続configと既存`Goose Vision 64K`ショートカットは変更しません。
 
 ## 通常のGoose起動を使う場合
 

@@ -7,8 +7,8 @@ Last updated: 2026-08-25
 | ID | Status | Repository / model | Variant | Key capabilities | Evidence state |
 |---|---|---|---|---|---|
 | `current-qwen38-27b-uncensored-q6k` | Current | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K | Text coding, MTP | Stable at 96K; measured MTP ON/OFF speed supplied |
-| `candidate-jonathan-q6k-vision` | Candidate / Vision profile; RTX5090 Balanced operational recommendation | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K + official F16 projector | Vision, text coding, MTP | Phase 1/1.5 selected 64K MTP4/Q8/batch2048 Balanced; permanent MTP2/Q8 Safe and explicit Q4 Coding-Fast retained; lifecycle remains Candidate |
-| `candidate-jonathan-q5km-vision` | Candidate / recommended 96K Goose profile | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q5_K_M + official F16 projector | Vision, tool use, lower-VRAM 96K | 96K capacity, 70,081-token input, direct Vision 7/7, Tool Calling, and isolated Goose Agentic Coding passed; MTP OFF selected |
+| `candidate-jonathan-q6k-vision` | Candidate / RTX5090 Quality-Performance Reference | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K + official F16 projector | Vision, text coding, MTP | Phase 1/1.5 selected 64K MTP4/Q8/batch2048 Balanced Reference; permanent MTP2/Q8 Safe and explicit Q4 Coding-Fast retained; not deprecated |
+| `candidate-jonathan-q5km-vision` | Candidate / RTX5090 Recommended Production | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q5_K_M + official F16 projector | Vision, tool use, lower-VRAM 96K | Final MTP/batch/capacity/quality gates passed at 96K MTP3/Q8/batch1024; lifecycle Current remains Q6_K |
 | `candidate-hauhaucs-aggressive-mtp` | Candidate | `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` | Q6_K_P primary; Q5_K_P fallback | Vision + embedded MTP; custom-patch FastMTP | Local evaluation complete; promotion not recommended |
 | `candidate-rtx3090-jonathan-q4km` | Candidate / Remote Node Fallback | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q4_K_M | Text coding, embedded MTP, separate Vision projector | Evaluation complete; retained as BLUE 32K fallback |
 | `candidate-rtx3090-hauhaucs-aggressive-q4kp` | Candidate / Remote Node Optional | `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` | Q4_K_P | Vision + embedded MTP; stock LM Studio path | Evaluation complete; retain for optional/direct Vision use |
@@ -40,11 +40,11 @@ Current remains the rollback point for every Candidate experiment.
 - Local storage: separate LM Studio Vision model view using NTFS hardlinks; no second 22.43 GB Q6_K copy and no GGUF in Git
 - Vision model key: `qwen3.8-27b-uncensored-vision-q6k`
 - API identifier: `qwen3.8-27b-uncensored-vision`
-- Operational profiles: Balanced recommended at 64K / MTP4 / Q8_0/Q8_0 / batch2048; existing Safe remains MTP2/Q8/batch2048; Coding-Fast is explicit MTP4/Q4/batch2048 only
+- Operational profiles: Balanced is the Quality/Performance Reference at 64K / MTP4 / Q8_0/Q8_0 / batch2048; existing Safe remains MTP2/Q8/batch2048; Coding-Fast is explicit MTP4/Q4/batch2048 only
 - Direct result: fixed PNG fixture 7/7 at 32K, 64K, and 96K
 - Client result: Kilo transported the image and scored 6/7; goose CLI 1.46.0 did not transport the image; goose Desktop 1.47.0 attached and sent the image under the Vision ID but the first inference hit a text-only LM Studio instance. Direct recovery passed after an explicit Vision reload; Desktop remains conditional and Zoo Code remains pending
-- Recommended runtime preset: 64K. The 96K run passed but peaked at 29,736 MiB and leaves reduced GPU headroom
-- Operational role: RTX5090 goose Desktop app-global default at 64K; this client-specific role does not promote the profile to repository Current
+- Recommended Reference preset: 64K. The Q6 96K run passed but peaked at 29,736 MiB and leaves reduced GPU headroom
+- Operational role: RTX5090 Quality/Performance Reference with Safe and Coding-Fast retained; Q6 is not deprecated and remains the sole repository Current artifact
 - One-click startup: desktop shortcut `Goose Vision 64K`, backed by `Start-Goose-Jonathan-Vision64K.ps1`, verifies the single Vision instance and all managed load fields before opening goose
 - Lifecycle decision: retain as an explicit Vision Candidate/runtime profile; do not create a second repository-wide Current
 - Management profile: `configs/candidates/jonathan-q6k-vision.json`
@@ -56,22 +56,25 @@ Current remains the rollback point for every Candidate experiment.
 
 ## Candidate: candidate-jonathan-q5km-vision
 
-- Role: explicit 96K Goose Candidate for workloads that exceed the practical 64K limit while retaining Windows/VRAM headroom
+- Role: RTX5090 Recommended Production / Operational Profile at 96K while retaining repository lifecycle `Candidate`
 - Repository: `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF`
 - Revision: `dee0a3164d9e11bbbebf5b63f52ba99443d14fc3`
 - Variant: `Q5_K_M` plus official F16 Vision projector
 - Model size: 19,535,701,408 bytes; 2,895,298,560 bytes / 2.696 GiB smaller than Q6_K
 - Model key / API identifier: `qwen3.8-27b-uncensored-vision-q5km`
-- Selected runtime: 98,304 context, Q8_0/Q8_0, full GPU offload, Flash Attention ON, MTP OFF, parallel 1
-- Speed/capacity: 53.7446 tok/s median and 25,876 MiB peak; same-condition Q6_K / MTP ON was 60.8219 tok/s and 29,720 MiB peak
-- MTP decision: Q5_K_M MTP ON reached 78.2548% acceptance but fell to 45.5164 tok/s and 27,265 MiB peak, so it is not the operational setting
-- Functional result: 70,081-token input exact PASS, direct Vision 7/7, exact direct Tool Calling, isolated Goose multi-file fixture 10/10
+- Selected runtime: 98,304 context, Q8_0/Q8_0, full GPU offload, Flash Attention ON, mmap+mlock, MTP draft 3, eval batch 1024, effective ubatch 512, parallel 1, PL 402W
+- Speed/capacity: final Text/Coding/Vision/69K Long generation 47.02/63.08/59.98/53.98 tok/s; load 26,432 MiB with 6,175 MiB raw and 5,755 MiB reserve-adjusted headroom; production peak 26,498 MiB / Shared 0.569 GiB
+- MTP decision: draft 3 produced the highest four-workload geomean (55.18 tok/s), 84.06% weighted acceptance, and 12/12 formal PASS. Relative to OFF it traded Text -8.88% for Coding/Vision/Long +24.03/+16.05/+15.55%; draft 4 did not improve the overall result
+- Batch decision: 1024 and 2048 were effectively equal on the unique ~24K Long Prompt (2,132.05 versus 2,129.33 prompt tok/s; TTFT 11.3648 versus 11.3727 seconds); 1024 retained slightly lower Shared/RAM
+- Functional result: 69,139-token input PASS, direct Vision 7/7 across three formal runs, exact direct Tool Calling, isolated Goose multi-file fixture 10/10
 - Known limitation: Reasoning Budget 8,192 did not reach a final answer; same-condition Q6_K also failed, so the cause remains shared/unresolved
-- Goose integration: separate `Goose Q5KM Vision 96K Candidate` shortcut with process-only 90,112 context limit and 16,384 max output; persistent config and Q6 shortcut remain unchanged
-- Lifecycle decision: recommended for explicit Candidate use, not promoted to Current
+- Goose integration: compatibility-named `Goose Q5KM Vision 96K Candidate` shortcut with process-only 90,112 context limit, 16,384 max output, and 0.3 compact threshold; Q6 shortcut remains available
+- Quality statement: 今回の実用fixtureではPromotionを妨げる品質差を観測していない。This does not assert complete Q5/Q6 quality equivalence
+- Lifecycle decision: promote to RTX5090 Recommended Production operational role without changing the single repository Current
 - Management profile: `configs/candidates/jonathan-q5km-vision.json`
 - Research note: `research/jonathan-q5km-vision-2026-08-24.md`
 - Controlled result: `benchmarks/results/2026-08-24-rtx5090-jonathan-q5km-vision.md`
+- Production finalization: `benchmarks/results/2026-08-25-rtx5090-q5km-vision-96k-production.md`
 - Managed loaders: `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision/`
 
 ## Candidate: candidate-hauhaucs-aggressive-mtp

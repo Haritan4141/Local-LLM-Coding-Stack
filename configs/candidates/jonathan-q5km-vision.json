@@ -3,7 +3,8 @@
   "profile_version": 1,
   "profile_id": "candidate-jonathan-q5km-vision",
   "status": "Candidate",
-  "captured_date": "2026-08-24",
+  "captured_date": "2026-08-25",
+  "operational_role": "Recommended Production",
   "baseline_profile": "../current/qwen38-27b-uncensored-q6k.json",
   "hardware": {
     "gpu": "NVIDIA GeForce RTX 5090",
@@ -28,31 +29,48 @@
   "context_profiles": [
     { "name": "Light Vision", "context_tokens": 32768, "status": "pending" },
     { "name": "Comparison Vision", "context_tokens": 65536, "status": "pending" },
-    { "name": "Operational Candidate", "context_tokens": 98304, "status": "verified" }
+    { "name": "Recommended Production", "context_tokens": 98304, "status": "verified" }
   ],
   "effective_settings": {
+    "context_tokens": 98304,
     "kv_cache": { "k": "Q8_0", "v": "Q8_0" },
     "kv_cache_gpu_offload": true,
     "flash_attention": true,
     "gpu_offload": { "mode": "all", "offloaded_layers": 65, "total_layers": 65 },
     "mtp": {
-      "enabled": false,
-      "max_draft_tokens": 2,
-      "selection_reason": "96K controlled fixture: OFF 53.7446 tok/s and 25876 MiB peak; ON 45.5164 tok/s and 27265 MiB peak"
+      "enabled": true,
+      "max_draft_tokens": 3,
+      "selection_reason": "96K final sweep selected draft 3: 55.1784 tok/s workload geomean, 84.0620% weighted acceptance, 12/12 formal quality PASS, and lower VRAM than draft 4; OFF sentinel drift stayed below 0.5%"
     },
+    "eval_batch_size": 1024,
+    "effective_ubatch_size": 512,
+    "mmap": true,
+    "mlock": true,
+    "keep_model_in_memory": true,
+    "power_limit_w": 402,
     "reasoning_budget_tokens": 8192,
     "max_concurrent_predictions": 1
   },
   "evaluation_status": {
     "lm_studio_catalog": "verified Q5_K_M, Vision true, tool-use true, native context 262144",
-    "direct_lm_studio_vision": "verified 7/7 at 96K with MTP OFF",
-    "long_context": "verified with 70081 input tokens and exact NEEDLE-96K-PASS response",
-    "direct_tool_calling": "verified exact function name and arguments",
+    "direct_lm_studio_vision": "verified 7/7 across three formal runs at 96K with MTP3/batch1024",
+    "long_context": "verified with 69139 input tokens (>64K) at MTP3/batch1024",
+    "direct_tool_calling": "verified exact function name and arguments at MTP3/batch1024",
     "goose_cli": "verified at 90112 client context limit and 16384 max output; persistent Goose config unchanged",
     "goose_desktop": "separate process-local Candidate launcher added; GUI image attachment remains to be exercised by the user",
-    "agentic_coding": "verified isolated multi-file fixture; final tests 10/10",
+    "agentic_coding": "verified isolated multi-file fixture at MTP3/batch1024; final tests 10/10",
     "reasoning_budget_8192": "Q5_K_M and same-condition Q6_K both exhausted the budget without a final answer; shared unresolved behavior",
-    "promotion": "keep Q6_K Current until controlled comparison and explicit approval"
+    "promotion": "Recommended Production operational role approved; repository lifecycle remains Candidate and the sole Current remains Q6_K"
+  },
+  "final_quality_gate": {
+    "result": "PASS",
+    "text": "PASS",
+    "coding": "PASS 3/3",
+    "vision": "PASS 7/7 across 3/3 formal runs",
+    "long_context": "PASS with 69139 input tokens",
+    "tool_calling": "PASS exact single tool call",
+    "agentic_coding": "PASS 10/10",
+    "quality_scope": "今回の実用fixtureではPromotionを妨げる品質差を観測していない。Complete Q5/Q6 quality equivalence is not claimed."
   },
   "measured_96k": {
     "mtp_off": {
@@ -71,6 +89,23 @@
       "median_generation_tokens_per_second": 60.8219,
       "median_ttft_seconds": 0.0892,
       "peak_vram_mib": 29720
+    },
+    "production_finalization": {
+      "selected_mtp_draft_tokens": 3,
+      "selected_eval_batch_size": 1024,
+      "effective_ubatch_size": 512,
+      "workload_geomean_generation_tokens_per_second": 55.1784,
+      "mtp_acceptance_percent": 84.062,
+      "formal_quality_passes": 12,
+      "formal_quality_total": 12,
+      "capacity_load_vram_mib": 26432,
+      "raw_headroom_mib": 6175,
+      "effective_headroom_after_reserve_mib": 5755,
+      "shared_memory_delta_gib": 0.309,
+      "long_context_input_tokens": 69139,
+      "tool_calling": "PASS",
+      "agentic_coding": "PASS 10/10",
+      "text_tradeoff": "draft 3 was 8.88% slower than MTP OFF; Coding, Vision, and Long generation improved by 24.03%, 16.05%, and 15.55%"
     }
   },
   "goose_candidate_profile": {

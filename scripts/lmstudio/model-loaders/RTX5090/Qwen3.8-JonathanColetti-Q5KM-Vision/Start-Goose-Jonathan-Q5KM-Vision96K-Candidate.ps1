@@ -119,13 +119,14 @@ function Test-CandidateRuntime {
         [int]$apiConfig.parallel -eq 1 -and
         $apiConfig.flash_attention -eq $true -and
         $apiConfig.offload_kv_cache_to_gpu -eq $true -and
-        $apiConfig.speculative_draft_mtp -eq $false -and
-        [int]$apiConfig.speculative_draft_max_tokens -eq 2
+        $apiConfig.speculative_draft_mtp -eq $true -and
+        [int]$apiConfig.speculative_draft_max_tokens -eq 3 -and
+        [int]$apiConfig.eval_batch_size -eq 1024
     if (-not $apiMatches) {
         return $false
     }
 
-    & node $managedPreflight --identifier $identifier --context $contextLength --mtp off --vision-required on
+    & node $managedPreflight --identifier $identifier --context $contextLength --mtp on --mtp-draft 3 --kv-k q8_0 --kv-v q8_0 --eval-batch 1024 --mmap on --keep-model-in-memory on --vision-required on
     return $LASTEXITCODE -eq 0
 }
 
@@ -153,16 +154,16 @@ function Load-CandidateRuntime {
         throw "lms unload --all failed with exit code $LASTEXITCODE."
     }
 
-    & node $managedLoader --model-key $modelKey --identifier $identifier --context $contextLength --mtp off
+    & node $managedLoader --model-key $modelKey --identifier $identifier --context $contextLength --mtp on --mtp-draft 3 --kv-k q8_0 --kv-v q8_0 --eval-batch 1024 --mmap on --keep-model-in-memory on
     if ($LASTEXITCODE -ne 0) {
         throw "Managed Candidate load failed with exit code $LASTEXITCODE."
     }
 
     if (-not (Test-CandidateRuntime)) {
-        throw 'Candidate loaded, but the managed 96K/Q8/MTP-OFF/Vision/parallel preflight did not pass.'
+        throw 'Profile loaded, but the managed 96K/Q8/MTP3/batch1024/Vision/parallel preflight did not pass.'
     }
 
-    Write-Host '[OK] Jonathan Q5_K_M Vision 96K Candidate runtime loaded and verified.' -ForegroundColor Green
+    Write-Host '[OK] Jonathan Q5_K_M Vision 96K Recommended Production runtime loaded and verified.' -ForegroundColor Green
 }
 
 function Install-DesktopShortcut {
@@ -173,7 +174,7 @@ function Install-DesktopShortcut {
     $shortcut = $shell.CreateShortcut($shortcutPath)
     $shortcut.TargetPath = $launcherBat
     $shortcut.WorkingDirectory = $scriptDirectory
-    $shortcut.Description = 'Load Jonathan Q5_K_M Vision at 96K with managed MTP-OFF settings, then start Goose with an isolated Candidate profile.'
+    $shortcut.Description = 'Load the Jonathan Q5_K_M Vision 96K Recommended Production profile, then start Goose with isolated client limits.'
     $shortcut.IconLocation = "$($gooseDesktop.TargetPath),0"
     $shortcut.Save()
     Write-Host "[OK] Desktop shortcut installed: $shortcutPath" -ForegroundColor Green
@@ -217,7 +218,7 @@ function Start-GooseWithCandidateEnvironment {
         throw 'Goose Desktop did not remain running after launch.'
     }
 
-    Write-Host "[OK] Goose Desktop started with Candidate model $identifier." -ForegroundColor Green
+    Write-Host "[OK] Goose Desktop started with Recommended Production model $identifier." -ForegroundColor Green
     Write-Host "[OK] Process-only client limits: context $gooseContextLimit, max output $gooseMaxTokens, compact threshold $gooseCompactThreshold." -ForegroundColor Green
     Write-Host '[INFO] Persistent Goose config was not changed.'
 }
@@ -231,17 +232,17 @@ if (-not (Test-Path -LiteralPath $managedPreflight -PathType Leaf)) {
 
 $runningGooseProcesses = @(Get-GooseProcesses)
 if ($runningGooseProcesses.Count -gt 0 -and -not $NoLaunch) {
-    throw 'Goose Desktop is already running. Close it completely, then run the Q5KM Vision 96K Candidate shortcut so the process-specific model and context settings can take effect.'
+    throw 'Goose Desktop is already running. Close it completely, then run the Q5KM Vision 96K shortcut so the process-specific model and context settings can take effect.'
 }
 
 $runtimeMatches = Test-CandidateRuntime
 if ($ForceReload -or -not $runtimeMatches) {
     if ($runningGooseProcesses.Count -gt 0) {
-        throw 'Goose Desktop is running and the Candidate runtime requires a reload. Close Goose before changing LM Studio runtime state.'
+        throw 'Goose Desktop is running and the Production runtime requires a reload. Close Goose before changing LM Studio runtime state.'
     }
     Load-CandidateRuntime
 } else {
-    Write-Host '[OK] Jonathan Q5_K_M Vision 96K Candidate runtime is already loaded with managed settings.' -ForegroundColor Green
+    Write-Host '[OK] Jonathan Q5_K_M Vision 96K Recommended Production runtime is already loaded with managed settings.' -ForegroundColor Green
 }
 
 if ($InstallDesktopShortcut) {
@@ -249,7 +250,7 @@ if ($InstallDesktopShortcut) {
 }
 
 if ($NoLaunch) {
-    Write-Host '[OK] Candidate preflight completed; Goose Desktop launch was skipped.' -ForegroundColor Green
+    Write-Host '[OK] Recommended Production preflight completed; Goose Desktop launch was skipped.' -ForegroundColor Green
     exit 0
 }
 

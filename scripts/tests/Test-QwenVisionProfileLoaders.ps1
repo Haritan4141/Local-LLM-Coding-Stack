@@ -20,6 +20,7 @@ function Assert-Contains {
 }
 
 $mainRoot = 'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision'
+$mainQ5Root = 'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision'
 $blueRoot = 'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision'
 $blueQ5Root = 'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q5KM-Vision'
 $requiredPaths = @(
@@ -27,6 +28,8 @@ $requiredPaths = @(
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat",
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_Coding-Fast.bat",
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat",
+    "$mainQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K.bat",
+    "$mainQ5Root/Start-Goose-Jonathan-Q5KM-Vision96K-Candidate.ps1",
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W.bat",
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced.bat",
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced.ps1",
@@ -53,7 +56,13 @@ foreach ($relativePath in $requiredPaths) {
 
 $mainBalanced = Get-Content -LiteralPath (Get-RepoPath "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat") -Raw
 $mainCodingFast = Get-Content -LiteralPath (Get-RepoPath "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_Coding-Fast.bat") -Raw
+$mainQ5Recommended = Get-Content -LiteralPath (Get-RepoPath "$mainQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K.bat") -Raw
 foreach ($check in @(
+    @{ Text = $mainQ5Recommended; Pattern = '--context 98304 --mtp on --mtp-draft 3'; Description = 'RTX5090 Q5 Recommended 96K/MTP3' },
+    @{ Text = $mainQ5Recommended; Pattern = '--kv-k q8_0 --kv-v q8_0'; Description = 'RTX5090 Q5 Recommended Q8/Q8' },
+    @{ Text = $mainQ5Recommended; Pattern = '--eval-batch 1024'; Description = 'RTX5090 Q5 Recommended batch1024' },
+    @{ Text = $mainQ5Recommended; Pattern = '--mmap on --keep-model-in-memory on'; Description = 'RTX5090 Q5 Recommended mmap/mlock behavior' },
+    @{ Text = $mainQ5Recommended; Pattern = 'Test-ManagedModel\.mjs.*--vision-required on'; Description = 'RTX5090 Q5 Recommended post-load Vision preflight' },
     @{ Text = $mainBalanced; Pattern = '--mtp-draft 4'; Description = 'RTX5090 Balanced MTP4' },
     @{ Text = $mainBalanced; Pattern = '--kv-k q8_0 --kv-v q8_0'; Description = 'RTX5090 Balanced Q8/Q8' },
     @{ Text = $mainBalanced; Pattern = '--eval-batch 2048'; Description = 'RTX5090 Balanced batch2048' },
@@ -65,6 +74,7 @@ foreach ($check in @(
 }
 
 $mainProfile = Get-Content -LiteralPath (Get-RepoPath 'configs/candidates/jonathan-q6k-vision.json') -Raw | ConvertFrom-Json
+$mainQ5Profile = Get-Content -LiteralPath (Get-RepoPath 'configs/candidates/jonathan-q5km-vision.json') -Raw | ConvertFrom-Json
 $blueProfile = Get-Content -LiteralPath (Get-RepoPath 'configs/candidates/rtx3090-dual-jonathan-q6k-vision.json') -Raw | ConvertFrom-Json
 $blueQ5Profile = Get-Content -LiteralPath (Get-RepoPath 'configs/candidates/rtx3090-dual-jonathan-q5km-vision-96k.json') -Raw | ConvertFrom-Json
 $nodeProfile = Get-Content -LiteralPath (Get-RepoPath 'profiles/RTX3090-Remote/node.json') -Raw | ConvertFrom-Json
@@ -73,6 +83,21 @@ if ($mainProfile.status -ne 'Candidate' -or $mainProfile.operational_profiles.re
     $mainProfile.operational_profiles.balanced.mtp_max_draft_tokens -ne 4 -or
     $mainProfile.operational_profiles.coding_fast.kv_cache -ne 'Q4_0/Q4_0') {
     $failures.Add('RTX5090 management profile does not preserve Candidate lifecycle and Safe/Balanced/Coding-Fast metadata.')
+}
+if ($mainQ5Profile.status -ne 'Candidate' -or
+    $mainQ5Profile.operational_role -ne 'Recommended Production' -or
+    $mainQ5Profile.effective_settings.context_tokens -ne 98304 -or
+    $mainQ5Profile.effective_settings.kv_cache.k -ne 'Q8_0' -or
+    $mainQ5Profile.effective_settings.kv_cache.v -ne 'Q8_0' -or
+    $mainQ5Profile.effective_settings.mtp.enabled -ne $true -or
+    $mainQ5Profile.effective_settings.mtp.max_draft_tokens -ne 3 -or
+    $mainQ5Profile.effective_settings.eval_batch_size -ne 1024 -or
+    $mainQ5Profile.effective_settings.effective_ubatch_size -ne 512 -or
+    $mainQ5Profile.effective_settings.mmap -ne $true -or
+    $mainQ5Profile.effective_settings.mlock -ne $true -or
+    $mainQ5Profile.effective_settings.power_limit_w -ne 402 -or
+    $mainQ5Profile.final_quality_gate.result -ne 'PASS') {
+    $failures.Add('RTX5090 Q5_K_M management profile does not preserve Candidate lifecycle and the qualified 96K Production settings.')
 }
 if ($blueProfile.status -ne 'Candidate' -or $blueProfile.operational_profiles.recommended -ne 'Balanced' -or
     $blueProfile.operational_profiles.safe.eval_batch_size -ne 512 -or
@@ -127,8 +152,9 @@ foreach ($check in @(
 
 $selectorExpectations = @{
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat" = @(
-        'Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat',
+        '..\Qwen3.8-JonathanColetti-Q5KM-Vision\Qwen3.8-JonathanColetti-Q5KM-Vision_96K.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat',
+        'Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_Coding-Fast.bat'
     )
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat" = @(
@@ -163,6 +189,7 @@ foreach ($entry in $selectorExpectations.GetEnumerator()) {
 }
 
 $powerShellFiles = @(
+    Get-Item -LiteralPath (Get-RepoPath "$mainQ5Root/Start-Goose-Jonathan-Q5KM-Vision96K-Candidate.ps1")
     Get-ChildItem -LiteralPath (Get-RepoPath $blueRoot) -File -Filter '*.ps1'
     Get-ChildItem -LiteralPath (Get-RepoPath $blueQ5Root) -File -Filter '*.ps1'
 )

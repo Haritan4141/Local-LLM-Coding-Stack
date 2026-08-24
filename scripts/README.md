@@ -6,7 +6,7 @@
 
 ## LM Studio model loaders
 
-loaderは `lmstudio/model-loaders/<GPU>/<Model-Variant-Quantization>/` のモデル別ディレクトリに置きます。RTX5090 Currentは`Qwen3.8-JonathanColetti-Q6K/`、同じQ6_Kへ公式projectorを追加するVision profileは`Qwen3.8-JonathanColetti-Q6K-Vision/`、低VRAM 96K Candidateは`Qwen3.8-JonathanColetti-Q5KM-Vision/`、Candidate Q6_K_Pは`Qwen3.8-HauhauCS-Aggressive-Q6KP/`、Q5_K_P fallbackは`Qwen3.8-HauhauCS-Aggressive-Q5KP/`です。RTX3090 Remote NodeはQ6_K Vision operational profilesを`RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/`、fallback/optional modelsをそれぞれ別ディレクトリへ分離します。Safe/Balanced/Coding-Fast selectorは個別loaderをCALLするだけで、設定ロジックを持ちません。共通設定と`lms unload --all`の副作用は各モデルディレクトリのREADMEを確認してください。
+loaderは `lmstudio/model-loaders/<GPU>/<Model-Variant-Quantization>/` のモデル別ディレクトリに置きます。RTX5090 Currentは`Qwen3.8-JonathanColetti-Q6K/`、Q6 Vision Reference/Safe/Coding-Fastは`Qwen3.8-JonathanColetti-Q6K-Vision/`、Q5_K_M Vision 96K Recommended Productionは`Qwen3.8-JonathanColetti-Q5KM-Vision/`、Candidate Q6_K_Pは`Qwen3.8-HauhauCS-Aggressive-Q6KP/`、Q5_K_P fallbackは`Qwen3.8-HauhauCS-Aggressive-Q5KP/`です。Selectorは個別loaderをCALLするだけで、設定ロジックを持ちません。共通設定と`lms unload --all`の副作用は各モデルディレクトリのREADMEを確認してください。
 
 ## New-BenchmarkRecord.ps1
 
@@ -104,9 +104,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File `
 
 通常運用はデスクトップの`Goose Vision 64K`を使用します。`-NoLaunch`はpreflightだけ、`-InstallDesktopShortcut`はショートカット作成、`-ForceReload`は推論中でないことを確認した上で再ロードする保守用です。
 
-## Goose Q5_K_M Vision 96K Candidate one-click startup
+## Goose Q5_K_M Vision 96K Recommended Production one-click startup
 
-`lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision/Start-Goose-Jonathan-Q5KM-Vision96K-Candidate.ps1`は、Q5_K_M Vision / 96K / Q8_0 / MTP OFF / parallel 1をpreflightし、Goose子プロセス限定で90,112-token client limitを渡します。永続Goose configと既存Q6_K 64K shortcutは変更しません。
+互換性のため既存名を保持する`lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision/Start-Goose-Jonathan-Q5KM-Vision96K-Candidate.ps1`は、Q5_K_M Vision / 96K / Q8_0 / MTP3 / batch1024 / effective ubatch512 / mmap+mlock / parallel 1をpreflightし、Goose子プロセス限定で90,112-token client limitを渡します。永続Goose configと既存Q6_K 64K shortcutは変更しません。
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File `
@@ -114,7 +114,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File `
   -NoLaunch -InstallDesktopShortcut
 ```
 
-通常利用はデスクトップの`Goose Q5KM Vision 96K Candidate`を使います。process-specific設定を確実に反映するため、実行前にGoose Desktopを完全終了してください。起動中は全`Goose` processを検知してruntime変更前に停止します。
+通常利用は互換名`Goose Q5KM Vision 96K Candidate`のデスクトップshortcutを使います。process-specific設定を確実に反映するため、実行前にGoose Desktopを完全終了してください。起動中は全`Goose` processを検知してruntime変更前に停止します。
 
 ## Goose persistent profile selectors
 

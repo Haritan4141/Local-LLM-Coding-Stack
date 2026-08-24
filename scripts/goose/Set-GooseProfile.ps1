@@ -14,7 +14,7 @@ $ErrorActionPreference = 'Stop'
 
 $profileDefinitions = @{
     'Q5KM-Vision96K' = [ordered]@{
-        DisplayName = 'Jonathan Q5_K_M Vision 96K Candidate'
+        DisplayName = 'Jonathan Q5_K_M Vision 96K Recommended Production (Candidate lifecycle)'
         Model = 'qwen3.8-27b-uncensored-vision-q5km'
         ContextLimit = '90112'
         MaxTokens = '16384'
@@ -22,7 +22,7 @@ $profileDefinitions = @{
         BackupSlug = 'q5km-vision96k'
     }
     'Q6K-Vision64K' = [ordered]@{
-        DisplayName = 'Jonathan Q6_K Vision 64K Operational Default'
+        DisplayName = 'Jonathan Q6_K Vision 64K Safe fallback'
         Model = 'qwen3.8-27b-uncensored-vision'
         ContextLimit = '64512'
         MaxTokens = '32768'

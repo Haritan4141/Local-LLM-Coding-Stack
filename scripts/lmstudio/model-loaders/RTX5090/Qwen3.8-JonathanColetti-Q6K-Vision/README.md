@@ -23,10 +23,10 @@ RTX 5090 32 GBでCurrentのJonathanColetti Q6_K本体を共有し、公式Vision
 | Operational profile / BAT | Context | MTP | KV | Eval / effective ubatch | Intended use |
 |---|---:|---:|---|---:|---|
 | Safe — `Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat` | 65,536 | 2 | Q8_0/Q8_0 | 2048 / 512 | permanent known-good rollback; existing loader unchanged |
-| **Balanced** — `Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat` | 65,536 | 4 | Q8_0/Q8_0 | 2048 / 512 | **Operational Recommended** |
+| **Balanced** — `Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat` | 65,536 | 4 | Q8_0/Q8_0 | 2048 / 512 | **Quality / Performance Reference** |
 | Coding-Fast — `Qwen3.8-JonathanColetti-Q6K-Vision_64K_Coding-Fast.bat` | 65,536 | 4 | Q4_0/Q4_0 | 2048 / 512 | explicit coding-speed selection only |
 
-All three use API ID `qwen3.8-27b-uncensored-vision`, Flash Attention ON, full offload, mmap/mlock behavior matching Safe, parallel 1, Vision true, and RTX5090 402W. `Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat` only CALLs these individual loaders; `[0]` exits without changing runtime state.
+All three use API ID `qwen3.8-27b-uncensored-vision`, Flash Attention ON, full offload, mmap/mlock behavior matching Safe, parallel 1, Vision true, and RTX5090 402W. Q6 is not deprecated: Balanced remains the Quality/Performance Reference, Safe remains the permanent known-good fallback, and Coding-Fast remains explicit-only. `Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat` lists Q5 96K Recommended first, then CALLs these existing Q6 loaders without embedding runtime logic; `[0]` exits without changing runtime state.
 
 The older context-specific presets remain available:
 
@@ -41,7 +41,7 @@ The older context-specific presets remain available:
 
 RTX5090のgoose Desktopは64K Vision profileをapp-global既定runtimeとして使用します。デスクトップの`Goose Vision 64K`、または`Start-Goose-Jonathan-Vision64K.bat`を起動してください。
 
-この既存one-click startupは既知GoodのSafe（MTP2/Q8）preflightを維持します。Operational RecommendedのBalanced、またはCoding-Fastを使う場合はProfile Selectorで明示的にloadし、新しいtaskを開始してください。
+この既存one-click startupは既知GoodのSafe（MTP2/Q8）preflightを維持します。Q5 Recommended Production、Q6 Balanced Reference、またはCoding-Fastを使う場合はProfile Selectorで明示的にloadし、新しいtaskを開始してください。
 
 launcherは次を行います。
 
