@@ -1,6 +1,6 @@
-# RTX3090 Remote LLM Node
+# BLUE Remote LLM Node
 
-メインPCのVS Code / Zoo Codeから家庭内LAN経由で利用する独立LM Studio nodeです。RTX5090 localhost環境とは別のBase URLとAPI identifierを使用します。
+MAINのVS Code / Kilo Code / Zoo Code等から家庭内LAN経由で利用する独立LM Studio nodeです。RTX5090 localhost環境とは別のBase URLとAPI identifierを使用します。BLUEのOperational Defaultはrepository-wide Currentを増やしません。
 
 ## Identity
 
@@ -9,83 +9,89 @@
 | COMPUTERNAME | `DESKTOP-L9HAM1G` |
 | IP | `192.168.0.104` |
 | SSH Alias | `pc5700x` |
-| GPU | NVIDIA GeForce RTX 3090 24,576 MiB + RTX 3060 12,288 MiB |
-| GPU links | RTX 3090 Gen3 x16; RTX 3060 Gen3 x4 |
-| Total physical VRAM | 36,864 MiB |
+| GPU | RTX 3090 24,576 MiB + RTX 3060 12,288 MiB |
+| GPU links | RTX3090 Gen3 x16; RTX3060 Gen3 x4 |
+| Total physical VRAM | 36,864 MiB; independent devices, not pooled |
+| Power Limit | RTX3090 370W / RTX3060 170W; current standard, loaders never change it |
 | RAM | 31.93 GiB |
 | NVIDIA driver | 591.86 |
-| LM Studio | 0.4.21.0 / CLI commit `71bd99c` |
-| Model storage | LM Studio外部領域。リポジトリには保存しない |
+| LM Studio | 0.4.21.0 / CLI `71bd99c` |
 | LAN URL | `http://192.168.0.104:1234` |
+| Model storage | LM Studio external data only; never Git |
 
-## Phase 1 baseline
+接続またはruntime変更前に`pc5700x`、`192.168.0.104`、`DESKTOP-L9HAM1G`を照合します。
 
-- SSH alias、IP、hostnameの3点照合に成功。
-- LM Studio serverは起動中だが`127.0.0.1:1234`だけで待受。
-- メインPCからTCP 1234は到達不可。
-- NetworkCategoryはPrivate。TCP 1234の既存Firewall ruleは0件。
-- ロード中LLMはなし。既存モデルはNomic Embed Text Q4_K_Mのみ。
-- C:空き容量は992.64 GiB。
+## LAN server boundary
 
-## LAN server
+- LM Studioは`0.0.0.0:1234`で待受し、MAINからAPI到達確認済みです。
+- Firewall rule: `Local-LLM-LMStudio-In-TCP-1234-Private-LocalSubnet`
+- Scope: Inbound / Allow / TCP 1234 / Private / LocalSubnet / Edge Traversal Block / LM Studio executable。
+- Backup: `C:\Users\Atsuki\Codex-RTX3090-Setup\firewall-before-lmstudio-20260820-114203.wfw`
+- 今回の64K採用ではFirewall、server bind、driver、Power Limit、BIOS、LM Studio global GPU設定を変更していません。
 
-- LM Studio serverは`0.0.0.0:1234`で待受し、メインPCから`GET /v1/models`へ到達確認済み。
-- Windows Firewall rule: `Local-LLM-LMStudio-In-TCP-1234-Private-LocalSubnet`
-- Scope: Inbound / Allow / TCP 1234 / Private / LocalSubnet / Edge Traversal Block / LM Studio実行ファイル限定。
-- 変更前Firewall backup: `C:\Users\Atsuki\Codex-RTX3090-Setup\firewall-before-lmstudio-20260820-114203.wfw`
-- Public profileまたはRemoteAddress AnyでTCP 1234を許可する規則は追加していない。
+## Operational Default
 
-## Managed models
+| Item | Value |
+|---|---|
+| Model | JonathanColetti Qwen3.8 27B Uncensored Q6_K + F16 Vision projector |
+| Model key | `qwen3.8-27b-uncensored@q6_k` |
+| API identifier | `qwen3.8-27b-uncensored-vision-blue` |
+| Context | 65,536 |
+| KV | Q8_0/Q8_0; GPU offload ON |
+| GPU split | `priorityOrder`: RTX3090 → RTX3060; runtime ID is resolved by name |
+| Other | full offload, Flash Attention ON, mmap OFF, keep in memory ON |
+| MTP / concurrency | MTP ON / draft 2 / parallel 1 |
+| Role | Coding, Agent, Vision, single-user long context |
 
-| Role | Model | Quant | API identifier | Default context | Vision |
-|---|---|---|---|---:|---|
-| **Remote coding default** | JonathanColetti Qwen3.8 27B Uncensored | Q4_K_M | `qwen3.8-27b-uncensored@q4_k_m` | 32,768 | separate F16 projector; direct API 7/7 |
-| Optional Candidate | HauhauCS Aggressive | Q4_K_P | `qwen3.8-27b-uncensored-hauhaucs-aggressive-mtp` | 32,768 | separate BF16 projector; direct API 7/7 |
+64K Q8はShared 3.281 GiBでStrict PASSし、Shared gate margin 0.719 GiB、Dedicated headroomはRTX3090 6,709 MiB + RTX3060 3,011 MiBです。80K/84K/88KもPASSしましたが、Shared gate marginが0.469/0.407/0.343 GiBまで縮むため、最大Contextより常用余裕を優先しました。96K Q8はShared 5.021 GiB、128K Q8は8.065 GiB、128K F16は15.044 GiBでFAILです。
 
-64Kは両モデルで3回生成を完了しましたが、idle VRAM余裕はJonathan約3.2 GiB、HauhauCS約2.1 GiBです。単独の長context作業だけに限定します。96KはQ8 KVで安全余裕が不足すると判断し、ロードもloader作成も行っていません。
+同じ64KのF16は速度が同等で、Q8よりDedicated headroomが1,494 MiB少ないため採用しません。
 
-## Results
+## Managed startup
+
+- BLUE local: `scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat`
+- MAIN remote one-click: 同ディレクトリの`Qwen3.8-JonathanColetti-Q6K-Vision_64K_REMOTE.bat`
+
+local loaderはidentity、IP、GPU、model、Vision、active prediction、370W/170Wを確認してからidle modelを解除します。ロード後にeffective settings、Vision、両GPUの利用、Power Limitを再監査します。REMOTE launcherはMAINのLM Studioを変更しません。
+
+2026-08-24のlocal/REMOTE両テストはPASSし、BLUEには対象1件がIDLE、64K、parallel 1でロード済みです。
+
+## Client profiles
+
+Kilo Code 7.4.22へ次の選択肢を追加し、既存localhost modelを既定のまま維持しました。
+
+| Profile | Context | Output | Vision / tools |
+|---|---:|---:|---|
+| `openai-compatible/blue-jonathan-vision-64k-standard16k` | 65,536 | 16,384 | enabled |
+| `openai-compatible/blue-jonathan-vision-64k-long32k` | 65,536 | 32,768 | enabled |
+
+Long32Kのnative API実測は30,803 output tokensで自然完了しました。さらにKilo Code実経路でも最初のgeneration stepが29,001 output tokensまで到達し、16K client limitで停止しないことを確認しました。Kiloは終了後に自動継続/要約ターンへ入るため、長大な定型出力では追加ターンに注意します。Gooseは単一active profile方式なので今回変更していません。Zoo Codeは正式な保存profile schemaがrepositoryにないため、UIからBase URLとnatural IDを指定する作業をpendingとします。
+
+## Fallback and optional models
+
+| Role | Model | Quant | API identifier | Context |
+|---|---|---|---|---:|
+| Fallback | JonathanColetti Qwen3.8 27B | Q4_K_M | `qwen3.8-27b-uncensored@q4_k_m` | 32K default / 64K solo |
+| Optional Candidate | HauhauCS Aggressive | Q4_K_P | `qwen3.8-27b-uncensored-hauhaucs-aggressive-mtp` | 32K default / 64K solo |
+
+既存Q4_K_M loaderは削除・上書きしていません。Q4_K_M 32Kは、3060を空けたい場合やQ6_K Visionで問題が出た場合のfallbackです。
+
+2026-08-24に拡張managed loaderとの後方互換性を実機確認し、Q4_K_M 32KのQ8_0/Q8_0、full offload、MTP draft 2、parallel 1がPASSしました。確認後はQ6_K Vision 64KをREMOTE launcherで復帰・再監査しています。
+
+## Legacy Q4 results
 
 | Model / context / MTP | Generation median | Peak VRAM | MTP acceptance | Result |
 |---|---:|---:|---:|---|
-| Jonathan Q4_K_M / 32K / ON | 36.31 tok/s | 19,737 MiB | 578/782 = 73.91% | stable; recommended |
-| Jonathan Q4_K_M / 32K / OFF | 33.37 tok/s | 18,902 MiB | n/a | stable; ON is 8.8% faster |
-| Jonathan Q4_K_M / 64K / ON | 35.88 tok/s | 21,106 MiB | not sampled | stable; solo use |
-| HauhauCS Q4_K_P / 32K / ON | 35.47 tok/s | 20,867 MiB | 546/750 = 72.80% | stable Candidate |
-| HauhauCS Q4_K_P / 32K / OFF | 31.86 tok/s | 19,932 MiB | n/a | stable; ON is 11.3% faster |
-| HauhauCS Q4_K_P / 64K / ON | 36.28 tok/s | 22,156 MiB | not sampled | stable; narrow margin |
+| Jonathan Q4_K_M / 32K / ON | 36.31 tok/s | 19,737 MiB | 73.91% | stable fallback |
+| Jonathan Q4_K_M / 64K / ON | 35.88 tok/s | 21,106 MiB | not sampled | solo use |
+| HauhauCS Q4_K_P / 32K / ON | 35.47 tok/s | 20,867 MiB | 72.80% | optional Candidate |
+| HauhauCS Q4_K_P / 64K / ON | 36.28 tok/s | 22,156 MiB | not sampled | narrow margin |
 
-15,478-token promptの中央値はJonathan 905.17 prompt tok/s、HauhauCS 897.60 prompt tok/sで実質同等です。Direct Tool Callingは両方pass、Direct Visionも各projectorで両方7/7でした。Reasoning Budget 8,192は両方とも上限を使い切り、usable final answerへ到達しませんでした。
+Both passed direct Tool Calling and direct Vision 7/7. HauhauCS entered a Zoo Code image/tool loop, so it was not selected.
 
-## Dual-GPU Jonathan Q6_K Vision capacity evaluation
+## Evidence
 
-2026-08-23に、現在のBLUE構成であるRTX 3090 + RTX 3060を実機照合し、Jonathan Vision Q6_Kをcontext 8,192、F16/F16 KV、mmap OFF、parallel 1でRTX5090と比較しました。既存のQ4_K_M / 32K Remote coding defaultは変更していません。
-
-| Configuration / workload | MTP | Median generation | Classification |
-|---|---:|---:|---|
-| RTX 3090 only / Text | OFF | 4.22 tok/s | `PARTIAL_OFFLOAD` |
-| RTX 3090 only / Text | ON | 6.99 tok/s | `PARTIAL_OFFLOAD` |
-| RTX 3090 only / Vision | OFF | 4.22 tok/s | `PARTIAL_OFFLOAD` |
-| RTX 3090 only / Vision | ON | 8.61 tok/s | `PARTIAL_OFFLOAD` |
-| RTX 3090+3060 / Text | OFF | 22.52 tok/s | `STRICT_GPU_ONLY` |
-| RTX 3090+3060 / Text | ON | 27.20 tok/s | `STRICT_GPU_ONLY` |
-| RTX 3090+3060 / Vision | OFF | 22.38 tok/s | `STRICT_GPU_ONLY` |
-| RTX 3090+3060 / Vision | ON | 34.03 tok/s | `STRICT_GPU_ONLY` |
-
-RTX 3090単独は8,192、4,096、2,048のすべてで約5.7–6.3 GiBをShared GPU Memoryへ退避し、strict GPU-onlyになりませんでした。2GPUでは本体+projectorがdedicated-residentとなり、3060は正式run中に約5.6–6.3 GiB、平均38–47%利用、約95–99 Wを使用しました。Visionは両構成・MTP両条件の全runで固定画像を正しく認識しています。
-
-36 GB構成はQ6_K Visionの容量面で有効ですが、RTX5090はdualより2.27–2.53倍高速です。BLUEの普段使いは引き続きJonathan Q4_K_M / 32Kとし、Q6_K Vision dualは品質優先の明示的な評価・実行用途に限定します。詳細は`benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md`を参照してください。評価後はLM Studioロード済みモデル0件です。
-
-Zoo Codeの同一multi-file fixtureは両モデルとも5/10から10/10へ修正し、read/command/edit/createを完遂しました。HauhauCSはcorrected 32K load後約320秒です。Jonathanも完遂しましたが、途中で旧HauhauCS会話が8K/parallel 4モデルを暗黙ロードしてVRAMを圧迫したため、所要時間は比較値に採用しません。
-
-Zoo Code Code modeでHauhauCSへPNGを添付する経路は成立しましたが、画像へ答えずdirectory/README tool callを反復したため129秒で停止しました。Direct API Vision 7/7との切り分けから、projector不良ではなくZoo Codeの画像＋agent tool loop相互作用として記録します。
-
-## Zoo Code operation
-
-- 保存profile: `RTX3090 Jonathan Q4KM`、`RTX3090 Hauhau Q4KP`
-- 評価後のactive profile: `default`（RTX5090 localhost Current）
-- profileのmodel IDにはloaderと同じnatural identifierを選ぶ。indexed repository pathを選ぶと、LM Studioが既定8Kで別instanceを暗黙ロードすることがある。
-- profile切替後は旧会話を再開せず、`lms ps`で単一モデル、意図したcontext、`PARALLEL 1`を確認する。
-- 3090側の通常終了状態はJonathan Q4_K_M / 32K / Q8 KV / embedded MTP ON。
-
-全結果: `benchmarks/results/2026-08-20-rtx3090-remote-node.md`
+- Operational selection: `benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md`
+- Shared GPU Memory investigation: `research/2026-08-24-blue-shared-gpu-memory-investigation.md`
+- Cross-hardware comparison: `benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md`
+- Legacy Q4 comparison: `benchmarks/results/2026-08-20-rtx3090-remote-node.md`

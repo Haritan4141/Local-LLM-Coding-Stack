@@ -6,6 +6,7 @@
 
 ```text
 RTX3090/
+  Qwen3.8-JonathanColetti-Q6K-Vision/
   Qwen3.8-JonathanColetti-Q4KM/
   Qwen3.8-HauhauCS-Aggressive-Q4KP/
 ```
@@ -20,6 +21,8 @@ RTX3090/
 - Zoo Code Base URLは`http://192.168.0.104:1234`です。
 - API identifierはモデルごとに一意にし、RTX5090 localhost CurrentのIDを流用しません。Zoo Codeが既定8Kの別instanceを暗黙ロードしないよう、loaderとprofileで同じnatural identifierを使用します。
 
-各BATはnode外部の公式SDK環境に配置したmanaged loaderを使い、Q8_0/Q8_0、Flash Attention ON、KV GPU offload ON、parallel 1、embedded MTP max draft 2を明示します。`lms load` CLI単独ではK/V cache量子化を指定できないためです。ロード後は`lms ps`で単一モデル、意図したcontext、`PARALLEL 1`を確認してください。
+各BATはnode外部の公式SDK環境に配置したmanaged loaderを使い、Q8_0/Q8_0、Flash Attention ON、KV GPU offload ON、parallel 1、embedded MTP max draft 2を明示します。`lms load` CLI単独ではK/V cache量子化を指定できないためです。Q6_K Vision 64K loaderはさらにmmap OFFとRTX3090→RTX3060の正式なper-load `priorityOrder`を監査します。runtime device IDは固定せずGPU名から解決します。
 
-32Kを通常値、64Kを単独長context用とします。96Kは24GBで安全余裕が不足するため作成していません。評価後の推奨はJonathan Q4_K_M 32Kです。
+BLUE Operational DefaultはJonathan Q6_K Vision / 64K / Q8_0 / dual GPUです。Jonathan Q4_K_M 32Kはfallbackとして保持します。Q6_K Q8は80K～88Kもcapacity gateを通過しましたが安全余裕を優先し、96K/128KはShared gate FAILのためloaderを作成しません。
+
+Q6_K Vision loaderはRTX3090 Power Limit 370WとRTX3060 170Wをロード前後に読み取り検査し、変更しません。MAINからは同ディレクトリの`_REMOTE.bat`を使い、SSH Alias、hostname、IPv4を照合して起動できます。

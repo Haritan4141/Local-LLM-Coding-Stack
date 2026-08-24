@@ -6,6 +6,10 @@
 
 ### Added
 
+- BLUE Operational DefaultとしてJonathan Q6_K Vision / 64K / Q8_0 / RTX3090→RTX3060 priorityOrder / MTP 2 / parallel 1を採用。identity、370W/170W、Vision、effective load config、両GPU利用を監査するlocal loaderと、MAINからのSSH one-click launcherを追加・実機検証。
+- Q8 capacityを64K/72K/80K/84K/88K/96K/128K、F16を64K/128Kで測定。80K～88KはPASSしたが安全余裕を優先し、96K/128KはShared gate FAILとして除外。Standard16KとLong32K（30,803 output tokens自然完了）、Vision 7/7を`benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md`へ記録。
+- Kilo Codeへ既存localhost defaultを変えずBLUE Standard16K / Long32K provider aliasesを追加。Kilo 7.4.22のmodel listingに加え、Long32K実経路で29,001 output tokensのgeneration stepを完了し、16K client limitがないことを確認。完了後の自動継続/要約ターンも注意事項として記録。
+- 88K→96KのShared GPU Memory不連続増加を読み取り監査。per-GPU FB/BAR1/WDDM counters、P2P不可、auto-fit警告、bufferログの限界、Sysmem Fallbackの未確認点を`Observed / Inferred / Unknown`で`research/2026-08-24-blue-shared-gpu-memory-investigation.md`へ記録。
 - Jonathan Vision Q6_KをRTX5090、RTX3090単独、RTX3090+RTX3060で同一native API・8K・F16 KV・mmap OFF条件により36正式run比較。raw成果物はリポジトリ外へ保持し、curated結果を`benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md`へ追加。
 - BLUEの現在ハードウェアをRTX3090 24GB + RTX3060 12GBへ同期し、3090 Gen3 x16 / 3060 Gen3 x4、合計36GB、GPU別VRAM・利用率・電力・温度をnode profileへ記録。
 - 再生成可能な標準ライブラリのみのbenchmark harnessを外部作業ディレクトリへ配置し、Text/Vision、MTP OFF/ON、capacity strict判定、MTP acceptance、TTFT、prompt速度、1秒GPU/RAM telemetry、JSON/CSV/Markdown集計を保存。
@@ -33,18 +37,23 @@
 
 ### Decision
 
-- RTX3090単独はcontext 8192/4096/2048の全条件でShared GPU Memoryへ約5.7–6.3 GiB退避するため、Jonathan Vision Q6_Kのstrict GPU-only構成として不採用。RTX3090+3060は8K strict GPU-onlyを満たし、品質優先のBLUE Vision用途に有効だが、既存Jonathan Q4_K_M / 32K Remote coding defaultは維持する。
+- BLUEはJonathan Q6_K Vision / 64K / Q8_0 / dual GPUをOperational Defaultとし、Jonathan Q4_K_M / 32Kをfallbackへ変更。repository-wide CurrentはRTX5090 Jonathan Q6_K textの1件だけを維持する。
+- 80K～88Kは最大値探索の証拠として保持するが、Shared gate marginが0.469～0.343 GiBしかないため常用しない。96K Q8のShared 5.021 GiB、128K Q8 8.065 GiB、128K F16 15.044 GiBを理由にOperational loaderを作成しない。
+- 64K F16はQ8と同速でDedicated headroomが1,494 MiB少ないため、Q8_0を採用する。
+- 2026-08-23時点では、RTX3090単独がcontext 8192/4096/2048の全条件でShared GPU Memoryへ約5.7–6.3 GiB退避するため、Jonathan Vision Q6_Kのstrict GPU-only構成として不採用。RTX3090+3060は8K strict GPU-onlyを満たし、品質優先のBLUE Vision用途に有効と判断し、当時のJonathan Q4_K_M / 32K defaultを維持した。2026-08-24の64K capacity評価で上記Operational Default判断へ更新。
 - RTX5090はstrict dual GPUよりText/Visionで2.27–2.53倍高速。RTX3060追加は3090単独partialより3.89–5.34倍高速化し、Q6_K+projectorをdedicated-residentにする容量上の価値がある。これを理由にCurrentや標準LM Studio設定は変更しない。
 - Jonathan Q6_K text-onlyを唯一のCurrentとして維持する。Visionは同一Q6_Kの明示切替Candidate/runtime profileとして扱い、通常は64Kを推奨、96Kは他のGPU負荷を止めた長context用途に限定する。
 - RTX5090のgoose DesktopだけはJonathan Q6_K Vision 64Kをapp-global既定runtimeとして常用する。これはclient固有のOperational Defaultであり、Vision profileのCurrent昇格ではない。
 - HauhauCS Aggressive Q6_K_P/Q5_K_PはCurrentへ昇格しない。
 - Visionは実用上の利点だが、Q6_K_Pの64K/96K VRAM不足、Q5_K_Pの速度低下、Candidate embedded MTPの逆効果、Reasoning 8192の最終回答未到達を優先して判断。
 - JonathanColetti Q6_KをCurrentとして維持し、将来のBalanced版を待つ。
-- RTX3090ではJonathan Q4_K_M / 32KをRemote coding defaultとする。64Kは単独長context作業だけに使い、96Kは安全余裕不足のためloaderを作成しない。
+- RTX3090の旧Jonathan Q4_K_M / 32K defaultは、2026-08-24以降BLUE fallbackとして保持する。
 - RTX3090 HauhauCS Q4_K_Pはoptional Candidateとして保持する。direct API Visionは7/7だがZoo Code Code modeの画像経路はtool loopとなるため、画像認識はLM Studio/direct APIを優先する。
 
 ### Runtime impact
 
+- BLUE external SDKへ後方互換managed loaderを配備し、BLUE local/MAIN remote launcherの両方でQ6_K Vision 64Kをロード。既存Q4_K_M 32K引数でもQ8_0/Q8_0、full offload、MTP draft 2、parallel 1の後方互換監査にPASSし、その後Q6_K Vision 64Kへ復帰。作業終了状態は対象1件がIDLE、context 65,536、parallel 1。Power LimitはRTX3090 370W / RTX3060 170Wのまま、driver、Firewall、BIOS、LM Studio global GPU設定は変更していない。
+- MAINのKilo configへBLUE provider 2件を追加したが、既定modelは`lmstudio/qwen3.8-27b-uncensored`のまま。Goose、Zoo Code、MAIN LM Studio runtimeは変更していない。
 - BLUEへ欠けていたJonathan Q6_K本体だけを既存SSH経路でコピーし、MAIN/BLUEで本体とVision projectorのSHA-256一致を確認。GGUFはGitへ保存していない。benchmarkはper-load GPU splitだけを使用し、global GPU priority、Power Limit、driver、Firewall、SSH/SMBを変更していない。
 - cross-hardware benchmark開始時と終了時はMAIN/BLUEともロード済みLM Studioモデル0件。CurrentのAPI ID、Goose Vision 64K operational default、Zoo Code profileは変更していない。
 - RTX5090 Vision profile検証直後はJonathan Q6_K Vision / 64K / Q8_0 K+V / full GPU offload / embedded MTP 2 / parallel 1をロードしていた。後続のcross-hardware benchmark終了時は上記のとおりアンロード済みで、通常Currentのモデル枠、API ID、loaderは保持している。
@@ -64,6 +73,7 @@
 
 ### Fixed
 
+- BLUE PowerShell 5.1 loaderで`lms ps --json`の配列を平坦化し、status/queued fieldがない未知objectもactiveとして保守的に拒否するよう修正。`processingPrompt`中の検証runに対し、モデルを解除せず`An LM Studio prediction is active or queued`で停止することを実機確認。
 - Windows PowerShell 5.1で`lms ps --json`がモデル未ロード時に返す`[]`をnested object 1件と誤認し、one-click launcherが存在しない`.type`で停止する問題を修正。空配列を0モデルとして扱い、未知のmodel fieldもreload判定前に安全に拒否する。
 
 ## [2026-08-20] - Initial management baseline

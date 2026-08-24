@@ -3,13 +3,14 @@
   "profile_version": 1,
   "profile_id": "candidate-rtx3090-dual-jonathan-q6k-vision",
   "status": "Candidate",
-  "captured_date": "2026-08-23",
+  "captured_date": "2026-08-24",
+  "operational_role": "BLUE Operational Default; independent Remote Node role, not repository Current",
   "stack": {
-    "runtime": "LM Studio",
-    "benchmark_connection": "localhost on the BLUE node over existing SSH administration",
-    "benchmark_base_url": "http://127.0.0.1:1234",
+    "runtime": "LM Studio 0.4.21.0 / CLI 71bd99c",
+    "local_base_url": "http://127.0.0.1:1234",
     "managed_remote_base_url": "http://192.168.0.104:1234",
-    "operational_lan_role": "not activated by this benchmark"
+    "clients": ["Kilo Code", "direct OpenAI-compatible API"],
+    "zoo_code_profile": "pending manual UI profile creation"
   },
   "hardware": {
     "computer_name": "DESKTOP-L9HAM1G",
@@ -20,7 +21,7 @@
         "name": "NVIDIA GeForce RTX 3090",
         "vram_mib": 24576,
         "observed_pcie": "Gen3 x16",
-        "power_limit_w": 259
+        "power_limit_w": 370
       },
       {
         "name": "NVIDIA GeForce RTX 3060",
@@ -28,14 +29,14 @@
         "observed_pcie": "Gen3 x4",
         "power_limit_w": 170
       }
-    ]
+    ],
+    "vram_is_pooled": false
   },
   "model": {
     "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
     "revision": "dee0a3164d9e11bbbebf5b63f52ba99443d14fc3",
     "variant": "Q6_K + vision-f16 projector",
     "file_name": "Qwen3.8-27B-Uncensored-Q6_K.gguf",
-    "external_path": null,
     "size_bytes": 22430999968,
     "sha256": "a50aa1478295b58ee3d93eabe02c17f6d5fcf6cb787fd8a0ab07ac629a46cae6",
     "vision_projector": {
@@ -45,62 +46,109 @@
     },
     "blue_lm_studio_model_key": "qwen3.8-27b-uncensored@q6_k"
   },
-  "api_identifier": "benchmark-jonathan-q6k-vision",
-  "api_identifier_scope": "temporary benchmark identifier only; no permanent Zoo Code or LAN profile was created",
+  "api_identifier": "qwen3.8-27b-uncensored-vision-blue",
   "context_profiles": [
-    {
-      "name": "Controlled benchmark",
-      "context_tokens": 8192,
-      "status": "STRICT_GPU_ONLY with RTX3090+RTX3060; PARTIAL_OFFLOAD with RTX3090 only"
-    },
-    {
-      "name": "RTX3090-only capacity floor",
-      "context_tokens": 2048,
-      "status": "PARTIAL_OFFLOAD; not suitable as a strict Q6_K role"
-    }
+    { "name": "Operational", "context_tokens": 65536, "status": "selected; Strict PASS" },
+    { "name": "Capacity evidence", "context_tokens": 90112, "status": "maximum measured PASS; not operational" },
+    { "name": "Excluded", "context_tokens": 98304, "status": "Shared-memory gate FAIL" },
+    { "name": "Excluded", "context_tokens": 131072, "status": "Q8_0 and F16 Shared-memory gate FAIL" }
   ],
   "effective_settings": {
-    "kv_cache": {
-      "k": "F16",
-      "v": "F16",
-      "quantization": "disabled"
-    },
+    "context_tokens": 65536,
+    "kv_cache": { "k": "Q8_0", "v": "Q8_0" },
     "kv_cache_gpu_offload": true,
     "flash_attention": true,
-    "gpu_offload": {
-      "mode": "max",
-      "strict_validation": "dedicated residency plus shared-memory delta threshold"
+    "gpu_offload": "max",
+    "gpu_split": {
+      "strategy": "priorityOrder",
+      "priority_by_name": ["NVIDIA GeForce RTX 3090", "NVIDIA GeForce RTX 3060"],
+      "runtime_device_ids": "resolved by GPU name on every load"
     },
+    "gpu_strict_vram_cap": false,
     "mmap": false,
     "keep_model_in_memory": true,
     "eval_batch_size": 512,
-    "mtp": {
-      "modes_tested": [false, true],
-      "max_draft_tokens": 2
-    },
-    "reasoning": "off",
-    "temperature": 0,
+    "mtp": { "enabled": true, "max_draft_tokens": 2 },
     "max_concurrent_predictions": 1
   },
-  "evaluation_status": "complete; optional quality-prioritized dual-GPU capacity role; do not replace the Q4_K_M / 32K Remote coding default",
-  "evaluation": {
-    "rtx3090_only": {
-      "classification": "PARTIAL_OFFLOAD",
-      "context_8192_shared_delta_mib": 6480,
-      "text_mtp_off_median_tok_s": 4.218,
-      "text_mtp_on_median_tok_s": 6.994,
-      "vision_mtp_off_median_tok_s": 4.218,
-      "vision_mtp_on_median_tok_s": 8.608
+  "capacity_gate": {
+    "shared_memory_limit_gib": 4.0,
+    "selected_context": {
+      "context_tokens": 65536,
+      "result": "PASS",
+      "shared_gpu_memory_gib": 3.281,
+      "shared_gate_margin_gib": 0.719,
+      "rtx3090_used_mib": 17867,
+      "rtx3090_headroom_mib": 6709,
+      "rtx3060_used_mib": 9277,
+      "rtx3060_headroom_mib": 3011,
+      "total_dedicated_headroom_mib": 9720
     },
-    "rtx3090_rtx3060": {
-      "classification": "STRICT_GPU_ONLY",
-      "context_8192_shared_delta_mib": 2266,
-      "text_mtp_off_median_tok_s": 22.522,
-      "text_mtp_on_median_tok_s": 27.198,
-      "vision_mtp_off_median_tok_s": 22.382,
-      "vision_mtp_on_median_tok_s": 34.034,
-      "vision_formal_runs_correct": "6/6"
+    "context_matrix": [
+      { "context_tokens": 73728, "kv": "Q8_0", "shared_gib": 3.405, "result": "PASS" },
+      { "context_tokens": 81920, "kv": "Q8_0", "shared_gib": 3.531, "result": "PASS" },
+      { "context_tokens": 86016, "kv": "Q8_0", "shared_gib": 3.593, "result": "PASS" },
+      { "context_tokens": 90112, "kv": "Q8_0", "shared_gib": 3.657, "result": "PASS; boundary only" },
+      { "context_tokens": 98304, "kv": "Q8_0", "shared_gib": 5.021, "result": "FAIL" },
+      { "context_tokens": 131072, "kv": "Q8_0", "shared_gib": 8.065, "result": "FAIL" },
+      { "context_tokens": 131072, "kv": "F16", "shared_gib": 15.044, "result": "FAIL" }
+    ],
+    "same_context_kv_comparison": {
+      "context_tokens": 65536,
+      "q8_shared_gib": 3.281,
+      "f16_shared_gib": 3.286,
+      "q8_total_dedicated_headroom_mib": 9720,
+      "f16_total_dedicated_headroom_mib": 8226,
+      "decision": "Q8_0; comparable speed with 1494 MiB more dedicated headroom"
+    }
+  },
+  "performance": {
+    "short_run_64k_q8": {
+      "prompt_processing_tok_s": 128.12,
+      "generation_tok_s": 26.13,
+      "ttft_s": 0.796,
+      "mtp_acceptance_percent": 79.41
     },
-    "result_path": "benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md"
-  }
+    "vision_fixture": {
+      "checks": "7/7",
+      "generation_tok_s": 33.60,
+      "prompt_processing_tok_s": 1087.25,
+      "ttft_s": 0.375,
+      "mtp_acceptance_percent": 90.62
+    }
+  },
+  "output_profiles": [
+    {
+      "name": "Standard16K",
+      "max_output_tokens": 16384,
+      "observed_output_tokens": 16384,
+      "result": "limit honored; fixture intentionally stopped before completion"
+    },
+    {
+      "name": "Long32K",
+      "max_output_tokens": 32768,
+      "observed_output_tokens": 30803,
+      "result": "natural completion; exact 100113-character copy and SHA-256 match"
+    }
+  ],
+  "client_profiles": {
+    "kilo": [
+      "openai-compatible/blue-jonathan-vision-64k-standard16k",
+      "openai-compatible/blue-jonathan-vision-64k-long32k"
+    ],
+    "kilo_long32k_validation": {
+      "observed_output_tokens": 29001,
+      "finish_reason": "length",
+      "result": "PASS; actual Kilo client generation exceeded 16384 tokens",
+      "note": "Kilo opened an automatic continuation/summary turn after the completed long generation"
+    },
+    "goose": "not changed; single active profile does not suit two simultaneous output profiles",
+    "zoo_code": "manual UI profile required; do not invent repository schema"
+  },
+  "fallback_profile_id": "candidate-rtx3090-jonathan-q4km",
+  "evaluation_status": "complete; selected as BLUE Operational Default with Q4_K_M 32K preserved as fallback",
+  "result_paths": [
+    "benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md",
+    "benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md"
+  ]
 }

@@ -20,12 +20,15 @@ $requiredPaths = @(
     'configs/candidates/hauhaucs-qwen38-27b-aggressive-mtp.json',
     'configs/candidates/rtx3090-jonathan-q4km.json',
     'configs/candidates/rtx3090-hauhaucs-aggressive-q4kp.json',
+    'configs/candidates/rtx3090-dual-jonathan-q6k-vision.json',
     'profiles/README.md',
     'profiles/RTX3090-Remote/README.md',
     'profiles/RTX3090-Remote/node.json',
     'benchmarks/results/2026-08-20-rtx3090-remote-node.md',
     'benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md',
+    'benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md',
     'research/jonathan-q6k-vision-2026-08-23.md',
+    'research/2026-08-24-blue-shared-gpu-memory-investigation.md',
     'package.json',
     'package-lock.json',
     'research',
@@ -37,6 +40,11 @@ $requiredPaths = @(
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q4KM/README.md',
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q4KM/Qwen3.8-JonathanColetti-Q4KM_32K.bat',
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q4KM/Qwen3.8-JonathanColetti-Q4KM_64K.bat',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/README.md',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K.ps1',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K_REMOTE.ps1',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K_REMOTE.bat',
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/README.md',
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/Qwen3.8-HauhauCS-Q4KP_32K.bat',
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/Qwen3.8-HauhauCS-Q4KP_64K.bat',
@@ -124,6 +132,11 @@ if ($candidateProfile.Count -ne 1 -or $candidateProfile[0].Status -ne 'Candidate
 $visionProfile = @($profiles | Where-Object { $_.Id -eq 'candidate-jonathan-q6k-vision' })
 if ($visionProfile.Count -ne 1 -or $visionProfile[0].Status -ne 'Candidate') {
     $failures.Add('Jonathan Q6_K Vision must exist exactly once with Candidate status.')
+}
+
+$blueVisionProfile = @($profiles | Where-Object { $_.Id -eq 'candidate-rtx3090-dual-jonathan-q6k-vision' })
+if ($blueVisionProfile.Count -ne 1 -or $blueVisionProfile[0].Status -ne 'Candidate') {
+    $failures.Add('BLUE Jonathan Q6_K Vision must exist exactly once with Candidate lifecycle status.')
 }
 
 $blockedExtensions = @('.gguf', '.safetensors', '.bin', '.ckpt', '.pth', '.pt', '.onnx')

@@ -10,69 +10,133 @@ for (let index = 2; index < process.argv.length; index += 2) {
   options.set(key.slice(2), value);
 }
 
+const parseIntegerList = (value, name) => {
+  if (value === undefined || value === "" || value === "none") return [];
+  const result = value.split(",").map((item) => {
+    const parsed = Number(item);
+    if (!Number.isSafeInteger(parsed) || parsed < 0) {
+      throw new Error(`Invalid GPU device id in --${name}: ${item}`);
+    }
+    return parsed;
+  });
+  if (new Set(result).size !== result.length) {
+    throw new Error(`--${name} contains a duplicate GPU device id.`);
+  }
+  return result;
+};
+
 const modelKey = options.get("model-key");
 const identifier = options.get("identifier");
 const contextLength = Number(options.get("context"));
 const mtpMode = options.get("mtp") ?? "on";
+const cacheMode = options.get("kv") ?? "q8_0";
+const mmapMode = options.get("mmap") ?? "default";
+const keepModelMode = options.get("keep-model-in-memory") ?? "default";
+const strictVramCapMode = options.get("strict-vram-cap") ?? "off";
+const evalBatchSize = options.has("eval-batch")
+  ? Number(options.get("eval-batch"))
+  : null;
+const priority = parseIntegerList(options.get("priority"), "priority");
+const disabledGpus = parseIntegerList(options.get("disabled"), "disabled");
 
-if (!modelKey || !identifier) {
-  throw new Error("--model-key and --identifier are required.");
-}
+if (!modelKey || !identifier) throw new Error("--model-key and --identifier are required.");
 if (!Number.isSafeInteger(contextLength) || contextLength < 1024) {
   throw new Error("--context must be an integer of at least 1024 tokens.");
 }
-if (!new Set(["on", "off"]).has(mtpMode)) {
-  throw new Error("--mtp must be on or off.");
+if (!new Set(["on", "off"]).has(mtpMode)) throw new Error("--mtp must be on or off.");
+if (!new Set(["q8_0", "f16"]).has(cacheMode)) throw new Error("--kv must be q8_0 or f16.");
+if (!new Set(["default", "on", "off"]).has(mmapMode)) {
+  throw new Error("--mmap must be default, on, or off.");
+}
+if (!new Set(["default", "on", "off"]).has(keepModelMode)) {
+  throw new Error("--keep-model-in-memory must be default, on, or off.");
+}
+if (!new Set(["on", "off"]).has(strictVramCapMode)) {
+  throw new Error("--strict-vram-cap must be on or off.");
+}
+if (evalBatchSize !== null && (!Number.isSafeInteger(evalBatchSize) || evalBatchSize < 1)) {
+  throw new Error("--eval-batch must be a positive integer.");
+}
+if (disabledGpus.some((deviceId) => priority.includes(deviceId))) {
+  throw new Error("A GPU device id cannot appear in both --priority and --disabled.");
+}
+if (options.has("priority") && priority.length === 0) {
+  throw new Error("--priority must contain at least one GPU device id.");
+}
+if (!options.has("priority") && options.has("disabled")) {
+  throw new Error("--disabled requires --priority.");
 }
 
 const client = new LMStudioClient();
+const useFp16ForKVCache = cacheMode === "f16";
+const cacheQuantizationType = useFp16ForKVCache ? false : "q8_0";
+const gpuStrictVramCap = strictVramCapMode === "on";
+const gpuSplitConfig = options.has("priority")
+  ? { strategy: "priorityOrder", disabledGpus, priority, customRatio: [] }
+  : null;
 
-// SDK 1.5.0 exposes K/V cache quantization, while the bundled LMS CLI exposes
-// max parallel predictions. LM Studio's load config key is obtained from the
-// effective config emitted by `lms load --parallel 1`. Inject that one field so
-// both settings are applied to the same model instance. Verify with `lms ps`
-// and getLoadConfig after every managed load.
+// SDK 1.5.0 exposes the documented cache, mmap, and offload settings. LM
+// Studio's effective per-load config is used for parallel predictions, MTP,
+// and the formal priority-order GPU split. Inject only those audited fields so
+// device id 0 is not lost by the SDK GPUSetting truthiness conversion.
 const convertLoadConfig = client.llm.loadConfigToKVConfig.bind(client.llm);
 client.llm.loadConfigToKVConfig = (config) => {
   const kvConfig = convertLoadConfig(config);
-  kvConfig.fields = kvConfig.fields.filter((field) => !new Set([
+  const injectedKeys = new Set([
+    "load.gpuStrictVramCap",
     "llm.load.numParallelSessions",
     "llm.load.llama.speculativeDecoding.draftMtp",
-  ]).has(field.key));
+    "llm.load.llama.speculativeDecoding.draftMaxTokens",
+  ]);
+  if (gpuSplitConfig !== null) injectedKeys.add("load.gpuSplitConfig");
+  kvConfig.fields = kvConfig.fields.filter((field) => !injectedKeys.has(field.key));
+  if (gpuSplitConfig !== null) {
+    kvConfig.fields.push({ key: "load.gpuSplitConfig", value: gpuSplitConfig });
+  }
   kvConfig.fields.push(
+    { key: "load.gpuStrictVramCap", value: gpuStrictVramCap },
     { key: "llm.load.numParallelSessions", value: 1 },
-    {
-      key: "llm.load.llama.speculativeDecoding.draftMtp",
-      value: mtpMode === "on",
-    },
+    { key: "llm.load.llama.speculativeDecoding.draftMtp", value: mtpMode === "on" },
+    { key: "llm.load.llama.speculativeDecoding.draftMaxTokens", value: 2 },
   );
   return kvConfig;
 };
 
+const modelConfig = {
+  contextLength,
+  gpu: { ratio: "max" },
+  maxParallelPredictions: 1,
+  flashAttention: true,
+  offloadKVCacheToGpu: true,
+  useFp16ForKVCache,
+  llamaKCacheQuantizationType: cacheQuantizationType,
+  llamaVCacheQuantizationType: cacheQuantizationType,
+  speculativeDraftMtp: mtpMode === "on",
+  speculativeDraftMaxTokens: 2,
+  gpuStrictVramCap,
+};
+if (mmapMode !== "default") modelConfig.tryMmap = mmapMode === "on";
+if (keepModelMode !== "default") modelConfig.keepModelInMemory = keepModelMode === "on";
+if (evalBatchSize !== null) modelConfig.evalBatchSize = evalBatchSize;
+
 const model = await client.llm.load(modelKey, {
   identifier,
   verbose: true,
-  config: {
-    contextLength,
-    gpu: { ratio: "max" },
-    maxParallelPredictions: 1,
-    flashAttention: true,
-    offloadKVCacheToGpu: true,
-    useFp16ForKVCache: false,
-    llamaKCacheQuantizationType: "q8_0",
-    llamaVCacheQuantizationType: "q8_0",
-    speculativeDraftMtp: mtpMode === "on",
-    speculativeDraftMaxTokens: 2,
-  },
+  config: modelConfig,
 });
 
 const effectiveLoadConfig = await model.getLoadConfig("post-load-audit");
 const auditedLoadKeys = new Set([
+  "load.gpuSplitConfig",
+  "load.gpuStrictVramCap",
   "llm.load.contextLength",
+  "llm.load.llama.evalBatchSize",
   "llm.load.llama.flashAttention",
+  "llm.load.llama.keepModelInMemory",
   "llm.load.llama.speculativeDecoding.draftMtp",
   "llm.load.llama.speculativeDecoding.draftMaxTokens",
   "llm.load.llama.acceleration.offloadRatio",
+  "llm.load.llama.tryMmap",
   "llm.load.llama.useFp16ForKVCache",
   "llm.load.llama.kCacheQuantizationType",
   "llm.load.llama.vCacheQuantizationType",
@@ -84,10 +148,14 @@ console.log(JSON.stringify({
   modelKey,
   identifier: model.identifier,
   contextLength,
-  kvCache: "q8_0/q8_0",
+  kvCache: useFp16ForKVCache ? "f16/f16" : "q8_0/q8_0",
   maxParallelPredictions: 1,
   mtp: mtpMode,
   maxDraftTokens: 2,
+  mmap: mmapMode,
+  keepModelInMemory: keepModelMode,
+  gpuStrictVramCap,
+  gpuSplitConfig,
   effectiveLoadConfig: {
     fields: effectiveLoadConfig.fields.filter((field) => auditedLoadKeys.has(field.key)),
   },
