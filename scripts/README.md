@@ -6,7 +6,7 @@
 
 ## LM Studio model loaders
 
-loaderは `lmstudio/model-loaders/<GPU>/<Model-Variant-Quantization>/` のモデル別ディレクトリに置きます。RTX5090 Currentは`Qwen3.8-JonathanColetti-Q6K/`、同じQ6_Kへ公式projectorを追加するVision profileは`Qwen3.8-JonathanColetti-Q6K-Vision/`、低VRAM 96K Candidateは`Qwen3.8-JonathanColetti-Q5KM-Vision/`、Candidate Q6_K_Pは`Qwen3.8-HauhauCS-Aggressive-Q6KP/`、Q5_K_P fallbackは`Qwen3.8-HauhauCS-Aggressive-Q5KP/`です。RTX3090 Remote Nodeは`RTX3090/Qwen3.8-JonathanColetti-Q4KM/`と`RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/`に分離します。BAT名は`<Model-Identifier>_<Context>K.bat`形式とし、用途名はREADMEで管理します。共通設定と`lms unload --all`の副作用は各モデルディレクトリのREADMEを確認してください。
+loaderは `lmstudio/model-loaders/<GPU>/<Model-Variant-Quantization>/` のモデル別ディレクトリに置きます。RTX5090 Currentは`Qwen3.8-JonathanColetti-Q6K/`、同じQ6_Kへ公式projectorを追加するVision profileは`Qwen3.8-JonathanColetti-Q6K-Vision/`、低VRAM 96K Candidateは`Qwen3.8-JonathanColetti-Q5KM-Vision/`、Candidate Q6_K_Pは`Qwen3.8-HauhauCS-Aggressive-Q6KP/`、Q5_K_P fallbackは`Qwen3.8-HauhauCS-Aggressive-Q5KP/`です。RTX3090 Remote NodeはQ6_K Vision operational profilesを`RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/`、fallback/optional modelsをそれぞれ別ディレクトリへ分離します。Safe/Balanced/Coding-Fast selectorは個別loaderをCALLするだけで、設定ロジックを持ちません。共通設定と`lms unload --all`の副作用は各モデルディレクトリのREADMEを確認してください。
 
 ## New-BenchmarkRecord.ps1
 
@@ -59,28 +59,38 @@ Remote NodeではBase URLとGPU telemetry用SSH identityを明示します。
 
 ## Load-ManagedModel.mjs
 
-LM Studio公式TypeScript SDKを使い、CLIでは同時指定できないQ8_0 K/V cacheとMax Concurrent Predictions 1を含む評価ロードを行います。repository rootで`npm install`を実行すると、固定済み`@lmstudio/sdk@1.5.0`が導入されます。このhelperはモデルをロードするため非破壊的なread-only helperではありません。先行モデルのunloadは行わないので、管理BATまたは明示的な`lms unload --all`と組み合わせます。
+LM Studio公式TypeScript SDKを使い、CLIでは同時指定しにくいK/V cache、MTP draft、eval batch、Max Concurrent Predictions 1を含むmanaged loadを行います。repository rootで`npm install`を実行すると、固定済み`@lmstudio/sdk@1.5.0`が導入されます。このhelperはモデルをロードするため非破壊的なread-only helperではありません。先行モデルのunloadは行わないので、管理BATまたは明示的な`lms unload --all`と組み合わせます。
 
 ```powershell
 node .\scripts\lmstudio\Load-ManagedModel.mjs `
   --model-key 'jonathancoletti/qwen3.8-27b-uncensored-gguf/qwen3.8-27b-uncensored-q4_k_m.gguf' `
   --identifier 'qwen3.8-27b-uncensored@q4_k_m' `
   --context 32768 `
-  --mtp on
+  --mtp on `
+  --mtp-draft 2 `
+  --kv-k q8_0 `
+  --kv-v q8_0
 ```
 
-指定値はfull GPU offload、Flash Attention ON、Q8_0/Q8_0、KV GPU offload ON、parallel 1、MTP max draft 2です。loaderとZoo Codeで同じnatural identifierを使い、ロード後は`lms ps`とLM Studio log/APIで実効設定を確認します。indexed repository pathをZoo Codeで選ぶと既定8Kの別instanceが暗黙ロードされる場合があります。
+`--mtp-draft`は2/3/4、`--kv-k`/`--kv-v`はq8_0/q4_0/f16、`--eval-batch`は正の整数を受け付けます。従来引数を省略した場合はdraft2、Q8_0/Q8_0、eval batch未指定の既存挙動です。unsupported option/valueとF16/quantized mixed KVはfail closedします。独自ubatch設定は実装せず、effective valueをbackend/APIで監査します。full GPU offload、Flash Attention ON、KV GPU offload ON、parallel 1は維持します。
 
 ## Test-ManagedModel.mjs
 
-ロード済みinstanceのSDK load configを読み取り、context、full offload、Flash Attention、Q8_0/Q8_0、MTP、draft tokens、parallelを検査します。モデルのload/unloadは行いません。
+ロード済みinstanceのSDK load configを読み取り、context、full offload、Flash Attention、K/V type、MTP、draft tokens、eval batch、parallel、必要に応じてmmap/GPU split/Visionを検査します。モデルのload/unloadは行いません。
 
 ```powershell
 node .\scripts\lmstudio\Test-ManagedModel.mjs `
   --identifier 'qwen3.8-27b-uncensored-vision' `
   --context 65536 `
-  --mtp on
+  --mtp on `
+  --mtp-draft 4 `
+  --kv-k q8_0 `
+  --kv-v q8_0 `
+  --eval-batch 2048 `
+  --vision-required on
 ```
+
+`tests/Test-QwenVisionProfileLoaders.ps1`はprofile明示値、selector mapping/Cancel、JavaScript/PowerShell構文、fail-closed引数を検査し、`Test-Repository.ps1`から実行されます。
 
 ## Goose Vision 64K one-click startup
 

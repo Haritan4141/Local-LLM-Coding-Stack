@@ -45,6 +45,8 @@ Candidate は Current と分離して扱います。Aggressive Q6_K_P/Q5_K_Pの�
 
 JonathanColetti版には公式F16 Vision projectorが追加されました。既存Q6_Kを再ダウンロードせず、別のLM Studio model key/API IDとして分離したVision profileで32K・64K・96Kの画像認識7/7を確認しています。64Kを通常のVision presetとして推奨し、96Kは長context専用とします。2026-08-23からRTX5090のgoose Desktopは、このVision 64K profileをapp-global既定runtimeとして運用します。デスクトップの`Goose Vision 64K`ショートカットがモデル、Vision capability、context、Q8/Q8、MTP、parallelをpreflightし、必要な場合だけmanaged reloadしてgooseを起動します。これはgoose固有の運用判断であり、repository lifecycle Currentは通常text Q6_K / 96Kのままです。導入方式とclient別結果は`research/jonathan-q6k-vision-2026-08-23.md`、実測は`benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md`にあります。
 
+Phase 1/1.5後のRTX5090 Q6_K Vision 64K Operational RecommendedはBalanced（MTP4 / Q8_0 / eval batch 2048）です。既存64K loaderはSafe（MTP2 / Q8_0 / batch 2048）として変更せず保持し、Coding-Fast（MTP4 / Q4_0 / batch 2048）は明示選択時だけ使用します。既存Goose one-click startupはSafe preflightを維持します。Profile Selectorと実測根拠は各loader READMEおよび`benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md`を参照してください。
+
 64Kを超えるGoose作業向けには、JonathanColetti Q5_K_M Vision / 96K / Q8_0 / MTP OFFを推奨Candidateとして追加しました。固定fixtureで53.74 tok/s、Peak 25,876 MiB、70,081-token入力、Vision 7/7、Tool Calling、isolated Agentic Coding 10/10を確認しています。同条件Q6_K / MTP ONより約11.6%遅い一方、Peak VRAMを3,844 MiB節約します。`Goose Q5KM Vision 96K Candidate`ショートカットは子プロセスだけへ90,112-token client limitを渡し、既存Goose設定とQ6 64Kショートカットを変更しません。CurrentはQ6_Kのままです。
 
 ## Remote nodes
@@ -58,9 +60,9 @@ Main PC: VS Code -> Zoo Code
   -> RTX 3090 24 GB + RTX 3060 12 GB
 ```
 
-BLUE Operational DefaultのAPI identifierは`qwen3.8-27b-uncensored-vision-blue`です。localhost CurrentのIDを流用しません。Kilo CodeにはBLUE Standard16K / Long32Kを追加し、既定localhost modelは変更していません。Zoo CodeのBLUE profileは正式なUIから追加する作業をpendingとします。
+BLUE Operational RecommendedのAPI identifierは`qwen3.8-27b-uncensored-vision-blue`です。localhost CurrentのIDを流用しません。Kilo CodeにはBLUE Standard16K / Long32Kを追加し、既定localhost modelは変更していません。Zoo CodeのBLUE profileは正式なUIから追加する作業をpendingとします。
 
-BLUEの普段使いはJonathan Q6_K Vision / 64K / Q8_0 / RTX3090→RTX3060 dual GPUです。Shared 3.281 GiB、Dedicated headroom合計9,720 MiBで選定し、80K～88Kはcapacity evidence、96K/128KはShared gate FAILとしてOperational loaderを作りません。RTX3090 Power Limitは259WをPrimary Operational、370Wを明示選択のPerformance overrideとします。RTX3060は常に170Wです。loaderはGPU名・PCI Bus IDで照合したUUIDへ設定し、成功確認後にモデルをロードします。
+BLUEの普段使いはJonathan Q6_K Vision / 64K / Q8_0 / MTP3 / eval batch 1024 / RTX3090→RTX3060 dual GPUのBalancedです。既存MTP2 / batch512 loaderはSafeとして永久保持し、Q4_0 / MTP3 / batch512はCoding-Fastとして明示選択時だけ使用します。Shared 3.281 GiB、Dedicated headroom合計9,720 MiBで選定し、80K～88Kはcapacity evidence、96K/128KはShared gate FAILとしてOperational loaderを作りません。RTX3090 Power Limitは259WをPrimary Operational、370Wを明示選択の独立Performance overrideとします。RTX3060は常に170Wです。loaderはGPU名・PCI Bus IDで照合したUUIDへ設定し、成功確認後にモデルをロードします。
 
 64K short generationは26.13 tok/s、MTP acceptance 79.41%、Vision fixture 7/7です。Long32Kはnative APIで30,803 output tokensを自然完了し、Kilo実経路でも29,001 tokensを生成しました。Standard16K / Long32KはPower Limitから独立したclient profileとして維持します。MAINのREMOTE launcherは`pc5700x / 192.168.0.104 / DESKTOP-L9HAM1G`を照合してBLUEだけを起動します。Q4_K_M / 32Kはfallback、HauhauCS Q4_K_Pはoptional Candidateとして保持します。詳細は`profiles/RTX3090-Remote/`、選定結果は`benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md`、Power A/Bは`benchmarks/results/2026-08-24-blue-rtx3090-power-limit-ab.md`、Shared原因は`research/2026-08-24-blue-shared-gpu-memory-investigation.md`に記録します。
 
@@ -89,7 +91,7 @@ BLUEの普段使いはJonathan Q6_K Vision / 64K / Q8_0 / RTX3090→RTX3060 dual
 
 ## Managed LM Studio loaders
 
-Currentモデルの96K / 64K / 32K BATは `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/` で管理します。同じQ6_Kへprojectorを追加するVision用BATは`Qwen3.8-JonathanColetti-Q6K-Vision/`、低VRAM 96K CandidateのQ5_K_M Visionは`Qwen3.8-JonathanColetti-Q5KM-Vision/`へ分離します。Candidate Q6_K_PとQ5_K_P fallbackも、量子化を明記した別ディレクトリです。RTX3090はOperational Defaultを`RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/`、fallbackを`Qwen3.8-JonathanColetti-Q4KM/`、optional Candidateを`Qwen3.8-HauhauCS-Aggressive-Q4KP/`へ分離します。別モデルを試す場合は、既存BATを上書きせず対象GPU配下へモデル・量子化別ディレクトリを追加します。
+Currentモデルの96K / 64K / 32K BATは `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/` で管理します。同じQ6_Kへprojectorを追加するVision用BATは`Qwen3.8-JonathanColetti-Q6K-Vision/`、低VRAM 96K CandidateのQ5_K_M Visionは`Qwen3.8-JonathanColetti-Q5KM-Vision/`へ分離します。Candidate Q6_K_PとQ5_K_P fallbackも、量子化を明記した別ディレクトリです。RTX5090/BLUEのVisionディレクトリにはSafe/Balanced/Coding-Fast selectorを置き、selectorは個別loaderをCALLするだけです。RTX3090はOperational Recommendedを`RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/`、fallbackを`Qwen3.8-JonathanColetti-Q4KM/`、optional Candidateを`Qwen3.8-HauhauCS-Aggressive-Q4KP/`へ分離します。別モデルを試す場合は、既存BATを上書きせず対象GPU配下へモデル・量子化別ディレクトリを追加します。
 
 BATはGGUFを内包・ダウンロードせず、LM Studioへインストール済みのモデルを `lms` CLIで参照します。実行時に `lms unload --all` を行うため、現在ロード中のモデルを解除する点に注意してください。
 

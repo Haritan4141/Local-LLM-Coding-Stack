@@ -10,6 +10,26 @@ for (let index = 2; index < process.argv.length; index += 2) {
   options.set(key.slice(2), value);
 }
 
+const supportedOptions = new Set([
+  "identifier",
+  "context",
+  "mtp",
+  "mtp-draft",
+  "kv",
+  "kv-k",
+  "kv-v",
+  "mmap",
+  "keep-model-in-memory",
+  "strict-vram-cap",
+  "eval-batch",
+  "priority",
+  "disabled",
+  "vision-required",
+]);
+for (const key of options.keys()) {
+  if (!supportedOptions.has(key)) throw new Error(`Unsupported option: --${key}`);
+}
+
 const parseIntegerList = (value, name) => {
   if (value === undefined || value === "" || value === "none") return [];
   const result = value.split(",").map((item) => {
@@ -28,7 +48,15 @@ const parseIntegerList = (value, name) => {
 const identifier = options.get("identifier");
 const contextLength = Number(options.get("context"));
 const mtpMode = options.get("mtp") ?? "on";
-const cacheMode = options.get("kv") ?? "q8_0";
+const mtpDraftTokens = options.has("mtp-draft")
+  ? Number(options.get("mtp-draft"))
+  : 2;
+const legacyCacheMode = options.get("kv");
+if (legacyCacheMode !== undefined && (options.has("kv-k") || options.has("kv-v"))) {
+  throw new Error("--kv cannot be combined with --kv-k or --kv-v.");
+}
+const kCacheMode = legacyCacheMode ?? options.get("kv-k") ?? "q8_0";
+const vCacheMode = legacyCacheMode ?? options.get("kv-v") ?? "q8_0";
 const mmapMode = options.get("mmap") ?? "default";
 const keepModelMode = options.get("keep-model-in-memory") ?? "default";
 const strictVramCapMode = options.get("strict-vram-cap") ?? "off";
@@ -42,7 +70,19 @@ if (!Number.isSafeInteger(contextLength) || contextLength < 1024) {
   throw new Error("--context must be an integer of at least 1024 tokens.");
 }
 if (!new Set(["on", "off"]).has(mtpMode)) throw new Error("--mtp must be on or off.");
-if (!new Set(["q8_0", "f16"]).has(cacheMode)) throw new Error("--kv must be q8_0 or f16.");
+if (![2, 3, 4].includes(mtpDraftTokens)) {
+  throw new Error("--mtp-draft must be 2, 3, or 4.");
+}
+const supportedCacheModes = new Set(["q8_0", "q4_0", "f16"]);
+if (!supportedCacheModes.has(kCacheMode)) {
+  throw new Error("--kv-k must be q8_0, q4_0, or f16.");
+}
+if (!supportedCacheModes.has(vCacheMode)) {
+  throw new Error("--kv-v must be q8_0, q4_0, or f16.");
+}
+if ((kCacheMode === "f16") !== (vCacheMode === "f16")) {
+  throw new Error("Mixed F16 and quantized K/V cache is unsupported by this helper.");
+}
 if (!new Set(["default", "on", "off"]).has(mmapMode)) {
   throw new Error("--mmap must be default, on, or off.");
 }
@@ -87,16 +127,16 @@ if (matches.length !== 1) {
   process.exit(2);
 }
 
-const useFp16ForKVCache = cacheMode === "f16";
+const useFp16ForKVCache = kCacheMode === "f16" && vCacheMode === "f16";
 const expectedFields = new Map([
   ["llm.load.contextLength", contextLength],
   ["llm.load.llama.flashAttention", true],
   ["llm.load.llama.speculativeDecoding.draftMtp", mtpMode === "on"],
-  ["llm.load.llama.speculativeDecoding.draftMaxTokens", 2],
+  ["llm.load.llama.speculativeDecoding.draftMaxTokens", mtpDraftTokens],
   ["llm.load.llama.acceleration.offloadRatio", "max"],
   ["llm.load.llama.useFp16ForKVCache", useFp16ForKVCache],
-  ["llm.load.llama.kCacheQuantizationType", useFp16ForKVCache ? { checked: false, value: "f16" } : "q8_0"],
-  ["llm.load.llama.vCacheQuantizationType", useFp16ForKVCache ? { checked: false, value: "f16" } : "q8_0"],
+  ["llm.load.llama.kCacheQuantizationType", useFp16ForKVCache ? { checked: false, value: "f16" } : kCacheMode],
+  ["llm.load.llama.vCacheQuantizationType", useFp16ForKVCache ? { checked: false, value: "f16" } : vCacheMode],
   ["llm.load.numParallelSessions", 1],
   ["load.gpuStrictVramCap", strictVramCapMode === "on"],
 ]);
@@ -134,10 +174,11 @@ const result = {
   valid: mismatches.length === 0,
   identifier,
   contextLength,
-  kvCache: useFp16ForKVCache ? "f16/f16" : "q8_0/q8_0",
+  kvCache: `${kCacheMode}/${vCacheMode}`,
   maxParallelPredictions: 1,
   mtp: mtpMode,
-  maxDraftTokens: 2,
+  maxDraftTokens: mtpDraftTokens,
+  evalBatchSize,
   mmap: mmapMode,
   keepModelInMemory: keepModelMode,
   gpuStrictVramCap: strictVramCapMode,

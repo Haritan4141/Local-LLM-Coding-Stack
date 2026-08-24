@@ -13,6 +13,7 @@ $requiredPaths = @(
     'CHANGELOG.md',
     'benchmarks',
     'benchmarks/results',
+    'benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md',
     'benchmarks/templates/result.template.json',
     'configs',
     'configs/current/qwen38-27b-uncensored-q6k.json',
@@ -36,6 +37,7 @@ $requiredPaths = @(
     'scripts',
     'scripts/goose/Set-GooseProfile.ps1',
     'scripts/tests/Test-GooseProfileSelector.ps1',
+    'scripts/tests/Test-QwenVisionProfileLoaders.ps1',
     'scripts/lmstudio/Load-ManagedModel.mjs',
     'scripts/lmstudio/Test-ManagedModel.mjs',
     'scripts/lmstudio/model-loaders/RTX3090/README.md',
@@ -47,6 +49,12 @@ $requiredPaths = @(
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat',
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K_REMOTE.ps1',
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K_REMOTE.bat',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced.bat',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Coding-Fast.bat',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced_REMOTE.bat',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Coding-Fast_REMOTE.bat',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat',
+    'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_REMOTE-Profile-Selector.bat',
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/README.md',
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/Qwen3.8-HauhauCS-Q4KP_32K.bat',
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/Qwen3.8-HauhauCS-Q4KP_64K.bat',
@@ -58,6 +66,9 @@ $requiredPaths = @(
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/README.md',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_96K.bat',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_64K_Coding-Fast.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_32K.bat',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Start-Goose-Jonathan-Vision64K.ps1',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Start-Goose-Jonathan-Vision64K.bat',
@@ -164,6 +175,14 @@ if (Test-Path -LiteralPath $gooseSelectorTest -PathType Leaf) {
     & powershell -NoProfile -ExecutionPolicy Bypass -File $gooseSelectorTest
     if ($LASTEXITCODE -ne 0) {
         $failures.Add("Goose profile selector regression test failed with exit code $LASTEXITCODE.")
+    }
+}
+
+$visionProfileLoaderTest = Join-Path $repoRoot 'scripts\tests\Test-QwenVisionProfileLoaders.ps1'
+if (Test-Path -LiteralPath $visionProfileLoaderTest -PathType Leaf) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $visionProfileLoaderTest
+    if ($LASTEXITCODE -ne 0) {
+        $failures.Add("Qwen Vision profile loader regression test failed with exit code $LASTEXITCODE.")
     }
 }
 

@@ -1,7 +1,10 @@
 [CmdletBinding()]
 param(
     [ValidateSet(259, 370)]
-    [int]$Rtx3090PowerLimit = 259
+    [int]$Rtx3090PowerLimit = 259,
+
+    [ValidateSet('Safe', 'Balanced', 'Coding-Fast')]
+    [string]$OperationalProfile = 'Safe'
 )
 
 Set-StrictMode -Version Latest
@@ -21,6 +24,22 @@ $Rtx3060Name = 'NVIDIA GeForce RTX 3060'
 $Rtx3060Bus = '00000000:01:00.0'
 $Rtx3060PowerLimit = 170
 $PowerProfile = if ($Rtx3090PowerLimit -eq 259) { 'Primary Operational' } else { 'Performance override' }
+
+if ($Rtx3090PowerLimit -ne 259 -and $OperationalProfile -ne 'Safe') {
+    throw 'Balanced and Coding-Fast are validated only at 259W; they cannot be combined with the 370W Performance override.'
+}
+
+$ProfileSettings = switch ($OperationalProfile) {
+    'Safe' {
+        [pscustomobject]@{ DraftTokens = 2; KCache = 'q8_0'; VCache = 'q8_0'; EvalBatch = 512 }
+    }
+    'Balanced' {
+        [pscustomobject]@{ DraftTokens = 3; KCache = 'q8_0'; VCache = 'q8_0'; EvalBatch = 1024 }
+    }
+    'Coding-Fast' {
+        [pscustomobject]@{ DraftTokens = 3; KCache = 'q4_0'; VCache = 'q4_0'; EvalBatch = 512 }
+    }
+}
 
 function Get-LmsObjects {
     param([Parameter(Mandatory)][string[]]$Arguments)
@@ -161,11 +180,13 @@ $loadArguments = @(
     '--identifier', $Identifier,
     '--context', [string]$ContextLength,
     '--mtp', 'on',
-    '--kv', 'q8_0',
+    '--mtp-draft', [string]$ProfileSettings.DraftTokens,
+    '--kv-k', $ProfileSettings.KCache,
+    '--kv-v', $ProfileSettings.VCache,
     '--mmap', 'off',
     '--keep-model-in-memory', 'on',
     '--strict-vram-cap', 'off',
-    '--eval-batch', '512',
+    '--eval-batch', [string]$ProfileSettings.EvalBatch,
     '--priority', $priorityArg,
     '--disabled', $disabledArg
 )
@@ -177,11 +198,13 @@ $testArguments = @(
     '--identifier', $Identifier,
     '--context', [string]$ContextLength,
     '--mtp', 'on',
-    '--kv', 'q8_0',
+    '--mtp-draft', [string]$ProfileSettings.DraftTokens,
+    '--kv-k', $ProfileSettings.KCache,
+    '--kv-v', $ProfileSettings.VCache,
     '--mmap', 'off',
     '--keep-model-in-memory', 'on',
     '--strict-vram-cap', 'off',
-    '--eval-batch', '512',
+    '--eval-batch', [string]$ProfileSettings.EvalBatch,
     '--priority', $priorityArg,
     '--disabled', $disabledArg,
     '--vision-required', 'on'
@@ -201,9 +224,9 @@ Assert-PowerLimit -Gpu $gpuIdentity.rtx3090 -ExpectedWatts $Rtx3090PowerLimit
 Assert-PowerLimit -Gpu $gpuIdentity.rtx3060 -ExpectedWatts $Rtx3060PowerLimit
 
 if ($Rtx3090PowerLimit -eq 259) {
-    Write-Host '[OK] BLUE Primary Operational Default is ready.'
+    Write-Host "[OK] BLUE $OperationalProfile profile is ready at the Primary Operational Power Limit."
 } else {
     Write-Host '[OK] BLUE 370W Performance override is ready.'
 }
-Write-Host "[OK] $Identifier / 64K / Q8_0 / RTX3090+RTX3060 / MTP 2 / Vision / RTX3090 ${Rtx3090PowerLimit}W"
+Write-Host "[OK] $Identifier / 64K / $($ProfileSettings.KCache)-$($ProfileSettings.VCache) / RTX3090+RTX3060 / MTP $($ProfileSettings.DraftTokens) / batch $($ProfileSettings.EvalBatch) / Vision / RTX3090 ${Rtx3090PowerLimit}W"
 & lms ps

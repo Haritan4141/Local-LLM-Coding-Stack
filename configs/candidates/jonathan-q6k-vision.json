@@ -31,12 +31,51 @@
     { "name": "Long-context Vision", "context_tokens": 98304, "status": "verified with reduced VRAM margin" }
   ],
   "effective_settings": {
+    "operational_profile": "Balanced",
+    "context_tokens": 65536,
     "kv_cache": { "k": "Q8_0", "v": "Q8_0" },
     "flash_attention": true,
     "gpu_offload": { "mode": "all", "offloaded_layers": 65, "total_layers": 65 },
-    "mtp": { "enabled": true, "max_draft_tokens": 2 },
+    "mtp": { "enabled": true, "max_draft_tokens": 4 },
+    "eval_batch_size": 2048,
+    "effective_ubatch_size": 512,
+    "mmap": true,
+    "mlock": true,
     "reasoning_budget_tokens": 8192,
     "max_concurrent_predictions": 1
+  },
+  "operational_profiles": {
+    "recommended": "Balanced",
+    "safe": {
+      "name": "Safe",
+      "context_tokens": 65536,
+      "mtp_max_draft_tokens": 2,
+      "kv_cache": "Q8_0/Q8_0",
+      "eval_batch_size": 2048,
+      "effective_ubatch_size": 512,
+      "power_limit_w": 402,
+      "status": "permanent known-good rollback; existing loader preserved"
+    },
+    "balanced": {
+      "name": "Balanced",
+      "context_tokens": 65536,
+      "mtp_max_draft_tokens": 4,
+      "kv_cache": "Q8_0/Q8_0",
+      "eval_batch_size": 2048,
+      "effective_ubatch_size": 512,
+      "power_limit_w": 402,
+      "status": "Operational Recommended"
+    },
+    "coding_fast": {
+      "name": "Coding-Fast",
+      "context_tokens": 65536,
+      "mtp_max_draft_tokens": 4,
+      "kv_cache": "Q4_0/Q4_0",
+      "eval_batch_size": 2048,
+      "effective_ubatch_size": 512,
+      "power_limit_w": 402,
+      "status": "explicit coding-speed selection only; fixture-external quality equivalence not established"
+    }
   },
   "evaluation_status": {
     "direct_lm_studio_vision": "verified 7/7 at 32K, 64K, and 96K",
@@ -45,7 +84,7 @@
     "goose_desktop": "1.47.0 image attachment, custom Vision ID selection, and outgoing image request verified; first inference failed because LM Studio loaded the text-only instance; direct recovery passed after managed Vision 64K reload; successful Desktop resend pending",
     "zoo_code": "pending; VS Code was not open during the controlled test",
     "promotion": "do not replace the text-only Current profile; retain as an explicit Vision Candidate profile",
-    "operational_role": "RTX5090 goose Desktop app-global default runtime at 64K with managed one-click startup"
+    "operational_role": "RTX5090 Vision 64K Balanced recommendation; existing Goose one-click startup retains the Safe preflight"
   },
   "local_results": {
     "32k": { "generation_tok_s": 63.0323, "prompt_tok_s": 1274.73, "ttft_seconds": 0.4958, "mtp_acceptance_percent": 81.149, "peak_vram_mib": 27057, "vision_fields_correct": "7/7" },

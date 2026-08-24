@@ -4,7 +4,7 @@
   "profile_id": "candidate-rtx3090-dual-jonathan-q6k-vision",
   "status": "Candidate",
   "captured_date": "2026-08-24",
-  "operational_role": "BLUE Operational Default; independent Remote Node role, not repository Current",
+  "operational_role": "BLUE Operational Recommended (Balanced); independent Remote Node role, not repository Current",
   "stack": {
     "runtime": "LM Studio 0.4.21.0 / CLI 71bd99c",
     "local_base_url": "http://127.0.0.1:1234",
@@ -70,6 +70,7 @@
     { "name": "Excluded", "context_tokens": 131072, "status": "Q8_0 and F16 Shared-memory gate FAIL" }
   ],
   "effective_settings": {
+    "operational_profile": "Balanced",
     "context_tokens": 65536,
     "kv_cache": { "k": "Q8_0", "v": "Q8_0" },
     "kv_cache_gpu_offload": true,
@@ -83,9 +84,50 @@
     "gpu_strict_vram_cap": false,
     "mmap": false,
     "keep_model_in_memory": true,
-    "eval_batch_size": 512,
-    "mtp": { "enabled": true, "max_draft_tokens": 2 },
+    "eval_batch_size": 1024,
+    "effective_ubatch_size": 512,
+    "mtp": { "enabled": true, "max_draft_tokens": 3 },
     "max_concurrent_predictions": 1
+  },
+  "operational_profiles": {
+    "recommended": "Balanced",
+    "safe": {
+      "name": "Safe",
+      "context_tokens": 65536,
+      "mtp_max_draft_tokens": 2,
+      "kv_cache": "Q8_0/Q8_0",
+      "eval_batch_size": 512,
+      "effective_ubatch_size": 512,
+      "rtx3090_power_limit_w": 259,
+      "rtx3060_power_limit_w": 170,
+      "status": "permanent known-good rollback; existing loader preserved"
+    },
+    "balanced": {
+      "name": "Balanced",
+      "context_tokens": 65536,
+      "mtp_max_draft_tokens": 3,
+      "kv_cache": "Q8_0/Q8_0",
+      "eval_batch_size": 1024,
+      "effective_ubatch_size": 512,
+      "rtx3090_power_limit_w": 259,
+      "rtx3060_power_limit_w": 170,
+      "status": "Operational Recommended"
+    },
+    "coding_fast": {
+      "name": "Coding-Fast",
+      "context_tokens": 65536,
+      "mtp_max_draft_tokens": 3,
+      "kv_cache": "Q4_0/Q4_0",
+      "eval_batch_size": 512,
+      "effective_ubatch_size": 512,
+      "rtx3090_power_limit_w": 259,
+      "rtx3060_power_limit_w": 170,
+      "status": "explicit coding-speed selection only; fixture-external quality equivalence not established"
+    },
+    "performance_370w": {
+      "name": "370W Performance",
+      "status": "existing independent override; do not combine with Balanced or Coding-Fast without a new controlled A/B"
+    }
   },
   "capacity_gate": {
     "shared_memory_limit_gib": 4.0,
@@ -173,10 +215,11 @@
     "zoo_code": "manual UI profile required; do not invent repository schema"
   },
   "fallback_profile_id": "candidate-rtx3090-jonathan-q4km",
-  "evaluation_status": "complete; selected as BLUE Operational Default at 259W Primary with 370W Performance override and Q4_K_M 32K preserved as fallback",
+  "evaluation_status": "complete; Balanced selected as BLUE Operational Recommended at 259W Primary, Safe and 370W Performance preserved, Q4_K_M 32K preserved as fallback",
   "result_paths": [
     "benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md",
     "benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md",
-    "benchmarks/results/2026-08-24-blue-rtx3090-power-limit-ab.md"
+    "benchmarks/results/2026-08-24-blue-rtx3090-power-limit-ab.md",
+    "benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md"
   ]
 }

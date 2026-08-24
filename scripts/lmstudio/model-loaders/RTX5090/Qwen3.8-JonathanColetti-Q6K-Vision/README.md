@@ -11,26 +11,37 @@ RTX 5090 32 GBでCurrentのJonathanColetti Q6_K本体を共有し、公式Vision
 | Projector SHA-256 | `5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c` |
 | LM Studio model key | `qwen3.8-27b-uncensored-vision-q6k` |
 | API identifier | `qwen3.8-27b-uncensored-vision` |
-| KV cache | `Q8_0 / Q8_0`, GPU offload ON |
+| KV cache | profile-specific `Q8_0 / Q8_0` or `Q4_0 / Q4_0`; GPU offload ON |
 | Flash Attention | ON |
 | GPU offload | maximum / all layers |
-| MTP | embedded ON, max draft tokens 2 |
+| MTP | embedded ON; profile-specific max draft tokens 2 or 4 |
 | Parallel | 1 |
 | Vision | LM Studio `capabilities.vision = true` verified |
 
 ## Presets
 
+| Operational profile / BAT | Context | MTP | KV | Eval / effective ubatch | Intended use |
+|---|---:|---:|---|---:|---|
+| Safe — `Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat` | 65,536 | 2 | Q8_0/Q8_0 | 2048 / 512 | permanent known-good rollback; existing loader unchanged |
+| **Balanced** — `Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat` | 65,536 | 4 | Q8_0/Q8_0 | 2048 / 512 | **Operational Recommended** |
+| Coding-Fast — `Qwen3.8-JonathanColetti-Q6K-Vision_64K_Coding-Fast.bat` | 65,536 | 4 | Q4_0/Q4_0 | 2048 / 512 | explicit coding-speed selection only |
+
+All three use API ID `qwen3.8-27b-uncensored-vision`, Flash Attention ON, full offload, mmap/mlock behavior matching Safe, parallel 1, Vision true, and RTX5090 402W. `Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat` only CALLs these individual loaders; `[0]` exits without changing runtime state.
+
+The older context-specific presets remain available:
+
 | BAT | Context | Intended use | Measured peak VRAM |
 |---|---:|---|---:|
-| `Qwen3.8-JonathanColetti-Q6K-Vision_32K.bat` | 32,768 | 軽量な画像/OCR確認 | 27,057 MiB |
-| `Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat` | 65,536 | 推奨。画像を含む通常のコーディング | 28,339 MiB |
-| `Qwen3.8-JonathanColetti-Q6K-Vision_96K.bat` | 98,304 | 長い文脈と画像が同時に必要な場合 | 29,736 MiB |
+| `Qwen3.8-JonathanColetti-Q6K-Vision_32K.bat` | 32,768 | lightweight image/OCR check | 27,057 MiB |
+| `Qwen3.8-JonathanColetti-Q6K-Vision_96K.bat` | 98,304 | long context plus Vision | 29,736 MiB |
 
-32K、64K、96Kは固定PNG fixtureでVision 7/7に成功しました。96Kは動作しますが、測定時のGPU残量は約2.87 GBだったため、ゲーム、VR、画像生成などのGPU負荷と併用しません。128K loaderは作成しません。
+32K、Safe 64K、96Kは固定PNG fixtureでVision 7/7に成功しました。Phase 1/1.5ではBalancedもformal qualityとVision correctnessにPASSしました。Coding-Fastは対象fixtureで生成破損を起こしませんでしたが、Q4のfixture外品質同等性は保証されません。96Kは動作しますが、測定時のGPU残量は約2.87 GBだったため、ゲーム、VR、画像生成などのGPU負荷と併用しません。128K loaderは作成しません。
 
 ## Goose one-click startup
 
 RTX5090のgoose Desktopは64K Vision profileをapp-global既定runtimeとして使用します。デスクトップの`Goose Vision 64K`、または`Start-Goose-Jonathan-Vision64K.bat`を起動してください。
+
+この既存one-click startupは既知GoodのSafe（MTP2/Q8）preflightを維持します。Operational RecommendedのBalanced、またはCoding-Fastを使う場合はProfile Selectorで明示的にloadし、新しいtaskを開始してください。
 
 launcherは次を行います。
 
@@ -61,3 +72,5 @@ Goose Desktopを完全終了し、このprofile selectorを実行してから`Qw
 通常CurrentとVision枠は、同じQ6_KをNTFSハードリンクで共有します。Vision projectorもHugging Face cacheとのハードリンクです。モデル本体、projector、LM Studio application data、cacheはGitへ保存しません。
 
 BAT実行はLM Studio runtime stateを変更します。別の推論中には実行しないでください。
+
+Phase 1/1.5の選定根拠と実機switching regressionは`benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md`にあります。

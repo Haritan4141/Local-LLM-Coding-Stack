@@ -1,7 +1,10 @@
 [CmdletBinding()]
 param(
     [ValidateSet(259, 370)]
-    [int]$Rtx3090PowerLimit = 259
+    [int]$Rtx3090PowerLimit = 259,
+
+    [ValidateSet('Safe', 'Balanced', 'Coding-Fast')]
+    [string]$OperationalProfile = 'Safe'
 )
 
 Set-StrictMode -Version Latest
@@ -17,6 +20,10 @@ $Rtx3090Bus = '00000000:0B:00.0'
 $Rtx3060Name = 'NVIDIA GeForce RTX 3060'
 $Rtx3060Bus = '00000000:01:00.0'
 
+if ($Rtx3090PowerLimit -ne 259 -and $OperationalProfile -ne 'Safe') {
+    throw 'Balanced and Coding-Fast are validated only at 259W; they cannot be combined with the 370W Performance override.'
+}
+
 $hostnameResult = (@(& ssh -o BatchMode=yes $SshAlias hostname) -join '').Trim()
 if ($LASTEXITCODE -ne 0) { throw "SSH connection to $SshAlias failed." }
 if ($hostnameResult -ne $ExpectedHostname) {
@@ -30,7 +37,7 @@ if ($LASTEXITCODE -ne 0 -or $ipResult -ne $ExpectedIp) {
 }
 
 Write-Host "[INFO] Verified $SshAlias -> $ExpectedHostname / $ExpectedIp."
-& ssh -o BatchMode=yes $SshAlias powershell -NoProfile -ExecutionPolicy Bypass -File $RemoteLoader -Rtx3090PowerLimit $Rtx3090PowerLimit
+& ssh -o BatchMode=yes $SshAlias powershell -NoProfile -ExecutionPolicy Bypass -File $RemoteLoader -Rtx3090PowerLimit $Rtx3090PowerLimit -OperationalProfile $OperationalProfile
 if ($LASTEXITCODE -ne 0) { throw "Remote BLUE loader failed with exit code $LASTEXITCODE." }
 
 $powerRows = @(& ssh -o BatchMode=yes $SshAlias nvidia-smi --query-gpu=name,pci.bus_id,power.limit --format=csv,noheader,nounits | ConvertFrom-Csv -Header @('name', 'pci_bus_id', 'power_limit_w'))
@@ -59,7 +66,7 @@ if ($loadedMatches.Count -ne 1) {
 }
 
 if ($Rtx3090PowerLimit -eq 259) {
-    Write-Host '[OK] BLUE Primary Operational Default is reachable from MAIN.'
+    Write-Host "[OK] BLUE $OperationalProfile profile is reachable from MAIN at the Primary Operational Power Limit."
 } else {
     Write-Host '[OK] BLUE 370W Performance override is reachable from MAIN.'
 }

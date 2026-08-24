@@ -49,7 +49,7 @@
   "models": [
     {
       "profile_id": "candidate-rtx3090-dual-jonathan-q6k-vision",
-      "status": "BLUE Operational Default",
+      "status": "BLUE Operational Recommended (Balanced)",
       "api_identifier": "qwen3.8-27b-uncensored-vision-blue",
       "context_tokens": 65536,
       "kv_cache": "Q8_0/Q8_0",
@@ -78,6 +78,7 @@
     }
   ],
   "operational_default": {
+    "operational_profile": "Balanced",
     "profile_id": "candidate-rtx3090-dual-jonathan-q6k-vision",
     "model_key": "qwen3.8-27b-uncensored@q6_k",
     "api_identifier": "qwen3.8-27b-uncensored-vision-blue",
@@ -85,7 +86,9 @@
     "kv_cache": "Q8_0/Q8_0",
     "gpu_split": "RTX3090 then RTX3060 by runtime GPU name",
     "mmap": false,
-    "mtp": "on / draft 2",
+    "mtp": "on / draft 3",
+    "eval_batch_size": 1024,
+    "effective_ubatch_size": 512,
     "parallel": 1,
     "power_limit_policy": {
       "primary": {
@@ -99,7 +102,14 @@
       }
     },
     "fallback_profile_id": "candidate-rtx3090-jonathan-q4km",
-    "reason": "quality and Vision with measured Shared/Dedicated safety margin; 259W selected by controlled Power Limit A/B; 80K+ retained only as capacity evidence"
+    "reason": "Phase 1/1.5 quality-pass recommendation with improved general performance; 259W selected by controlled Power Limit A/B; 80K+ retained only as capacity evidence"
+  },
+  "operational_profiles": {
+    "recommended": "Balanced",
+    "safe": "MTP2 / Q8_0-Q8_0 / eval batch512 / ubatch512 / 64K / 259W-170W",
+    "balanced": "MTP3 / Q8_0-Q8_0 / eval batch1024 / ubatch512 / 64K / 259W-170W",
+    "coding_fast": "MTP3 / Q4_0-Q4_0 / eval batch512 / ubatch512 / 64K / 259W-170W; explicit selection only",
+    "performance_370w": "existing separate override; not combined with Balanced or Coding-Fast"
   },
   "client_profiles": {
     "kilo": [
@@ -114,6 +124,11 @@
     "identifier": "qwen3.8-27b-uncensored-vision-blue",
     "status": "IDLE",
     "context_tokens": 65536,
+    "operational_profile": "Balanced",
+    "kv_cache": "Q8_0/Q8_0",
+    "mtp_max_draft_tokens": 3,
+    "eval_batch_size": 1024,
+    "effective_ubatch_size": 512,
     "parallel": 1,
     "vision": true,
     "rtx3090_power_limit_w": 259,

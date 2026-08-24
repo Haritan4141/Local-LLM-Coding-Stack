@@ -6,13 +6,16 @@
 
 ### Added
 
+- RTX5090とBLUEへQwen3.8 Vision 64KのSafe / Balanced / Coding-Fast個別loaderとselectorを追加。既存Safe loader、BLUE 370W Performance、Standard16K / Long32Kは変更せず独立維持した。BLUEにはlocal/REMOTE双方のBalanced/Coding-Fast launcherとREMOTE selectorを追加した。
+- managed loader/helperを後方互換で拡張し、MTP draft 2/3/4、独立K/V Q8_0/Q4_0/F16、eval batchを明示指定・effective readbackできるようにした。未指定時は従来のdraft2/Q8/default batchを維持し、unsupported option/valueとF16/quantized mixed KVはfail closedする。ubatch設定機能は追加していない。
+- Phase 1/1.5のRTX5090/BLUE結果、品質境界、Q4 caveat、実機profile switchingを`benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md`へcurated記録した。
 - RTX5090向けJonathanColetti Q5_K_M + official F16 Vision projectorを、独立model key/API ID `qwen3.8-27b-uncensored-vision-q5km`の96K Candidateとして外部LM Studio領域へ導入。固定revisionの本体/projectorサイズとSHA-256を検証し、GGUFはGitへ保存していない。
 - Q5_K_M Visionの32K/64K/96K managed loader、Candidate profile、upstream調査、controlled benchmarkを追加。96KでMTP ON/OFF、同条件Q6_K control、VRAM/Shared、70,081-token入力、Vision 7/7、direct Tool Calling、Reasoning 8192、Goose multi-file Agentic Coding 10/10を記録。
 - `Goose Q5KM Vision 96K Candidate`デスクトップショートカットを追加。98,304-token LM Studio runtimeをpreflightし、Goose子プロセスだけへ90,112 context limit、16,384 max output、compact threshold 0.3を渡す。永続Goose configと既存`Goose Vision 64K`は変更しない。
 - 通常のGoose shortcutを使う手動運用向けに、永続client設定だけをQ5_K_M Vision 96Kへ切り替えるprofile selectorと、Q6_K Vision 64Kへ戻すselectorを追加。Goose起動中は拒否し、変更前configをrepository外へ日時付きbackupし、対象値を再検証する。LM Studio runtimeとGoose processは変更しない。
 - BLUE Jonathan Q6_K Vision 64KへRTX3090 259W Primaryと370W Performance overrideの分離loaderをlocal/MAIN remoteの双方に追加。GPU indexを固定せず、GPU名・PCI Bus IDで一意照合したUUIDだけへPower Limitを設定・検証してからmanaged loadする。
 - 370W→259W→370WのText/Vision/30.9K prompt/Sustained A/Bを`benchmarks/results/2026-08-24-blue-rtx3090-power-limit-ab.md`へcurated記録。既存Standard16K / Long32K client profileはPower Limitから独立して維持。
-- BLUE Operational DefaultとしてJonathan Q6_K Vision / 64K / Q8_0 / RTX3090→RTX3060 priorityOrder / MTP 2 / parallel 1を採用。identity、370W/170W、Vision、effective load config、両GPU利用を監査するlocal loaderと、MAINからのSSH one-click launcherを追加・実機検証。
+- BLUE Q6_K Visionの既知Good Safe baselineとして64K / Q8_0 / RTX3090→RTX3060 priorityOrder / MTP 2 / parallel 1を採用し、identity、Power Limit、Vision、effective load config、両GPU利用を監査するlocal/REMOTE loaderを追加・実機検証。後続のPhase 1/1.5 integrationでOperational RecommendedだけをMTP3 / batch1024 Balancedへ更新した。
 - Q8 capacityを64K/72K/80K/84K/88K/96K/128K、F16を64K/128Kで測定。80K～88KはPASSしたが安全余裕を優先し、96K/128KはShared gate FAILとして除外。Standard16KとLong32K（30,803 output tokens自然完了）、Vision 7/7を`benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md`へ記録。
 - Kilo Codeへ既存localhost defaultを変えずBLUE Standard16K / Long32K provider aliasesを追加。Kilo 7.4.22のmodel listingに加え、Long32K実経路で29,001 output tokensのgeneration stepを完了し、16K client limitがないことを確認。完了後の自動継続/要約ターンも注意事項として記録。
 - 88K→96KのShared GPU Memory不連続増加を読み取り監査。per-GPU FB/BAR1/WDDM counters、P2P不可、auto-fit警告、bufferログの限界、Sysmem Fallbackの未確認点を`Observed / Inferred / Unknown`で`research/2026-08-24-blue-shared-gpu-memory-investigation.md`へ記録。
@@ -43,9 +46,12 @@
 
 ### Decision
 
+- RTX5090 Vision 64KはMTP4 / Q8_0 / batch2048をBalanced / Operational Recommendedとする。MTP2 / Q8_0 / batch2048はSafeとして永久保持し、MTP4 / Q4_0 / batch2048はCoding-Fastとして明示選択時だけ使用する。
+- BLUE Vision 64K / 259WはMTP3 / Q8_0 / batch1024をBalanced / Operational Recommendedとする。MTP2 / Q8_0 / batch512はSafeとして永久保持し、MTP3 / Q4_0 / batch512はCoding-Fastとして明示選択時だけ使用する。Q4のfixture外品質同等性は保証しない。
+- BLUE 370W PerformanceへMTP3/batch1024またはQ4を組み合わせるloaderは作成しない。Repository lifecycle Currentは`current-qwen38-27b-uncensored-q6k`の1件から変更しない。
 - Jonathan Q5_K_M Vision / 96K / Q8_0 / MTP OFF / parallel 1を、64Kを超えるGoose作業の推奨explicit Candidateとする。同条件Q6_K / MTP ONより11.6%遅いがPeak VRAMを3,844 MiB節約し、予約420 MiB差引後6,311 MiB / 約6.16 GiBのeffective headroomを得た。CurrentはQ6_Kのまま維持する。
 - Q5_K_MではMTP ONが45.5164 tok/s・27,265 MiB、OFFが53.7446 tok/s・25,876 MiBだったため、Candidate loaderはMTP OFFへ統一する。78.2548% acceptanceだけを理由にMTPを有効化しない。
-- BLUE RTX3090は259WをPrimary Operational Power Limitへ採用し、370Wは明示的Performance overrideへ変更。RTX3060は170Wのまま維持する。Repository lifecycle Current、MAIN RTX5090 Operational Default、Q6_K Vision 64Kのモデル設定は変更しない。
+- BLUE RTX3090は259WをPrimary Operational Power Limitへ採用し、370Wは明示的Performance overrideへ変更。RTX3060は170Wのまま維持する。Repository lifecycle Currentとモデルartifactは変更しない。後続のPhase 1/1.5 integrationはPower方針を変えず、Q6_K Vision 64KのOperational tierだけを追加する。
 - BLUEはJonathan Q6_K Vision / 64K / Q8_0 / dual GPUをOperational Defaultとし、Jonathan Q4_K_M / 32Kをfallbackへ変更。repository-wide CurrentはRTX5090 Jonathan Q6_K textの1件だけを維持する。
 - 80K～88Kは最大値探索の証拠として保持するが、Shared gate marginが0.469～0.343 GiBしかないため常用しない。96K Q8のShared 5.021 GiB、128K Q8 8.065 GiB、128K F16 15.044 GiBを理由にOperational loaderを作成しない。
 - 64K F16はQ8と同速でDedicated headroomが1,494 MiB少ないため、Q8_0を採用する。
@@ -61,6 +67,8 @@
 
 ### Runtime impact
 
+- 2026-08-24 profile integration終了時、MAINはSafe→Balanced→Coding-Fast→Safeを実機切替後に0 loaded modelsへ復帰。BLUEは同じ切替回帰後、Balanced / MTP3 / Q8_0 / batch1024 / effective ubatch512 / 64K / priorityOrder / mmap OFF / parallel1 / Vision true / RTX3090 259W / RTX3060 170Wを1件だけIDLEで常駐。MAINからnative API到達とreasoning OFF Coding fixtureを確認した。この項目が同日中の旧runtime終了記録を更新する。
+- MAIN BalancedでText/Coding/Vision smoke、両PCのCoding-FastでPhase 1 Coding fixture必須5マーカー・両関数・code blockを確認。Safe復帰後はQ4、draft3/4、batch1024の残留なし。Firewall、SSH、driver、BIOS、global LM Studio設定、モデル重量、client output profileは変更していない。
 - MAIN RTX5090の終了時runtimeはJonathan Q5_K_M Vision Candidate / 98,304 / Q8_0-Q8_0 / MTP OFF / parallel 1 / Vision true / IDLE。既存Goose Desktop processはユーザー操作を中断しないため閉じず、Candidate shortcutの実起動はGoose完全終了後に行う。永続Goose modelはQ6_K Visionのまま、repository Current、Zoo Code、Kilo、driver、global LM Studio設定は変更していない。
 - BLUEでQ4_K_M 32K fallbackを回帰後、259W Primary remote loaderを実行。終了状態はRTX3090 259W / RTX3060 170W、Jonathan Q6_K Vision、65,536、Q8_0/Q8_0、MTP draft 2、parallel 1、Vision true、MAINからTCP/API到達PASS。370W Performance loaderは通常loaderから分離した。
 - BLUE external SDKへ後方互換managed loaderを配備し、BLUE local/MAIN remote launcherの両方でQ6_K Vision 64Kをロード。既存Q4_K_M 32K引数でもQ8_0/Q8_0、full offload、MTP draft 2、parallel 1の後方互換監査にPASSし、その後Q6_K Vision 64Kへ復帰。作業終了状態は対象1件がIDLE、context 65,536、parallel 1。Power LimitはRTX3090 370W / RTX3060 170Wのまま、driver、Firewall、BIOS、LM Studio global GPU設定は変更していない。

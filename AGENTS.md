@@ -11,7 +11,8 @@ This repository is the source of truth for the local coding stack built around V
 - A future HauhauCS Balanced-MTP release is `Watch`, not an available or validated model.
 - `CURRENT_STATE.md` and `configs/current/` describe the operating baseline.
 - `profiles/RTX3090-Remote/` describes the independent `pc5700x` LAN node. A Remote Node role does not create another repository-wide Current model.
-- The node hardware is RTX 3090 24 GB + RTX 3060 12 GB. Its independent Operational Default is Jonathan Vision Q6_K at 64K, Q8_0/Q8_0, priority-order dual GPU, MTP 2, and parallel 1. This node role remains a `Candidate` in repository lifecycle terms and does not create a second Current.
+- The node hardware is RTX 3090 24 GB + RTX 3060 12 GB. Its independent Operational Recommended profile is Jonathan Vision Q6_K at 64K, Q8_0/Q8_0, priority-order dual GPU, MTP 3, eval batch 1024, and parallel 1. The permanent Safe profile remains MTP 2 / Q8_0 / batch 512. This node role remains a `Candidate` in repository lifecycle terms and does not create a second Current.
+- RTX5090 Jonathan Vision Q6_K at 64K uses Balanced (MTP 4 / Q8_0 / batch 2048) as its Operational Recommended profile while preserving the existing MTP 2 / Q8_0 / batch 2048 loader as Safe.
 - Jonathan Q4_K_M at 32K is the BLUE fallback. HauhauCS Aggressive Q4_K_P remains optional. Q8 capacity passed through 88K but 96K/128K failed the Shared-memory gate; do not create operational 96K/128K loaders.
 - BLUE RTX3090 Power Limit 259W is the Primary Operational standard; RTX3060 remains 170W. The separated 370W Performance override may change only the RTX3090 when explicitly selected. Power loaders must match GPU name plus PCI Bus ID, mutate the resolved UUID rather than a fixed index, verify both limits before model load, and stop before changing runtime state when identity or active-prediction checks fail.
 
@@ -38,6 +39,7 @@ This repository is the source of truth for the local coding stack built around V
 12. For a LAN node, verify SSH Alias, expected IP, and `hostname` before changing runtime state. Keep its Base URL and API identifiers distinct from the RTX5090 localhost Current.
 13. A LAN LM Studio firewall rule must be inbound TCP on the selected port, Private, LocalSubnet, and Edge Traversal Block. Never broaden it to Public or RemoteAddress Any, and do not reset the firewall.
 14. After changing a Zoo Code Remote Node profile, start a new task and verify with `lms ps` that only the intended model is loaded at the intended context with parallel 1. Do not accept measurements from implicit auto-load or multi-model VRAM contention.
+15. Never overwrite, rename, or remove a known-good Safe profile when adding an optimization profile. `Coding-Fast` is explicit workload-specific selection only and must not be described or wired as the General Default.
 
 ## Required update workflow
 
