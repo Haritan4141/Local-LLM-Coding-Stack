@@ -41,6 +41,19 @@ launcherは次を行います。
 
 `Start-Goose-Jonathan-Vision64K.ps1 -NoLaunch -InstallDesktopShortcut`でshortcutを再作成できます。Goose configを切り替える必要がある場合は、変更前configをrepository外の`%LOCALAPPDATA%\Local-LLM-Coding-Stack\goose-config-backups\`へ保存します。Secret fileは読み書きしません。
 
+## Q5_K_M 96Kから通常起動へ戻す場合
+
+`Set-Goose-Profile-Q6K-Vision64K.bat`は、通常のGoose shortcutを使用するための永続client profileをQ6_K Vision 64Kへ戻します。LM StudioのloadとGoose起動は行いません。
+
+| Goose setting | Q6_K Vision 64K value |
+|---|---:|
+| Model | `qwen3.8-27b-uncensored-vision` |
+| `GOOSE_CONTEXT_LIMIT` | 64,512 |
+| `GOOSE_MAX_TOKENS` | 32,768 |
+| `GOOSE_AUTO_COMPACT_THRESHOLD` | 0.3 |
+
+Goose Desktopを完全終了し、このprofile selectorを実行してから`Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat`をloadし、通常のGoose shortcutで新しいchatを開始します。変更前configはrepository外へbackupされ、Goose起動中は変更しません。
+
 ## Runtime behavior
 
 各BATは現在ロード中の全LM Studioモデルを解除した後、repository rootの`Load-ManagedModel.mjs`を使ってVisionモデル枠をロードします。実行には`npm install`済みの`@lmstudio/sdk` 1.5.0、LM Studio起動、`lms` CLI、外部モデルデータが必要です。

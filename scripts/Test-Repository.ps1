@@ -34,6 +34,8 @@ $requiredPaths = @(
     'research',
     'logs',
     'scripts',
+    'scripts/goose/Set-GooseProfile.ps1',
+    'scripts/tests/Test-GooseProfileSelector.ps1',
     'scripts/lmstudio/Load-ManagedModel.mjs',
     'scripts/lmstudio/Test-ManagedModel.mjs',
     'scripts/lmstudio/model-loaders/RTX3090/README.md',
@@ -59,6 +61,9 @@ $requiredPaths = @(
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Qwen3.8-JonathanColetti-Q6K-Vision_32K.bat',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Start-Goose-Jonathan-Vision64K.ps1',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Start-Goose-Jonathan-Vision64K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Set-Goose-Profile-Q6K-Vision64K.bat',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision/README.md',
+    'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision/Set-Goose-Profile-Q5KM-Vision96K.bat',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q6KP/README.md',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q6KP/Qwen3.8-HauhauCS-Q6KP_96K.bat',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-HauhauCS-Aggressive-Q6KP/Qwen3.8-HauhauCS-Q6KP_64K.bat',
@@ -151,6 +156,14 @@ foreach ($blockedDirectory in @('models', 'model-data', 'runtime-data', '.lmstud
     $blockedPath = Join-Path $repoRoot $blockedDirectory
     if (Test-Path -LiteralPath $blockedPath) {
         $failures.Add("Runtime/model data directory must not exist in repository: $blockedDirectory")
+    }
+}
+
+$gooseSelectorTest = Join-Path $repoRoot 'scripts\tests\Test-GooseProfileSelector.ps1'
+if (Test-Path -LiteralPath $gooseSelectorTest -PathType Leaf) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $gooseSelectorTest
+    if ($LASTEXITCODE -ne 0) {
+        $failures.Add("Goose profile selector regression test failed with exit code $LASTEXITCODE.")
     }
 }
 

@@ -1,0 +1,90 @@
+{
+  "$schema": "../profile.schema.json",
+  "profile_version": 1,
+  "profile_id": "candidate-jonathan-q5km-vision",
+  "status": "Candidate",
+  "captured_date": "2026-08-24",
+  "baseline_profile": "../current/qwen38-27b-uncensored-q6k.json",
+  "hardware": {
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "vram_gib": 32
+  },
+  "model": {
+    "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+    "revision": "dee0a3164d9e11bbbebf5b63f52ba99443d14fc3",
+    "variant": "Q5_K_M + vision-f16 projector",
+    "file_name": "Qwen3.8-27B-Uncensored-Q5_K_M.gguf",
+    "external_path": null,
+    "size_bytes": 19535701408,
+    "sha256": "24780644a95f759a9aeeb228c3d852028f2fd40ce0b74d68134246ec4a959547",
+    "vision_projector": {
+      "file_name": "Qwen3.8-27B-Uncensored-vision-f16.gguf",
+      "size_bytes": 927606912,
+      "sha256": "5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c"
+    },
+    "lm_studio_model_key": "qwen3.8-27b-uncensored-vision-q5km",
+    "api_identifier": "qwen3.8-27b-uncensored-vision-q5km"
+  },
+  "context_profiles": [
+    { "name": "Light Vision", "context_tokens": 32768, "status": "pending" },
+    { "name": "Comparison Vision", "context_tokens": 65536, "status": "pending" },
+    { "name": "Operational Candidate", "context_tokens": 98304, "status": "verified" }
+  ],
+  "effective_settings": {
+    "kv_cache": { "k": "Q8_0", "v": "Q8_0" },
+    "kv_cache_gpu_offload": true,
+    "flash_attention": true,
+    "gpu_offload": { "mode": "all", "offloaded_layers": 65, "total_layers": 65 },
+    "mtp": {
+      "enabled": false,
+      "max_draft_tokens": 2,
+      "selection_reason": "96K controlled fixture: OFF 53.7446 tok/s and 25876 MiB peak; ON 45.5164 tok/s and 27265 MiB peak"
+    },
+    "reasoning_budget_tokens": 8192,
+    "max_concurrent_predictions": 1
+  },
+  "evaluation_status": {
+    "lm_studio_catalog": "verified Q5_K_M, Vision true, tool-use true, native context 262144",
+    "direct_lm_studio_vision": "verified 7/7 at 96K with MTP OFF",
+    "long_context": "verified with 70081 input tokens and exact NEEDLE-96K-PASS response",
+    "direct_tool_calling": "verified exact function name and arguments",
+    "goose_cli": "verified at 90112 client context limit and 16384 max output; persistent Goose config unchanged",
+    "goose_desktop": "separate process-local Candidate launcher added; GUI image attachment remains to be exercised by the user",
+    "agentic_coding": "verified isolated multi-file fixture; final tests 10/10",
+    "reasoning_budget_8192": "Q5_K_M and same-condition Q6_K both exhausted the budget without a final answer; shared unresolved behavior",
+    "promotion": "keep Q6_K Current until controlled comparison and explicit approval"
+  },
+  "measured_96k": {
+    "mtp_off": {
+      "median_generation_tokens_per_second": 53.7446,
+      "median_ttft_seconds": 0.0837,
+      "peak_vram_mib": 25876,
+      "wddm_peak_shared_gib": 0.708
+    },
+    "mtp_on": {
+      "median_generation_tokens_per_second": 45.5164,
+      "median_ttft_seconds": 0.1132,
+      "peak_vram_mib": 27265,
+      "mtp_acceptance_percent": 78.2548
+    },
+    "same_condition_q6k_mtp_on": {
+      "median_generation_tokens_per_second": 60.8219,
+      "median_ttft_seconds": 0.0892,
+      "peak_vram_mib": 29720
+    }
+  },
+  "goose_candidate_profile": {
+    "runtime_context_tokens": 98304,
+    "client_context_limit_tokens": 90112,
+    "max_output_tokens": 16384,
+    "auto_compact_threshold": 0.3,
+    "scope": "launcher child process only; persistent Goose config unchanged"
+  },
+  "pre_test_estimate": {
+    "model_saving_vs_q6_bytes": 2895298560,
+    "model_saving_vs_q6_gib": 2.6965,
+    "predicted_96k_peak_vram_mib": 26975,
+    "predicted_96k_effective_headroom_mib": 5212,
+    "status": "calculated from the Q6_K Vision 96K measured peak; not observed"
+  }
+}

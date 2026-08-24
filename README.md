@@ -37,12 +37,15 @@ Current の主な運用値:
 |---|---|
 | Current | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` / `Q6_K` |
 | Candidate / Vision profile | JonathanColetti `Q6_K` + official `vision-f16` projector / direct Vision 7/7 |
+| Candidate / recommended 96K Goose profile | JonathanColetti `Q5_K_M` + official `vision-f16` projector / MTP OFF |
 | Candidate | `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` / evaluated, not adopted |
 | Watch | 将来の HauhauCS Balanced-MTP-GGUF。公開確認後に登録内容を確定 |
 
 Candidate は Current と分離して扱います。Aggressive Q6_K_P/Q5_K_Pの評価ではVisionとZoo Code連携を確認しましたが、速度・VRAM・Reasoningの回帰によりCurrentへ昇格しません。結果は `benchmarks/results/2026-08-20-hauhaucs-aggressive-ab.md` にあります。FastMTPはcustom patchが必要なため未検証です。
 
 JonathanColetti版には公式F16 Vision projectorが追加されました。既存Q6_Kを再ダウンロードせず、別のLM Studio model key/API IDとして分離したVision profileで32K・64K・96Kの画像認識7/7を確認しています。64Kを通常のVision presetとして推奨し、96Kは長context専用とします。2026-08-23からRTX5090のgoose Desktopは、このVision 64K profileをapp-global既定runtimeとして運用します。デスクトップの`Goose Vision 64K`ショートカットがモデル、Vision capability、context、Q8/Q8、MTP、parallelをpreflightし、必要な場合だけmanaged reloadしてgooseを起動します。これはgoose固有の運用判断であり、repository lifecycle Currentは通常text Q6_K / 96Kのままです。導入方式とclient別結果は`research/jonathan-q6k-vision-2026-08-23.md`、実測は`benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md`にあります。
+
+64Kを超えるGoose作業向けには、JonathanColetti Q5_K_M Vision / 96K / Q8_0 / MTP OFFを推奨Candidateとして追加しました。固定fixtureで53.74 tok/s、Peak 25,876 MiB、70,081-token入力、Vision 7/7、Tool Calling、isolated Agentic Coding 10/10を確認しています。同条件Q6_K / MTP ONより約11.6%遅い一方、Peak VRAMを3,844 MiB節約します。`Goose Q5KM Vision 96K Candidate`ショートカットは子プロセスだけへ90,112-token client limitを渡し、既存Goose設定とQ6 64Kショートカットを変更しません。CurrentはQ6_Kのままです。
 
 ## Remote nodes
 
@@ -86,7 +89,7 @@ BLUEの普段使いはJonathan Q6_K Vision / 64K / Q8_0 / RTX3090→RTX3060 dual
 
 ## Managed LM Studio loaders
 
-Currentモデルの96K / 64K / 32K BATは `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/` で管理します。同じQ6_Kへprojectorを追加するVision用BATは`Qwen3.8-JonathanColetti-Q6K-Vision/`へ分離します。Candidate Q6_K_PとQ5_K_P fallbackも、量子化を明記した別ディレクトリです。RTX3090はOperational Defaultを`RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/`、fallbackを`Qwen3.8-JonathanColetti-Q4KM/`、optional Candidateを`Qwen3.8-HauhauCS-Aggressive-Q4KP/`へ分離します。別モデルを試す場合は、既存BATを上書きせず対象GPU配下へモデル・量子化別ディレクトリを追加します。
+Currentモデルの96K / 64K / 32K BATは `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/` で管理します。同じQ6_Kへprojectorを追加するVision用BATは`Qwen3.8-JonathanColetti-Q6K-Vision/`、低VRAM 96K CandidateのQ5_K_M Visionは`Qwen3.8-JonathanColetti-Q5KM-Vision/`へ分離します。Candidate Q6_K_PとQ5_K_P fallbackも、量子化を明記した別ディレクトリです。RTX3090はOperational Defaultを`RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/`、fallbackを`Qwen3.8-JonathanColetti-Q4KM/`、optional Candidateを`Qwen3.8-HauhauCS-Aggressive-Q4KP/`へ分離します。別モデルを試す場合は、既存BATを上書きせず対象GPU配下へモデル・量子化別ディレクトリを追加します。
 
 BATはGGUFを内包・ダウンロードせず、LM Studioへインストール済みのモデルを `lms` CLIで参照します。実行時に `lms unload --all` を行うため、現在ロード中のモデルを解除する点に注意してください。
 

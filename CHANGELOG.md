@@ -6,6 +6,10 @@
 
 ### Added
 
+- RTX5090向けJonathanColetti Q5_K_M + official F16 Vision projectorを、独立model key/API ID `qwen3.8-27b-uncensored-vision-q5km`の96K Candidateとして外部LM Studio領域へ導入。固定revisionの本体/projectorサイズとSHA-256を検証し、GGUFはGitへ保存していない。
+- Q5_K_M Visionの32K/64K/96K managed loader、Candidate profile、upstream調査、controlled benchmarkを追加。96KでMTP ON/OFF、同条件Q6_K control、VRAM/Shared、70,081-token入力、Vision 7/7、direct Tool Calling、Reasoning 8192、Goose multi-file Agentic Coding 10/10を記録。
+- `Goose Q5KM Vision 96K Candidate`デスクトップショートカットを追加。98,304-token LM Studio runtimeをpreflightし、Goose子プロセスだけへ90,112 context limit、16,384 max output、compact threshold 0.3を渡す。永続Goose configと既存`Goose Vision 64K`は変更しない。
+- 通常のGoose shortcutを使う手動運用向けに、永続client設定だけをQ5_K_M Vision 96Kへ切り替えるprofile selectorと、Q6_K Vision 64Kへ戻すselectorを追加。Goose起動中は拒否し、変更前configをrepository外へ日時付きbackupし、対象値を再検証する。LM Studio runtimeとGoose processは変更しない。
 - BLUE Jonathan Q6_K Vision 64KへRTX3090 259W Primaryと370W Performance overrideの分離loaderをlocal/MAIN remoteの双方に追加。GPU indexを固定せず、GPU名・PCI Bus IDで一意照合したUUIDだけへPower Limitを設定・検証してからmanaged loadする。
 - 370W→259W→370WのText/Vision/30.9K prompt/Sustained A/Bを`benchmarks/results/2026-08-24-blue-rtx3090-power-limit-ab.md`へcurated記録。既存Standard16K / Long32K client profileはPower Limitから独立して維持。
 - BLUE Operational DefaultとしてJonathan Q6_K Vision / 64K / Q8_0 / RTX3090→RTX3060 priorityOrder / MTP 2 / parallel 1を採用。identity、370W/170W、Vision、effective load config、両GPU利用を監査するlocal loaderと、MAINからのSSH one-click launcherを追加・実機検証。
@@ -39,6 +43,8 @@
 
 ### Decision
 
+- Jonathan Q5_K_M Vision / 96K / Q8_0 / MTP OFF / parallel 1を、64Kを超えるGoose作業の推奨explicit Candidateとする。同条件Q6_K / MTP ONより11.6%遅いがPeak VRAMを3,844 MiB節約し、予約420 MiB差引後6,311 MiB / 約6.16 GiBのeffective headroomを得た。CurrentはQ6_Kのまま維持する。
+- Q5_K_MではMTP ONが45.5164 tok/s・27,265 MiB、OFFが53.7446 tok/s・25,876 MiBだったため、Candidate loaderはMTP OFFへ統一する。78.2548% acceptanceだけを理由にMTPを有効化しない。
 - BLUE RTX3090は259WをPrimary Operational Power Limitへ採用し、370Wは明示的Performance overrideへ変更。RTX3060は170Wのまま維持する。Repository lifecycle Current、MAIN RTX5090 Operational Default、Q6_K Vision 64Kのモデル設定は変更しない。
 - BLUEはJonathan Q6_K Vision / 64K / Q8_0 / dual GPUをOperational Defaultとし、Jonathan Q4_K_M / 32Kをfallbackへ変更。repository-wide CurrentはRTX5090 Jonathan Q6_K textの1件だけを維持する。
 - 80K～88Kは最大値探索の証拠として保持するが、Shared gate marginが0.469～0.343 GiBしかないため常用しない。96K Q8のShared 5.021 GiB、128K Q8 8.065 GiB、128K F16 15.044 GiBを理由にOperational loaderを作成しない。
@@ -55,6 +61,7 @@
 
 ### Runtime impact
 
+- MAIN RTX5090の終了時runtimeはJonathan Q5_K_M Vision Candidate / 98,304 / Q8_0-Q8_0 / MTP OFF / parallel 1 / Vision true / IDLE。既存Goose Desktop processはユーザー操作を中断しないため閉じず、Candidate shortcutの実起動はGoose完全終了後に行う。永続Goose modelはQ6_K Visionのまま、repository Current、Zoo Code、Kilo、driver、global LM Studio設定は変更していない。
 - BLUEでQ4_K_M 32K fallbackを回帰後、259W Primary remote loaderを実行。終了状態はRTX3090 259W / RTX3060 170W、Jonathan Q6_K Vision、65,536、Q8_0/Q8_0、MTP draft 2、parallel 1、Vision true、MAINからTCP/API到達PASS。370W Performance loaderは通常loaderから分離した。
 - BLUE external SDKへ後方互換managed loaderを配備し、BLUE local/MAIN remote launcherの両方でQ6_K Vision 64Kをロード。既存Q4_K_M 32K引数でもQ8_0/Q8_0、full offload、MTP draft 2、parallel 1の後方互換監査にPASSし、その後Q6_K Vision 64Kへ復帰。作業終了状態は対象1件がIDLE、context 65,536、parallel 1。Power LimitはRTX3090 370W / RTX3060 170Wのまま、driver、Firewall、BIOS、LM Studio global GPU設定は変更していない。
 - MAINのKilo configへBLUE provider 2件を追加したが、既定modelは`lmstudio/qwen3.8-27b-uncensored`のまま。Goose、Zoo Code、MAIN LM Studio runtimeは変更していない。
@@ -77,6 +84,7 @@
 
 ### Fixed
 
+- Goose configにlocalhostとBLUE remoteの複数provider `model:`行がある場合、Q6_K Vision 64K launcherが全provider横断で1件を期待して停止する問題を修正。`lmstudio` provider block内だけを一意照合し、remote providerを変更しない。
 - BLUE PowerShell 5.1 loaderで`lms ps --json`の配列を平坦化し、status/queued fieldがない未知objectもactiveとして保守的に拒否するよう修正。`processingPrompt`中の検証runに対し、モデルを解除せず`An LM Studio prediction is active or queued`で停止することを実機確認。
 - Windows PowerShell 5.1で`lms ps --json`がモデル未ロード時に返す`[]`をnested object 1件と誤認し、one-click launcherが存在しない`.type`で停止する問題を修正。空配列を0モデルとして扱い、未知のmodel fieldもreload判定前に安全に拒否する。
 

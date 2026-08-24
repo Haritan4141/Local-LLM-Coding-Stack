@@ -12,7 +12,9 @@ State captured: 2026-08-24 (Asia/Tokyo)
 - Max concurrent predictions: 1
 - Repository lifecycle Current remains API ID `qwen3.8-27b-uncensored`; its model files and loader presets were not overwritten.
 - BLUE currently has its independent Operational Default loaded and IDLE: API ID `qwen3.8-27b-uncensored-vision-blue`, 65,536 context, Q8_0/Q8_0, RTX3090→RTX3060 priority order, embedded MTP ON / draft 2, parallel 1, Vision true. This Remote Node role does not promote the Candidate or replace repository Current.
-- goose Desktop operational default on RTX5090: the Vision API ID above with client context limit 64,512. The desktop shortcut `Goose Vision 64K` performs a managed runtime preflight and starts goose without requiring normal model reselection.
+- goose Desktop persistent operational default on RTX5090: API ID `qwen3.8-27b-uncensored-vision` with client context limit 64,512. The desktop shortcut `Goose Vision 64K` performs a managed runtime preflight and starts goose without requiring normal model reselection.
+- Recommended explicit 96K Goose Candidate: Jonathan Q5_K_M Vision, API ID `qwen3.8-27b-uncensored-vision-q5km`, Q8_0/Q8_0, MTP OFF, parallel 1. Its separate shortcut uses a process-only 90,112 client limit and does not replace the persistent Q6_K Vision 64K default.
+- RTX5090 runtime at this capture: the Q5_K_M Vision Candidate is loaded IDLE at 98,304 and passed the managed preflight. The already-open Goose Desktop process was not interrupted; close it completely before using the Candidate shortcut so process-only overrides take effect.
 
 ## Effective profiles
 
@@ -60,6 +62,23 @@ Currentと同じQ6_K本体へJonathanColetti公式F16 Vision projectorを組み�
 
 64Kを通常のVision presetとして推奨します。96Kも画像認識と生成に成功しましたが、測定後のGPU残量は約2.87 GBで、他のGPU負荷との併用余裕が小さくなります。Kilo CLIは画像転送に成功して6/7です。goose CLI 1.46.0は画像をtext pathとして扱い失敗しました。goose Desktop 1.47.0は添付・custom Vision ID・画像付き送信まで確認しましたが、初回はLM Studioがtext-only instanceをロードしてHTTP 400となりました。Vision 64K明示ロード後の同一ID direct recoveryは正答しています。日常起動はmanaged preflight付き`Goose Vision 64K`ショートカットへ統一し、text-only instanceの暗黙選択を避けます。Desktopでの画像付き成功再送は引き続きpending、Zoo Codeは未実施です。詳細は`benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md`を参照してください。
 
+## Recommended 96K Goose Candidate
+
+JonathanColetti Q5_K_Mと同じ公式F16 Vision projectorを組み合わせた独立Candidateを追加しました。Current/Q6_K model枠、API ID、loader、永続Goose configは上書きしていません。
+
+| Item | Q5_K_M Candidate | Same-condition Q6_K control |
+|---|---:|---:|
+| Selected MTP | OFF | ON |
+| 96K median generation | 53.7446 tok/s | 60.8219 tok/s |
+| 96K Peak VRAM | 25,876 MiB | 29,720 MiB |
+| Difference | 11.6% slower | 3,844 MiB more Peak VRAM |
+
+Q5_K_M / MTP ONは45.5164 tok/s・27,265 MiB・acceptance 78.2548%で、OFFより遅くVRAMも多いため採用しません。MTP OFFの96Kでは予約420 MiB差引後6,311 MiB / 約6.16 GiBのeffective headroomを保持し、70,081-token入力、direct Vision 7/7、Tool Calling、Goose Agentic Coding 10/10に成功しました。Reasoning Budget 8,192はQ5と同条件Q6の双方が最終回答前に上限へ達したため未解決です。
+
+デスクトップの`Goose Q5KM Vision 96K Candidate`は、Gooseを閉じた状態で実行します。LM Studioの98,304 contextを検査し、Goose子プロセスだけへ`GOOSE_CONTEXT_LIMIT=90112`、`GOOSE_MAX_TOKENS=16384`、compact threshold 0.3を渡します。既存`Goose Vision 64K`は従来どおりQ6_K Vision用です。
+
+LM Studio loaderと通常のGoose shortcutを別々に使う運用向けに、永続client設定だけを切り替える`Set-Goose-Profile-Q5KM-Vision96K.bat`と、Q6_K 64Kへ戻す`Set-Goose-Profile-Q6K-Vision64K.bat`を追加しました。selectorはGoose完全終了時だけ動作し、変更前configをrepository外へbackupします。モデルloadやGoose起動は行わず、repository Currentも変更しません。
+
 ## Existing measurements
 
 | Mode | Generation speed | MTP acceptance | Evidence |
@@ -76,7 +95,7 @@ Currentと同じQ6_K本体へJonathanColetti公式F16 Vision projectorを組み�
 - 128K は「不可能」ではなく「日常運用の安定条件を満たさない」と扱う。
 - text-only Currentの定量的なVRAM baseline/peak/deltaは未記録。Vision profileは32K/64K/96Kのidle/peakを記録済み。
 
-## Active candidate
+## Evaluated HauhauCS candidate
 
 `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` の比較を完了しました。Candidateとして記録を残しますが、Currentへの昇格は推奨しません。
 
@@ -127,7 +146,9 @@ Identity、Firewall backup、モデルartifact、context別実測は`profiles/RT
 
 ## Next decision
 
-1. JonathanColetti Q6_KをCurrentとして維持する。
-2. Visionが必要なときは、まず同じJonathan Q6_Kを使う64K Vision profileを手動選択する。HauhauCS Aggressiveは比較履歴として保持する。
-3. BLUEはJonathan Q6_K Vision / 64K / Q8_0 / dual GPU / RTX3090 259WをPrimary Operational Defaultとし、370WをPerformance override、Q4_K_M / 32Kをfallbackとして保持する。
-4. HauhauCS Balanced-MTP-GGUFが実際に公開された場合、同じfixtureで再評価してから昇格可否を判断する。
+1. JonathanColetti Q6_Kを唯一のCurrentとして維持する。
+2. Gooseで64K以内なら既存Q6_K Vision 64K、64Kを超える可能性がある作業はQ5_K_M Vision 96K Candidateを明示選択する。
+3. Q5_K_M 96KはMTP OFFで運用し、実使用の品質、マウス応答性、長い同一turn tool loop、Desktop画像添付を追加観察する。自動昇格しない。
+4. HauhauCS Aggressiveは比較履歴として保持する。
+5. BLUEはJonathan Q6_K Vision / 64K / Q8_0 / dual GPU / RTX3090 259WをPrimary Operational Defaultとし、370WをPerformance override、Q4_K_M / 32Kをfallbackとして保持する。
+6. HauhauCS Balanced-MTP-GGUFが実際に公開された場合、同じfixtureで再評価してから昇格可否を判断する。

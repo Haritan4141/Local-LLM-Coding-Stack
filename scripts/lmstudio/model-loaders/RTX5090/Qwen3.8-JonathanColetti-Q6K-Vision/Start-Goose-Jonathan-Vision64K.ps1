@@ -48,14 +48,25 @@ function Ensure-GooseDefaultModel {
     }
 
     $configText = [System.IO.File]::ReadAllText($gooseConfig)
-    $matches = [regex]::Matches($configText, '(?m)^([ \t]*)model:[ \t]*([^\r\n]+?)[ \t]*(\r?)$')
-    if ($matches.Count -ne 1) {
-        throw "Expected exactly one Goose provider model setting, found $($matches.Count)."
+    $providerMatches = [regex]::Matches(
+        $configText,
+        '(?ms)^  lmstudio:\r?\n(?<body>(?:    [^\r\n]*(?:\r?\n|$))*)'
+    )
+    if ($providerMatches.Count -ne 1) {
+        throw "Expected exactly one Goose lmstudio provider block, found $($providerMatches.Count)."
     }
 
-    $modelIndent = $matches[0].Groups[1].Value
-    $currentModel = $matches[0].Groups[2].Value.Trim()
-    $lineEnding = $matches[0].Groups[3].Value
+    $providerBody = $providerMatches[0].Groups['body']
+    $modelMatches = [regex]::Matches(
+        $providerBody.Value,
+        '(?m)^(    model:[ \t]*)([^\r\n]+?)[ \t]*(\r?)$'
+    )
+    if ($modelMatches.Count -ne 1) {
+        throw "Expected exactly one model setting in the Goose lmstudio provider block, found $($modelMatches.Count)."
+    }
+
+    $currentModel = $modelMatches[0].Groups[2].Value.Trim()
+    $lineEnding = $modelMatches[0].Groups[3].Value
     if ($currentModel -eq $identifier) {
         Write-Host "[OK] Goose default model: $identifier" -ForegroundColor Green
         return
@@ -70,8 +81,9 @@ function Ensure-GooseDefaultModel {
     $backupPath = Join-Path $backupRoot ("config-{0}.yaml" -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
     Copy-Item -LiteralPath $gooseConfig -Destination $backupPath
 
-    $updatedLine = "${modelIndent}model: $identifier$lineEnding"
-    $updatedText = $configText.Remove($matches[0].Index, $matches[0].Length).Insert($matches[0].Index, $updatedLine)
+    $updatedLine = "    model: $identifier$lineEnding"
+    $modelIndex = $providerBody.Index + $modelMatches[0].Index
+    $updatedText = $configText.Remove($modelIndex, $modelMatches[0].Length).Insert($modelIndex, $updatedLine)
 
     $bytes = [System.IO.File]::ReadAllBytes($gooseConfig)
     $hasUtf8Bom = $bytes.Length -ge 3 -and $bytes[0] -eq 0xEF -and $bytes[1] -eq 0xBB -and $bytes[2] -eq 0xBF
