@@ -12,7 +12,7 @@ lms unload --all
 
 echo.
 echo Loading qwen3.8-27b-uncensored...
-lms load "qwen3.8-27b-uncensored" --context-length 65536 --gpu max --identifier "qwen3.8-27b-uncensored"
+lms load "qwen3.8-27b-uncensored" --yes --context-length 65536 --gpu max --identifier "qwen3.8-27b-uncensored"
 
 echo.
 if errorlevel 1 (
