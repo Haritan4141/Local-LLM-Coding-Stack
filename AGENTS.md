@@ -13,7 +13,7 @@ This repository is the source of truth for the local coding stack built around V
 - `profiles/RTX3090-Remote/` describes the independent `pc5700x` LAN node. A Remote Node role does not create another repository-wide Current model.
 - The node hardware is RTX 3090 24 GB + RTX 3060 12 GB. Its independent Operational Default is Jonathan Vision Q6_K at 64K, Q8_0/Q8_0, priority-order dual GPU, MTP 2, and parallel 1. This node role remains a `Candidate` in repository lifecycle terms and does not create a second Current.
 - Jonathan Q4_K_M at 32K is the BLUE fallback. HauhauCS Aggressive Q4_K_P remains optional. Q8 capacity passed through 88K but 96K/128K failed the Shared-memory gate; do not create operational 96K/128K loaders.
-- RTX3090 Power Limit 370W is the BLUE standard. Managed loaders may verify it but must never change it without explicit user authorization.
+- BLUE RTX3090 Power Limit 259W is the Primary Operational standard; RTX3060 remains 170W. The separated 370W Performance override may change only the RTX3090 when explicitly selected. Power loaders must match GPU name plus PCI Bus ID, mutate the resolved UUID rather than a fixed index, verify both limits before model load, and stop before changing runtime state when identity or active-prediction checks fail.
 
 ## Status semantics
 

@@ -8,6 +8,7 @@ RTX3090 Remote Node用の通常コーディングモデルです。
 | Quantization | `Q4_K_M` |
 | Model size | 16,810,714,528 bytes |
 | API identifier | `qwen3.8-27b-uncensored@q4_k_m` |
+| Power Limit | 変更しない。現在選択中のBLUE Primary 259WまたはPerformance 370Wを継承し、RTX3060 170Wも変更しない |
 | Vision | separate F16 projector installed outside Git; direct API verified |
 | Measured VRAM | 19,737 MiB peak at 32K; 21,106 MiB peak at 64K |
 | Default use | 32K remote coding / Zoo Code |

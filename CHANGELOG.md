@@ -6,6 +6,8 @@
 
 ### Added
 
+- BLUE Jonathan Q6_K Vision 64KへRTX3090 259W Primaryと370W Performance overrideの分離loaderをlocal/MAIN remoteの双方に追加。GPU indexを固定せず、GPU名・PCI Bus IDで一意照合したUUIDだけへPower Limitを設定・検証してからmanaged loadする。
+- 370W→259W→370WのText/Vision/30.9K prompt/Sustained A/Bを`benchmarks/results/2026-08-24-blue-rtx3090-power-limit-ab.md`へcurated記録。既存Standard16K / Long32K client profileはPower Limitから独立して維持。
 - BLUE Operational DefaultとしてJonathan Q6_K Vision / 64K / Q8_0 / RTX3090→RTX3060 priorityOrder / MTP 2 / parallel 1を採用。identity、370W/170W、Vision、effective load config、両GPU利用を監査するlocal loaderと、MAINからのSSH one-click launcherを追加・実機検証。
 - Q8 capacityを64K/72K/80K/84K/88K/96K/128K、F16を64K/128Kで測定。80K～88KはPASSしたが安全余裕を優先し、96K/128KはShared gate FAILとして除外。Standard16KとLong32K（30,803 output tokens自然完了）、Vision 7/7を`benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md`へ記録。
 - Kilo Codeへ既存localhost defaultを変えずBLUE Standard16K / Long32K provider aliasesを追加。Kilo 7.4.22のmodel listingに加え、Long32K実経路で29,001 output tokensのgeneration stepを完了し、16K client limitがないことを確認。完了後の自動継続/要約ターンも注意事項として記録。
@@ -37,6 +39,7 @@
 
 ### Decision
 
+- BLUE RTX3090は259WをPrimary Operational Power Limitへ採用し、370Wは明示的Performance overrideへ変更。RTX3060は170Wのまま維持する。Repository lifecycle Current、MAIN RTX5090 Operational Default、Q6_K Vision 64Kのモデル設定は変更しない。
 - BLUEはJonathan Q6_K Vision / 64K / Q8_0 / dual GPUをOperational Defaultとし、Jonathan Q4_K_M / 32Kをfallbackへ変更。repository-wide CurrentはRTX5090 Jonathan Q6_K textの1件だけを維持する。
 - 80K～88Kは最大値探索の証拠として保持するが、Shared gate marginが0.469～0.343 GiBしかないため常用しない。96K Q8のShared 5.021 GiB、128K Q8 8.065 GiB、128K F16 15.044 GiBを理由にOperational loaderを作成しない。
 - 64K F16はQ8と同速でDedicated headroomが1,494 MiB少ないため、Q8_0を採用する。
@@ -52,6 +55,7 @@
 
 ### Runtime impact
 
+- BLUEでQ4_K_M 32K fallbackを回帰後、259W Primary remote loaderを実行。終了状態はRTX3090 259W / RTX3060 170W、Jonathan Q6_K Vision、65,536、Q8_0/Q8_0、MTP draft 2、parallel 1、Vision true、MAINからTCP/API到達PASS。370W Performance loaderは通常loaderから分離した。
 - BLUE external SDKへ後方互換managed loaderを配備し、BLUE local/MAIN remote launcherの両方でQ6_K Vision 64Kをロード。既存Q4_K_M 32K引数でもQ8_0/Q8_0、full offload、MTP draft 2、parallel 1の後方互換監査にPASSし、その後Q6_K Vision 64Kへ復帰。作業終了状態は対象1件がIDLE、context 65,536、parallel 1。Power LimitはRTX3090 370W / RTX3060 170Wのまま、driver、Firewall、BIOS、LM Studio global GPU設定は変更していない。
 - MAINのKilo configへBLUE provider 2件を追加したが、既定modelは`lmstudio/qwen3.8-27b-uncensored`のまま。Goose、Zoo Code、MAIN LM Studio runtimeは変更していない。
 - BLUEへ欠けていたJonathan Q6_K本体だけを既存SSH経路でコピーし、MAIN/BLUEで本体とVision projectorのSHA-256一致を確認。GGUFはGitへ保存していない。benchmarkはper-load GPU splitだけを使用し、global GPU priority、Power Limit、driver、Firewall、SSH/SMBを変更していない。

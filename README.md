@@ -57,9 +57,9 @@ Main PC: VS Code -> Zoo Code
 
 BLUE Operational DefaultのAPI identifierは`qwen3.8-27b-uncensored-vision-blue`です。localhost CurrentのIDを流用しません。Kilo CodeにはBLUE Standard16K / Long32Kを追加し、既定localhost modelは変更していません。Zoo CodeのBLUE profileは正式なUIから追加する作業をpendingとします。
 
-BLUEの普段使いはJonathan Q6_K Vision / 64K / Q8_0 / RTX3090→RTX3060 dual GPUです。Shared 3.281 GiB、Dedicated headroom合計9,720 MiBで選定し、80K～88Kはcapacity evidence、96K/128KはShared gate FAILとしてOperational loaderを作りません。RTX3090 Power Limit 370Wは現行標準で、loaderは読み取り確認だけを行います。
+BLUEの普段使いはJonathan Q6_K Vision / 64K / Q8_0 / RTX3090→RTX3060 dual GPUです。Shared 3.281 GiB、Dedicated headroom合計9,720 MiBで選定し、80K～88Kはcapacity evidence、96K/128KはShared gate FAILとしてOperational loaderを作りません。RTX3090 Power Limitは259WをPrimary Operational、370Wを明示選択のPerformance overrideとします。RTX3060は常に170Wです。loaderはGPU名・PCI Bus IDで照合したUUIDへ設定し、成功確認後にモデルをロードします。
 
-64K short generationは26.13 tok/s、MTP acceptance 79.41%、Vision fixture 7/7です。Long32Kはnative APIで30,803 output tokensを自然完了し、Kilo実経路でも29,001 tokensを生成しました。MAINのREMOTE launcherは`pc5700x / 192.168.0.104 / DESKTOP-L9HAM1G`を照合してBLUEだけを起動します。Q4_K_M / 32Kはfallback、HauhauCS Q4_K_Pはoptional Candidateとして保持します。詳細は`profiles/RTX3090-Remote/`、選定結果は`benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md`、Shared原因は`research/2026-08-24-blue-shared-gpu-memory-investigation.md`に記録します。
+64K short generationは26.13 tok/s、MTP acceptance 79.41%、Vision fixture 7/7です。Long32Kはnative APIで30,803 output tokensを自然完了し、Kilo実経路でも29,001 tokensを生成しました。Standard16K / Long32KはPower Limitから独立したclient profileとして維持します。MAINのREMOTE launcherは`pc5700x / 192.168.0.104 / DESKTOP-L9HAM1G`を照合してBLUEだけを起動します。Q4_K_M / 32Kはfallback、HauhauCS Q4_K_Pはoptional Candidateとして保持します。詳細は`profiles/RTX3090-Remote/`、選定結果は`benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md`、Power A/Bは`benchmarks/results/2026-08-24-blue-rtx3090-power-limit-ab.md`、Shared原因は`research/2026-08-24-blue-shared-gpu-memory-investigation.md`に記録します。
 
 ## Repository map
 

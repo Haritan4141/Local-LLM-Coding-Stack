@@ -11,7 +11,7 @@ RTX3090/
   Qwen3.8-HauhauCS-Aggressive-Q4KP/
 ```
 
-新しいモデルや量子化を評価する場合は既存ディレクトリを上書きせず、`<Model-Variant-Quantization>/`を追加します。BAT名は`<Model-Identifier>_<Context>K.bat`形式とし、`Light`、`Normal`、`VRChat`などの用途語はREADMEで管理します。
+新しいモデルや量子化を評価する場合は既存ディレクトリを上書きせず、`<Model-Variant-Quantization>/`を追加します。通常のBAT名は`<Model-Identifier>_<Context>K.bat`形式とし、`Light`、`Normal`、`VRChat`などの用途語はREADMEで管理します。同一モデル・Contextに明示的Power profileを分ける場合だけ、`_<Power>W`または`_<Power>W-Performance`をContext後へ付加します。
 
 ## Runtime boundary
 
@@ -25,4 +25,4 @@ RTX3090/
 
 BLUE Operational DefaultはJonathan Q6_K Vision / 64K / Q8_0 / dual GPUです。Jonathan Q4_K_M 32Kはfallbackとして保持します。Q6_K Q8は80K～88Kもcapacity gateを通過しましたが安全余裕を優先し、96K/128KはShared gate FAILのためloaderを作成しません。
 
-Q6_K Vision loaderはRTX3090 Power Limit 370WとRTX3060 170Wをロード前後に読み取り検査し、変更しません。MAINからは同ディレクトリの`_REMOTE.bat`を使い、SSH Alias、hostname、IPv4を照合して起動できます。
+Q6_K Vision 64KのPrimary Operational Power LimitはRTX3090 `259W`、RTX3060 `170W`です。明示選択用にRTX3090 `370W` / RTX3060 `170W`のPerformance overrideを分離しています。loaderはGPU indexを固定せず、GPU名・PCI Bus IDで照合したRTX3090 UUIDだけへPower Limitを設定し、RTX3060が170Wのままであることを確認してからモデルをロードします。MAINからは同ディレクトリの`_259W_REMOTE.bat`または`_370W-Performance_REMOTE.bat`を使い、SSH Alias、hostname、IPv4を照合して起動できます。旧`_64K.bat` / `_64K_REMOTE.bat`は259W Primaryの互換エイリアスです。

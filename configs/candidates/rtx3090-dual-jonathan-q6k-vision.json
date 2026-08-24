@@ -21,7 +21,9 @@
         "name": "NVIDIA GeForce RTX 3090",
         "vram_mib": 24576,
         "observed_pcie": "Gen3 x16",
-        "power_limit_w": 370
+        "power_limit_w": 259,
+        "default_power_limit_w": 370,
+        "performance_override_power_limit_w": 370
       },
       {
         "name": "NVIDIA GeForce RTX 3060",
@@ -47,6 +49,20 @@
     "blue_lm_studio_model_key": "qwen3.8-27b-uncensored@q6_k"
   },
   "api_identifier": "qwen3.8-27b-uncensored-vision-blue",
+  "power_limit_policy": {
+    "primary": {
+      "rtx3090_w": 259,
+      "rtx3060_w": 170,
+      "status": "verified and adopted"
+    },
+    "performance_override": {
+      "rtx3090_w": 370,
+      "rtx3060_w": 170,
+      "status": "verified; explicit loader selection only"
+    },
+    "gpu_selection": "GPU name plus PCI Bus ID; nvidia-smi mutation uses the resolved UUID, never a fixed index",
+    "output_profiles_independent": true
+  },
   "context_profiles": [
     { "name": "Operational", "context_tokens": 65536, "status": "selected; Strict PASS" },
     { "name": "Capacity evidence", "context_tokens": 90112, "status": "maximum measured PASS; not operational" },
@@ -103,6 +119,17 @@
     }
   },
   "performance": {
+    "power_limit_ab": {
+      "date": "2026-08-24",
+      "text_generation_loss_at_259w_percent": 4.43,
+      "vision_generation_loss_at_259w_percent": 4.97,
+      "long_prompt_processing_loss_at_259w_percent": 6.45,
+      "sustained_generation_loss_at_259w_percent": 3.27,
+      "sustained_total_gpu_power_reduction_percent": 14.23,
+      "sustained_rtx3090_peak_temperature_reduction_c": 4,
+      "sustained_efficiency_gain_percent": 12.78,
+      "decision": "259W Primary Operational; 370W explicit Performance override"
+    },
     "short_run_64k_q8": {
       "prompt_processing_tok_s": 128.12,
       "generation_tok_s": 26.13,
@@ -146,9 +173,10 @@
     "zoo_code": "manual UI profile required; do not invent repository schema"
   },
   "fallback_profile_id": "candidate-rtx3090-jonathan-q4km",
-  "evaluation_status": "complete; selected as BLUE Operational Default with Q4_K_M 32K preserved as fallback",
+  "evaluation_status": "complete; selected as BLUE Operational Default at 259W Primary with 370W Performance override and Q4_K_M 32K preserved as fallback",
   "result_paths": [
     "benchmarks/results/2026-08-23-jonathan-q6k-vision-gpu-comparison.md",
-    "benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md"
+    "benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md",
+    "benchmarks/results/2026-08-24-blue-rtx3090-power-limit-ab.md"
   ]
 }

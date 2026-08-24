@@ -15,15 +15,17 @@
         "name": "NVIDIA GeForce RTX 3090",
         "vram_mib": 24576,
         "observed_pcie": "Gen3 x16",
-        "power_limit_w": 370,
-        "power_limit_policy": "current standard; loader verifies but never changes"
+        "power_limit_w": 259,
+        "default_power_limit_w": 370,
+        "performance_override_power_limit_w": 370,
+        "power_limit_policy": "259W Primary Operational; 370W only through the explicit Performance loader"
       },
       {
         "name": "NVIDIA GeForce RTX 3060",
         "vram_mib": 12288,
         "observed_pcie": "Gen3 x4",
         "power_limit_w": 170,
-        "power_limit_policy": "loader verifies but never changes"
+        "power_limit_policy": "fixed at 170W; Q6_K Vision loaders verify and never change it"
       }
     ],
     "ram_gib": 31.93,
@@ -85,8 +87,19 @@
     "mmap": false,
     "mtp": "on / draft 2",
     "parallel": 1,
+    "power_limit_policy": {
+      "primary": {
+        "rtx3090_w": 259,
+        "rtx3060_w": 170
+      },
+      "performance_override": {
+        "rtx3090_w": 370,
+        "rtx3060_w": 170,
+        "explicit_selection_required": true
+      }
+    },
     "fallback_profile_id": "candidate-rtx3090-jonathan-q4km",
-    "reason": "quality and Vision with measured Shared/Dedicated safety margin; 80K+ retained only as capacity evidence"
+    "reason": "quality and Vision with measured Shared/Dedicated safety margin; 259W selected by controlled Power Limit A/B; 80K+ retained only as capacity evidence"
   },
   "client_profiles": {
     "kilo": [
@@ -102,6 +115,8 @@
     "status": "IDLE",
     "context_tokens": 65536,
     "parallel": 1,
-    "vision": true
+    "vision": true,
+    "rtx3090_power_limit_w": 259,
+    "rtx3060_power_limit_w": 170
   }
 }

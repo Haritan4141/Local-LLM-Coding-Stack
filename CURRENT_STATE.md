@@ -104,6 +104,8 @@ Currentと同じQ6_K本体へJonathanColetti公式F16 Vision projectorを組み�
 | Server | `0.0.0.0:1234`; main-PC API reachability verified |
 | Firewall | Inbound TCP 1234 / Private / LocalSubnet / Edge Block / LM Studio executable scoped |
 | BLUE Operational Default | JonathanColetti Q6_K Vision / `qwen3.8-27b-uncensored-vision-blue` / 64K / Q8_0 / dual GPU |
+| Primary Power Limit | RTX3090 259W / RTX3060 170W |
+| Performance override | RTX3090 370W / RTX3060 170W; explicit loader selection only |
 | Fallback | JonathanColetti Q4_K_M / `qwen3.8-27b-uncensored@q4_k_m` / 32K |
 | Optional Vision candidate | HauhauCS Aggressive Q4_K_P / `qwen3.8-27b-uncensored-hauhaucs-aggressive-mtp` |
 | Operational context | 65,536; 80K–88K are capacity evidence only |
@@ -117,7 +119,9 @@ Kilo Code 7.4.22にはBLUE専用OpenAI-compatible providerを追加し、Standar
 
 Q6_K Visionは64K/Q8_0/dual GPUをOperational Defaultへ採用しました。64KはShared 3.281 GiB、Shared gate margin 0.719 GiB、Dedicated headroom合計9,720 MiBです。80K/84K/88KもPASSしましたがmarginが0.469/0.407/0.343 GiBまで縮むため採用しません。96K Q8はShared 5.021 GiB、128K Q8は8.065 GiB、128K F16は15.044 GiBでFAILです。64K F16はQ8と同速でDedicated headroomが1,494 MiB少ないため、Q8を選びました。
 
-64K short runは26.13 tok/s、MTP acceptance 79.41%。Vision fixtureは7/7、33.60 tok/sです。Long32K output profileはnative APIで30,803 tokensを自然完了し、Kilo実経路でも29,001 tokensを生成しました。local/MAIN remote one-click loaderはidentity、370W/170W、effective split、Vision、両GPUを監査してPASSしています。Q4_K_M 32K fallbackも拡張helperとの後方互換性を確認し、終了時はQ6_K Vision 64Kへ復帰済みです。詳細は`benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md`、Shared原因調査は`research/2026-08-24-blue-shared-gpu-memory-investigation.md`を参照してください。
+64K short runは26.13 tok/s、MTP acceptance 79.41%。Vision fixtureは7/7、33.60 tok/sです。Long32K output profileはnative APIで30,803 tokensを自然完了し、Kilo実経路でも29,001 tokensを生成しました。Standard16K / Long32KはPower Limitから独立したclient profileです。
+
+同一64K設定の370W→259W→370W A/Bを行い、259WはText -4.43%、Vision -4.97%、Long-prompt processing -6.45%、Sustained -3.27%でした。一方、Sustained dual-GPU平均電力は-14.23%、RTX3090 peak temperatureは-4C、tok/s per GPU wattは+12.78%でした。この結果からRTX3090 259WをPrimary Operational、370Wを明示的Performance overrideへ変更し、RTX3060は170Wを維持します。local/MAIN remote loaderはGPU名・PCI Bus IDを照合し、UUID指定でPower Limitを設定・検証してからロードします。Q4_K_M 32K fallback回帰後、終了状態をQ6_K Vision 64K / 259Wへ復帰しました。詳細は`benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md`、Power A/Bは`benchmarks/results/2026-08-24-blue-rtx3090-power-limit-ab.md`、Shared原因調査は`research/2026-08-24-blue-shared-gpu-memory-investigation.md`を参照してください。
 
 Identity、Firewall backup、モデルartifact、context別実測は`profiles/RTX3090-Remote/`、詳細比較は`benchmarks/results/2026-08-20-rtx3090-remote-node.md`を正とします。Remote NodeのidentifierはRTX5090 localhost CurrentのAPI IDを流用しません。
 
@@ -125,5 +129,5 @@ Identity、Firewall backup、モデルartifact、context別実測は`profiles/RT
 
 1. JonathanColetti Q6_KをCurrentとして維持する。
 2. Visionが必要なときは、まず同じJonathan Q6_Kを使う64K Vision profileを手動選択する。HauhauCS Aggressiveは比較履歴として保持する。
-3. BLUEはJonathan Q6_K Vision / 64K / Q8_0 / dual GPUをOperational Defaultとし、Q4_K_M / 32Kをfallbackとして保持する。
+3. BLUEはJonathan Q6_K Vision / 64K / Q8_0 / dual GPU / RTX3090 259WをPrimary Operational Defaultとし、370WをPerformance override、Q4_K_M / 32Kをfallbackとして保持する。
 4. HauhauCS Balanced-MTP-GGUFが実際に公開された場合、同じfixtureで再評価してから昇格可否を判断する。
