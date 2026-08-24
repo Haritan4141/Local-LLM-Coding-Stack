@@ -18,9 +18,9 @@ The exact 96K buffer that crossed the threshold is not available in the current 
 
 ### Context matrix — Q8_0 KV
 
-Shared is the Windows `GPU Adapter Memory(*)\Shared Usage` total. Dedicated is the two-GPU `nvidia-smi` total.
+Shared is the Windows `GPU Adapter Memory(*)\Shared Usage` delta. `Dedicated delta` is the two-GPU after-load `nvidia-smi memory.used` total minus that run's 569–570 MiB pre-load display baseline. The per-GPU used/free columns are absolute after-load `nvidia-smi` values.
 
-| Context | Shared | Dedicated | RTX3060 used / free | RTX3090 used / free | Gate |
+| Context | Shared | Dedicated delta | RTX3060 used / free | RTX3090 used / free | Gate |
 |---:|---:|---:|---:|---:|---|
 | 64K | 3.281 GiB | 26,574 MiB | 9,277 / 3,011 MiB | 17,867 / 6,709 MiB | PASS |
 | 72K | 3.405 GiB | 27,042 MiB | 9,801 / 2,487 MiB | 17,811 / 6,765 MiB | PASS |
@@ -33,14 +33,14 @@ Shared is the Windows `GPU Adapter Memory(*)\Shared Usage` total. Dedicated is t
 From 88K to 96K:
 
 - Shared increases by 1.364 GiB.
-- Dedicated occupancy decreases by 1,782 MiB instead of increasing with context.
+- Model-attributed Dedicated delta decreases by 1,782 MiB instead of increasing with context; absolute after-load usage falls from 28,540 to 26,757 MiB (1,783 MiB).
 - Aggregate post-load Dedicated free therefore increases from 8,324 MiB to 10,107 MiB.
 
 This inverse movement is direct evidence of a placement/residency regime change. It is not a normal linear KV-only slope.
 
 ### F16 comparison
 
-| Context | KV | Shared | Dedicated |
+| Context | KV | Shared | Dedicated delta |
 |---:|---|---:|---:|
 | 64K | Q8_0 | 3.281 GiB | 26,574 MiB |
 | 64K | F16 | 3.286 GiB | 28,068 MiB |
