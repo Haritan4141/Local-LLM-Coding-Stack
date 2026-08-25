@@ -14,6 +14,7 @@ Last updated: 2026-08-25
 | `candidate-rtx3090-hauhaucs-aggressive-q4kp` | Candidate / Remote Node Optional | `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` | Q4_K_P | Vision + embedded MTP; stock LM Studio path | Evaluation complete; retain for optional/direct Vision use |
 | `candidate-rtx3090-dual-jonathan-q5km-vision-96k` | Candidate / BLUE Recommended Production | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q5_K_M + F16 projector | Dual-GPU Vision, embedded MTP, 96K | Strict gate, Text/Coding/Vision/Tool/76,880-token quality, and fresh Q6 comparison PASS; MTP3/Q8/batch1024 at 259W selected |
 | `candidate-rtx3090-dual-jonathan-q6k-vision` | Candidate / BLUE Quality-Performance Reference | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K + F16 projector | Dual-GPU Vision, embedded MTP, 64K | Phase 1/1.5 selected MTP3/Q8/batch1024 Balanced at 259W; MTP2/Q8/batch512 Safe and explicit Q4 Coding-Fast retained; 370W stays separate |
+| `candidate-rx9070xt-jonathan-iq4xs-96k` | Candidate / RED Remote Node Recommended | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | IQ4_XS text/tool | ROCm, embedded MTP, 96K Q4 KV | 64K/96K load, MTP A/B, 70,082-token input, exact Tool Calling and Goose path PASS; Shared-dependent |
 | `watch-hauhaucs-balanced-mtp` | Watch | HauhauCS Balanced-MTP-GGUF (provisional reference) | TBD | Expected balanced MTP profile | Publication and exact repository not yet confirmed |
 
 ## Current: current-qwen38-27b-uncensored-q6k
@@ -125,6 +126,22 @@ Promotion is blocked by measured speed, VRAM, MTP, and Reasoning regressions. Cu
 - Q5_K_M 96K qualification: `benchmarks/results/2026-08-25-blue-q5km-vision-96k-qualification.md`
 - Shared memory investigation: `research/2026-08-24-blue-shared-gpu-memory-investigation.md`
 - Lifecycle rule: these entries assign a Remote Node role only. They do not replace `current-qwen38-27b-uncensored-q6k`.
+
+## Remote Node candidate: RX9070XT
+
+- Node: `pc7600x / DESKTOP-LMB720F / 192.168.0.103 / AMD Radeon RX 9070 XT 16 GB`
+- Runtime: LM Studio 0.4.21+2 / AMD ROCm 2.29.1; Vulkan 2.29.1 retained as fallback
+- Artifact: Jonathan `IQ4_XS`, 15,309,039,008 bytes, SHA-256 `53adc4bbed67044d662273356bbf3a50fdec667ac21bbf18d13e5815fbccc7f5`
+- API identifier: `qwen3.8-27b-uncensored-iq4xs-red`
+- Recommended Candidate: 96K / Q4_0-Q4_0 / MTP draft 2 / batch512 / parallel1 / RX9070XT only / Vision false
+- Capacity: 96K load Dedicated 14.816 GiB / Shared 3.542 GiB; generation peak 14.845 / 3.570 GiB. 64K fallback Shared is 2.604 GiB
+- Speed: MTP2 median 36.762 tok/s versus OFF 29.664 tok/s, about +23.9%
+- Long context: 70,082-token input completed with 3/3 retrieval; TTFT 246.93 seconds
+- Client: exact direct Tool Calling, Goose simple inference, and Goose Developer tool call PASS. Goose global default remains RTX5090 localhost
+- Management profile: `configs/candidates/rx9070xt-jonathan-iq4xs-96k.json`
+- Node profile: `profiles/RX9070XT-Remote/`
+- Result: `benchmarks/results/2026-08-25-rx9070xt-iq4xs-96k.md`
+- Lifecycle: Remote Node Candidate only; it does not replace Current or the RTX5090/BLUE operational profiles
 
 ## Watch: watch-hauhaucs-balanced-mtp
 

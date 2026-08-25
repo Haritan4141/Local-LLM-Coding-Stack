@@ -11,6 +11,7 @@ for (let index = 2; index < process.argv.length; index += 2) {
 }
 
 const supportedOptions = new Set([
+  "base-url",
   "model-key",
   "identifier",
   "context",
@@ -47,6 +48,7 @@ const parseIntegerList = (value, name) => {
 
 const modelKey = options.get("model-key");
 const identifier = options.get("identifier");
+const baseUrl = options.get("base-url");
 const contextLength = Number(options.get("context"));
 const mtpMode = options.get("mtp") ?? "on";
 const mtpDraftTokens = options.has("mtp-draft")
@@ -107,7 +109,7 @@ if (!options.has("priority") && options.has("disabled")) {
   throw new Error("--disabled requires --priority.");
 }
 
-const client = new LMStudioClient();
+const client = new LMStudioClient(baseUrl === undefined ? undefined : { baseUrl });
 const useFp16ForKVCache = kCacheMode === "f16" && vCacheMode === "f16";
 const kCacheQuantizationType = useFp16ForKVCache ? false : kCacheMode;
 const vCacheQuantizationType = useFp16ForKVCache ? false : vCacheMode;
@@ -186,6 +188,7 @@ const auditedLoadKeys = new Set([
 
 console.log(JSON.stringify({
   loaded: true,
+  baseUrl: baseUrl ?? "auto/local",
   modelKey,
   identifier: model.identifier,
   contextLength,

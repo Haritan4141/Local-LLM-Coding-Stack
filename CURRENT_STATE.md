@@ -15,6 +15,7 @@ State captured: 2026-08-25 (Asia/Tokyo)
 - RTX5090 Recommended Production / Operational Profile: Jonathan Q5_K_M Vision, API ID `qwen3.8-27b-uncensored-vision-q5km`, 98,304 context, Q8_0/Q8_0, MTP draft 3, eval batch 1024, effective ubatch 512, parallel 1, mmap+mlock, PL 402W. Its Goose profile keeps the 90,112 client context limit, 16,384 max output, and 0.3 compact threshold.
 - Q6_K Vision profiles remain fully supported: Balanced is the Quality/Performance Reference, Safe is the permanent known-good fallback, and Coding-Fast is explicit-only. The existing `Goose Vision 64K` Safe-preflight shortcut remains available.
 - RTX5090 runtime at this capture: Jonathan Q5_K_M Vision 96K Recommended Production loaded as the sole model and IDLE; repository lifecycle Current remains unchanged.
+- RED `pc7600x` is now an independent AMD Remote Node Candidate: Jonathan IQ4_XS, API ID `qwen3.8-27b-uncensored-iq4xs-red`, 98,304 context, Q4_0/Q4_0, ROCm 2.29.1, MTP2, batch512, parallel1, Vision false. MAINから`192.168.0.103:1234`へ到達し、Goose simple inference / Developer tool pathを確認済みです。
 
 ## Effective profiles
 
@@ -168,6 +169,23 @@ Q6_K Vision 64K/Q8_0/dual GPUのMTP3 / batch1024はQuality/Performance Reference
 
 Identity、Firewall backup、モデルartifact、context別実測は`profiles/RTX3090-Remote/`、詳細比較は`benchmarks/results/2026-08-20-rtx3090-remote-node.md`を正とします。Remote NodeのidentifierはRTX5090 localhost CurrentのAPI IDを流用しません。
 
+## RX9070XT Remote LLM Node
+
+`pc7600x / DESKTOP-LMB720F / 192.168.0.103`をRED AMD Remote Nodeとして分離管理します。LM Studio 0.4.21+2へAMD ROCm 2.29.1を追加・選択し、Vulkan 2.29.1はfallbackとして保持しました。
+
+| Item | Value |
+|---|---|
+| GPU / RAM | RX 9070 XT 16 GB (`gfx1201`) / 63.09 GiB |
+| Base URL | `http://192.168.0.103:1234` |
+| Firewall | TCP 1234 / Private / LocalSubnet / Edge Block / LM Studio executable |
+| Model | Jonathan IQ4_XS / `qwen3.8-27b-uncensored-iq4xs-red` / Vision false |
+| Recommended Candidate | 96K / Q4_0-Q4_0 / MTP2 / batch512 / parallel1 |
+| Fallback | 同一model 64K / Q4_0-Q4_0 |
+
+96KはDedicated 14.816 GiB / Shared 3.542 GiB、生成peakは14.845 / 3.570 GiBです。70,082-token入力を3/3回収で完走しましたがTTFTは246.93秒で、長文収容と即応性を区別します。MTP2は36.762 tok/s median、OFFは29.664 tok/sで約23.9%向上しました。Shared依存のため、重いGPU workloadとの併用は避けます。
+
+Goose Custom Provider `custom_lm_studio_rx9070xt_remote`を追加し、既定`active_provider: lmstudio`は変更していません。Desktop model switcherへ反映するにはGooseの完全終了・再起動が必要です。Managed loaderは`scripts/lmstudio/model-loaders/RX9070XT/Qwen3.8-JonathanColetti-IQ4XS/`です。
+
 ## Next decision
 
 1. JonathanColetti Q6_Kを唯一のCurrentとして維持する。
@@ -175,4 +193,5 @@ Identity、Firewall backup、モデルartifact、context別実測は`profiles/RT
 3. RTX5090 Q6_K Vision 64K Balanced/Safe/Coding-FastをReference/fallback/explicit-onlyとして保持し、deprecated扱いしない。
 4. HauhauCS Aggressiveは比較履歴として保持する。
 5. BLUEはJonathan Q5_K_M Vision / 96K / Q8_0 / MTP3 / batch1024 / dual GPU / RTX3090 259WをRecommended Productionとする。Q6 BalancedをQuality/Performance Reference、Q6 Safeをknown-good fallback、Q6 Coding-Fastと370Wを独立明示profileとして保持する。
-6. HauhauCS Balanced-MTP-GGUFが実際に公開された場合、同じfixtureで再評価してから昇格可否を判断する。
+6. REDはJonathan IQ4_XS / 96K / Q4_0 / ROCm / MTP2をRemote Node Candidateとして使用し、Shared 4 GiB gateと重いGPU workload非併用を維持する。必要時は64Kへ切り替える。
+7. HauhauCS Balanced-MTP-GGUFが実際に公開された場合、同じfixtureで再評価してから昇格可否を判断する。

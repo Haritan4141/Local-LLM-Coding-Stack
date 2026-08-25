@@ -11,6 +11,7 @@ for (let index = 2; index < process.argv.length; index += 2) {
 }
 
 const supportedOptions = new Set([
+  "base-url",
   "identifier",
   "context",
   "mtp",
@@ -46,6 +47,7 @@ const parseIntegerList = (value, name) => {
 };
 
 const identifier = options.get("identifier");
+const baseUrl = options.get("base-url");
 const contextLength = Number(options.get("context"));
 const mtpMode = options.get("mtp") ?? "on";
 const mtpDraftTokens = options.has("mtp-draft")
@@ -108,7 +110,7 @@ if (!options.has("priority") && options.has("disabled")) {
   throw new Error("--disabled requires --priority.");
 }
 
-const client = new LMStudioClient();
+const client = new LMStudioClient(baseUrl === undefined ? undefined : { baseUrl });
 const loadedModels = await client.llm.listLoaded();
 const matches = [];
 for (const model of loadedModels) {
@@ -172,6 +174,7 @@ if (visionRequired === "on" && info?.vision !== true) {
 
 const result = {
   valid: mismatches.length === 0,
+  baseUrl: baseUrl ?? "auto/local",
   identifier,
   contextLength,
   kvCache: `${kCacheMode}/${vCacheMode}`,

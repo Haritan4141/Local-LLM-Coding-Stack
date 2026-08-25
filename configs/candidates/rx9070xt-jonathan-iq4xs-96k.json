@@ -1,0 +1,101 @@
+{
+  "$schema": "../profile.schema.json",
+  "profile_version": 1,
+  "profile_id": "candidate-rx9070xt-jonathan-iq4xs-96k",
+  "status": "Candidate",
+  "captured_date": "2026-08-25",
+  "operational_role": "RED RX 9070 XT Remote Node Recommended Candidate; not repository Current",
+  "stack": {
+    "lm_studio": "0.4.21+2",
+    "runtime": "llama.cpp-win-x86_64-amd-rocm-avx2@2.29.1",
+    "lan_base_url": "http://192.168.0.103:1234"
+  },
+  "hardware": {
+    "computer_name": "DESKTOP-LMB720F",
+    "ssh_alias": "pc7600x",
+    "ip": "192.168.0.103",
+    "cpu": "AMD Ryzen 5 7600X",
+    "ram_gib": 63.09,
+    "gpu": {
+      "name": "AMD Radeon RX 9070 XT",
+      "architecture": "gfx1201",
+      "dedicated_vram_bytes": 17095983104,
+      "driver": "AMD Software 26.7.1"
+    }
+  },
+  "model": {
+    "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+    "file_name": "Qwen3.8-27B-Uncensored-IQ4_XS.gguf",
+    "quantization": "IQ4_XS",
+    "size_bytes": 15309039008,
+    "sha256": "53adc4bbed67044d662273356bbf3a50fdec667ac21bbf18d13e5815fbccc7f5",
+    "model_key": "qwen3.8-27b-uncensored",
+    "native_context_tokens": 262144,
+    "vision": false,
+    "trained_for_tool_use": true
+  },
+  "api_identifier": "qwen3.8-27b-uncensored-iq4xs-red",
+  "effective_settings": {
+    "context_tokens": 98304,
+    "kv_cache": {
+      "k": "Q4_0",
+      "v": "Q4_0",
+      "gpu_offload": true
+    },
+    "flash_attention": true,
+    "gpu_offload": "max",
+    "gpu_priority": "RX 9070 XT only; integrated GPU disabled by runtime device ID",
+    "gpu_strict_vram_cap": true,
+    "mmap": true,
+    "keep_model_in_memory": true,
+    "eval_batch_size": 512,
+    "effective_ubatch_size": 512,
+    "mtp": {
+      "enabled": true,
+      "max_draft_tokens": 2
+    },
+    "max_concurrent_predictions": 1
+  },
+  "capacity": {
+    "load_64k": {
+      "dedicated_gib": 14.814,
+      "shared_gib": 2.604,
+      "dedicated_headroom_gib": 1.108
+    },
+    "load_96k": {
+      "dedicated_gib": 14.816,
+      "shared_gib": 3.542,
+      "dedicated_headroom_gib": 1.106
+    },
+    "generation_peak_96k": {
+      "dedicated_gib": 14.845,
+      "shared_gib": 3.57,
+      "total_committed_gib": 18.469
+    },
+    "gate": "PASS; Shared memory is material and heavy concurrent GPU workloads are not recommended"
+  },
+  "performance": {
+    "coding_fixture_mtp2_tok_s": [36.7088, 36.8154],
+    "coding_fixture_mtp_off_tok_s": [29.7225, 29.6052],
+    "mtp2_median_gain_percent": 23.9,
+    "observed_acceptance_percent": [79.74, 96.3],
+    "long_context": {
+      "input_tokens": 70082,
+      "time_to_first_token_seconds": 246.9275,
+      "retrieval_checks": "3/3 PASS"
+    }
+  },
+  "client_validation": {
+    "direct_tool_calling": "PASS; exact function name and arguments",
+    "goose_simple_inference": "PASS; exact RED_REMOTE_OK",
+    "goose_developer_tool": "PASS; one shell call and exact final marker",
+    "goose_provider": "custom_lm_studio_rx9070xt_remote",
+    "goose_is_default": false
+  },
+  "fallback_profile": {
+    "context_tokens": 65536,
+    "kv_cache": "Q4_0/Q4_0",
+    "reason": "lower Shared GPU Memory footprint"
+  },
+  "evaluation_status": "96K capacity, MTP A/B, long context, direct tool calling, and Goose path tested; retain Candidate lifecycle"
+}

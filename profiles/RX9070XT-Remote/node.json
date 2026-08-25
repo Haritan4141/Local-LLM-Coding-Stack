@@ -1,0 +1,49 @@
+{
+  "profile_version": 1,
+  "node_id": "red-rx9070xt-remote",
+  "status": "Candidate",
+  "captured_date": "2026-08-25",
+  "identity": {
+    "computer_name": "DESKTOP-LMB720F",
+    "ssh_alias": "pc7600x",
+    "ipv4": "192.168.0.103",
+    "nic_mac": "9C-6B-00-D2-45-F9",
+    "network_profile": "Private",
+    "link_speed": "1 Gbps"
+  },
+  "hardware": {
+    "cpu": "AMD Ryzen 5 7600X",
+    "ram_gib": 63.09,
+    "gpu": "AMD Radeon RX 9070 XT",
+    "gpu_architecture": "gfx1201",
+    "dedicated_vram_bytes": 17095983104,
+    "driver": "AMD Software 26.7.1"
+  },
+  "lm_studio": {
+    "version": "0.4.21+2",
+    "selected_runtime": "llama.cpp-win-x86_64-amd-rocm-avx2@2.29.1",
+    "fallback_runtime_installed": "llama.cpp-win-x86_64-vulkan-avx2@2.29.1",
+    "port": 1234,
+    "bind": "0.0.0.0",
+    "lan_base_url": "http://192.168.0.103:1234",
+    "firewall_rule": "Local-LLM-LMStudio-RX9070XT-In-TCP-1234-Private-LocalSubnet",
+    "firewall_policy": "Inbound TCP 1234 / Private / LocalSubnet / Edge Traversal Block / LM Studio executable",
+    "firewall_backup": "C:\\Users\\Atsuki\\Codex-RX9070XT-Setup\\firewall-before-lmstudio-20260825-110328.wfw"
+  },
+  "operational_candidate": {
+    "profile_id": "candidate-rx9070xt-jonathan-iq4xs-96k",
+    "model": "JonathanColetti Qwen3.8 27B Uncensored IQ4_XS",
+    "api_identifier": "qwen3.8-27b-uncensored-iq4xs-red",
+    "context_tokens": 98304,
+    "kv_cache": "Q4_0/Q4_0",
+    "mtp": "on / draft 2",
+    "parallel": 1,
+    "vision": false,
+    "shared_gpu_memory_note": "3.542 GiB at load; 3.570 GiB observed generation peak"
+  },
+  "fallback": {
+    "context_tokens": 65536,
+    "shared_gpu_memory_gib": 2.604
+  },
+  "repository_lifecycle": "Candidate Remote Node role; repository-wide Current remains Jonathan Q6_K on RTX5090"
+}

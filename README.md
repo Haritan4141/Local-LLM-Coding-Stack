@@ -66,6 +66,8 @@ BLUEの普段使いはJonathan Q5_K_M Vision / 96K / Q8_0 / MTP3 / eval batch102
 
 Q5 96K qualificationはText/Coding/Vision/Tool Calling/76,880-token入力とfresh Q6 comparisonにPASSしました。Q6 64K Referenceのshort generationは26.13 tok/s、MTP acceptance 79.41%、Vision fixture 7/7です。Long32Kはnative APIで30,803 output tokensを自然完了し、Kilo実経路でも29,001 tokensを生成しました。Standard16K / Long32KはPower Limitから独立したclient profileとして維持します。MAINのREMOTE launcherは`pc5700x / 192.168.0.104 / DESKTOP-L9HAM1G`を照合してBLUEだけを起動します。Q4_K_M / 32Kはfallback、HauhauCS Q4_K_Pはoptional Candidateとして保持します。詳細は`profiles/RTX3090-Remote/`、Q5選定結果は`benchmarks/results/2026-08-25-blue-q5km-vision-96k-qualification.md`、Q6 Referenceは`benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md`、Power A/Bは`benchmarks/results/2026-08-24-blue-rtx3090-power-limit-ab.md`、Shared原因は`research/2026-08-24-blue-shared-gpu-memory-investigation.md`に記録します。
 
+`pc7600x / RX 9070 XT 16 GB`はRED AMD Remote Node Candidateです。Jonathan公式IQ4_XSをROCm 2.29.1でロードし、API ID `qwen3.8-27b-uncensored-iq4xs-red`、96K、Q4_0/Q4_0、MTP2、batch512、parallel1を採用しました。70,082-token入力、exact Tool Calling、Goose simple/Developer tool pathを確認済みです。96K生成peakはDedicated 14.845 GiB / Shared 3.570 GiBなので、重いGPU workloadと併用しない補助nodeとして扱います。64K fallbackも保持します。詳細は`profiles/RX9070XT-Remote/`と`benchmarks/results/2026-08-25-rx9070xt-iq4xs-96k.md`を参照してください。
+
 ## Repository map
 
 | Path | Role |
@@ -91,7 +93,7 @@ Q5 96K qualificationはText/Coding/Vision/Tool Calling/76,880-token入力とfres
 
 ## Managed LM Studio loaders
 
-Currentモデルの96K / 64K / 32K BATは `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/` で管理します。同じQ6_Kへprojectorを追加するVision用BATは`Qwen3.8-JonathanColetti-Q6K-Vision/`、Recommended ProductionのQ5_K_M Vision 96Kは`Qwen3.8-JonathanColetti-Q5KM-Vision/`へ分離します。Candidate Q6_K_PとQ5_K_P fallbackも、量子化を明記した別ディレクトリです。RTX5090/BLUEのVision selectorは個別loaderをCALLするだけです。RTX3090はOperational Recommendedを`RTX3090/Qwen3.8-JonathanColetti-Q5KM-Vision/`、Q6 referenceを`Qwen3.8-JonathanColetti-Q6K-Vision/`、fallbackを`Qwen3.8-JonathanColetti-Q4KM/`、optional Candidateを`Qwen3.8-HauhauCS-Aggressive-Q4KP/`へ分離します。別モデルを試す場合は、既存BATを上書きせず対象GPU配下へモデル・量子化別ディレクトリを追加します。
+Currentモデルの96K / 64K / 32K BATは `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/` で管理します。同じQ6_Kへprojectorを追加するVision用BATは`Qwen3.8-JonathanColetti-Q6K-Vision/`、Recommended ProductionのQ5_K_M Vision 96Kは`Qwen3.8-JonathanColetti-Q5KM-Vision/`へ分離します。Candidate Q6_K_PとQ5_K_P fallbackも、量子化を明記した別ディレクトリです。RTX5090/BLUEのVision selectorは個別loaderをCALLするだけです。RTX3090はOperational Recommendedを`RTX3090/Qwen3.8-JonathanColetti-Q5KM-Vision/`、Q6 referenceを`Qwen3.8-JonathanColetti-Q6K-Vision/`、fallbackを`Qwen3.8-JonathanColetti-Q4KM/`、optional Candidateを`Qwen3.8-HauhauCS-Aggressive-Q4KP/`へ分離します。RX9070XTは`RX9070XT/Qwen3.8-JonathanColetti-IQ4XS/`にMAIN用64K/96K REMOTE loaderを置きます。別モデルを試す場合は、既存BATを上書きせず対象GPU配下へモデル・量子化別ディレクトリを追加します。
 
 BATはGGUFを内包・ダウンロードせず、LM Studioへインストール済みのモデルを `lms` CLIで参照します。実行時に `lms unload --all` を行うため、現在ロード中のモデルを解除する点に注意してください。
 

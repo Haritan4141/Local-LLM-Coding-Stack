@@ -6,6 +6,11 @@
 
 ### Added
 
+- RED `pc7600x / DESKTOP-LMB720F / 192.168.0.103 / RX 9070 XT 16 GB`をAMD Remote LLM Node Candidateとして構築。LM Studio 0.4.21+2へROCm 2.29.1を追加・選択し、既存Vulkan 2.29.1はfallbackとして保持した。
+- Jonathan公式IQ4_XS（15,309,039,008 bytes / SHA-256 `53adc4bbed67044d662273356bbf3a50fdec667ac21bbf18d13e5815fbccc7f5`）をLM Studio外部領域へ導入。GGUFはGitへ保存していない。
+- RED用96K/64K MAIN REMOTE loaderを追加。SSH Alias、hostname、IP、Private/LocalSubnet Firewall、ROCm/gfx1201、iGPU無効、artifact、active prediction、effective settings、Dedicated/Shared gateをfail closedで監査する。
+- RED 96K/Q4_0/MTP2でMTP A/B、70,082-token入力、direct Tool Calling、Goose simple inference、Goose Developer toolを検証。Goose Custom Provider `custom_lm_studio_rx9070xt_remote`を追加し、RTX5090 localhost defaultは変更していない。
+- managed model helperへ任意の`ws://` remote base URLを追加し、MAIN上の固定SDKからLAN LM Studioへ同じper-load設定とreadbackを適用可能にした。未指定時のlocalhost動作は維持する。
 - RTX5090 Q5_K_M Vision 96KをMTP OFF/2/3/4/OFF sentinel、batch1024/2048、capacity、Text/Coding/Vision/69,139-token Long、exact Tool Calling、isolated Agentic Codingで最終qualification。MTP3/Q8/batch1024をRecommended Productionへ採用し、`benchmarks/results/2026-08-25-rtx5090-q5km-vision-96k-production.md`へcurated記録した。
 - RTX5090 Q5 96K loaderとGoose preflightをMTP3/batch1024/mmap+mlockへ更新。Profile SelectorはQ5 Recommended、Q6 Balanced Reference、Q6 Safe、Q6 Coding-Fastの順に既存個別BATだけをCALLし、Q6 profileを削除・deprecated化していない。
 - MAINへ公式Visual Studio Build Tools 2022 17.14.39、MSVC v143、Windows SDK 26100、CMake 4.4.2、Ninja 1.13.2を導入し、既存CUDA 12.9 nvccとRTX5090 `sm_120` compile/run smokeを検証。DFlash2 clone/build、Drafter download、server/18080、benchmarkは開始していない。
@@ -54,6 +59,7 @@
 
 ### Decision
 
+- RED Recommended CandidateをJonathan IQ4_XS / 96K / Q4_0-Q4_0 / ROCm / MTP2 / batch512 / parallel1とし、64Kをlower-Shared fallbackとする。96K生成peak Shared 3.570 GiBと70K TTFT 246.93秒を制約として記録し、repository CurrentとRTX5090/BLUE operational roleは変更しない。
 - BLUE Recommended ProductionをJonathan Q5_K_M Vision / 96K / Q8_0 / MTP3 / batch1024 / RTX3090 259W + RTX3060 170Wへ昇格する。Q6_K BalancedはQuality/Performance Reference、Q6_K Safeはknown-good fallback、Q6 Coding-Fast/370Wは明示選択profileとして永久保持する。Repository lifecycle Currentは変更しない。
 - RTX5090 Recommended ProductionをJonathan Q5_K_M Vision / 96K / Q8_0 / MTP3 / batch1024 / effective ubatch512 / PL402Wとする。Repository lifecycle CurrentはQ6_Kのまま維持する。
 - RTX5090 Q6 Vision 64K MTP4 / Q8_0 / batch2048 BalancedをQuality/Performance Reference、MTP2 / Q8_0 / batch2048をSafe、MTP4 / Q4_0 / batch2048をexplicit-only Coding-Fastとして永久保持する。Q6をdeprecated扱いしない。
@@ -76,6 +82,7 @@
 
 ### Runtime impact
 
+- REDは終了時に`qwen3.8-27b-uncensored-iq4xs-red` 1件がIDLE / queued0 / 98,304 / Q4_0-Q4_0 / ROCm / RX9070XT only / MTP2 / batch512 / parallel1で常駐。LM Studioは`0.0.0.0:1234`で待受し、MAINからTCP/API/Goose到達PASS。Firewall backupは`C:\Users\Atsuki\Codex-RX9070XT-Setup\firewall-before-lmstudio-20260825-110328.wfw`。driver、BIOS、UAC、Defender、既存RTX5090/BLUE runtimeは変更していない。
 - 2026-08-25 Q5 promotion終了時、BLUEはQ6 Safe→Q5 Recommended→Q6 Balanced→Q5 Recommendedの実機切替にPASS。Q5 REMOTE launcherもMAINからexit0となり、対象1件がIDLE / queued0 / 98,304 / Q8_0-Q8_0 / MTP3 / batch1024 / physical batch512 readback / parallel1 / Vision true / RTX3090 259W / RTX3060 170Wで常駐する。Firewall、SSH、SMB、driver、BIOS、LM Studio global settingsは変更していない。
 - 2026-08-24 profile integration終了時、MAINはSafe→Balanced→Coding-Fast→Safeを実機切替後に0 loaded modelsへ復帰。BLUEは同じ切替回帰後、Balanced / MTP3 / Q8_0 / batch1024 / effective ubatch512 / 64K / priorityOrder / mmap OFF / parallel1 / Vision true / RTX3090 259W / RTX3060 170Wを1件だけIDLEで常駐。MAINからnative API到達とreasoning OFF Coding fixtureを確認した。この項目が同日中の旧runtime終了記録を更新する。
 - MAIN BalancedでText/Coding/Vision smoke、両PCのCoding-FastでPhase 1 Coding fixture必須5マーカー・両関数・code blockを確認。Safe復帰後はQ4、draft3/4、batch1024の残留なし。Firewall、SSH、driver、BIOS、global LM Studio設定、モデル重量、client output profileは変更していない。

@@ -25,15 +25,20 @@ $requiredPaths = @(
     'configs/candidates/rtx3090-hauhaucs-aggressive-q4kp.json',
     'configs/candidates/rtx3090-dual-jonathan-q6k-vision.json',
     'configs/candidates/rtx3090-dual-jonathan-q5km-vision-96k.json',
+    'configs/candidates/rx9070xt-jonathan-iq4xs-96k.json',
     'profiles/README.md',
     'profiles/RTX3090-Remote/README.md',
     'profiles/RTX3090-Remote/node.json',
+    'profiles/RX9070XT-Remote/README.md',
+    'profiles/RX9070XT-Remote/node.json',
     'benchmarks/results/2026-08-20-rtx3090-remote-node.md',
     'benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md',
     'benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md',
     'benchmarks/results/2026-08-25-blue-q5km-vision-96k-qualification.md',
+    'benchmarks/results/2026-08-25-rx9070xt-iq4xs-96k.md',
     'research/jonathan-q6k-vision-2026-08-23.md',
     'research/2026-08-24-blue-shared-gpu-memory-investigation.md',
+    'research/2026-08-25-rx9070xt-remote-node.md',
     'package.json',
     'package-lock.json',
     'research',
@@ -42,6 +47,7 @@ $requiredPaths = @(
     'scripts/goose/Set-GooseProfile.ps1',
     'scripts/tests/Test-GooseProfileSelector.ps1',
     'scripts/tests/Test-QwenVisionProfileLoaders.ps1',
+    'scripts/tests/Test-RX9070XTRemoteLoaders.ps1',
     'scripts/lmstudio/Load-ManagedModel.mjs',
     'scripts/lmstudio/Test-ManagedModel.mjs',
     'scripts/lmstudio/model-loaders/RTX3090/README.md',
@@ -67,6 +73,12 @@ $requiredPaths = @(
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/README.md',
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/Qwen3.8-HauhauCS-Q4KP_32K.bat',
     'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-HauhauCS-Aggressive-Q4KP/Qwen3.8-HauhauCS-Q4KP_64K.bat',
+    'scripts/lmstudio/model-loaders/RX9070XT/README.md',
+    'scripts/lmstudio/model-loaders/RX9070XT/Qwen3.8-JonathanColetti-IQ4XS/README.md',
+    'scripts/lmstudio/model-loaders/RX9070XT/Qwen3.8-JonathanColetti-IQ4XS/Qwen3.8-JonathanColetti-IQ4XS_REMOTE.ps1',
+    'scripts/lmstudio/model-loaders/RX9070XT/Qwen3.8-JonathanColetti-IQ4XS/Qwen3.8-JonathanColetti-IQ4XS_96K_REMOTE.bat',
+    'scripts/lmstudio/model-loaders/RX9070XT/Qwen3.8-JonathanColetti-IQ4XS/Qwen3.8-JonathanColetti-IQ4XS_64K_REMOTE.bat',
+    'scripts/lmstudio/model-loaders/RX9070XT/Qwen3.8-JonathanColetti-IQ4XS/Qwen3.8-JonathanColetti-IQ4XS_REMOTE-Profile-Selector.bat',
     'scripts/lmstudio/model-loaders/RTX5090/README.md',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/README.md',
     'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/Qwen3.8-JonathanColetti-Q6K_96K.bat',
@@ -177,6 +189,11 @@ if ($blueQ5VisionProfile.Count -ne 1 -or $blueQ5VisionProfile[0].Status -ne 'Can
     $failures.Add('BLUE Jonathan Q5_K_M Vision 96K must exist exactly once with Candidate lifecycle status.')
 }
 
+$redProfile = @($profiles | Where-Object { $_.Id -eq 'candidate-rx9070xt-jonathan-iq4xs-96k' })
+if ($redProfile.Count -ne 1 -or $redProfile[0].Status -ne 'Candidate') {
+    $failures.Add('RED RX9070XT Jonathan IQ4_XS 96K must exist exactly once with Candidate lifecycle status.')
+}
+
 $blockedExtensions = @('.gguf', '.safetensors', '.bin', '.ckpt', '.pth', '.pt', '.onnx')
 $blockedFiles = Get-ChildItem -LiteralPath $repoRoot -Recurse -File | Where-Object {
     $blockedExtensions -contains $_.Extension.ToLowerInvariant()
@@ -205,6 +222,14 @@ if (Test-Path -LiteralPath $visionProfileLoaderTest -PathType Leaf) {
     & powershell -NoProfile -ExecutionPolicy Bypass -File $visionProfileLoaderTest
     if ($LASTEXITCODE -ne 0) {
         $failures.Add("Qwen Vision profile loader regression test failed with exit code $LASTEXITCODE.")
+    }
+}
+
+$redLoaderTest = Join-Path $repoRoot 'scripts\tests\Test-RX9070XTRemoteLoaders.ps1'
+if (Test-Path -LiteralPath $redLoaderTest -PathType Leaf) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $redLoaderTest
+    if ($LASTEXITCODE -ne 0) {
+        $failures.Add("RX9070XT loader regression test failed with exit code $LASTEXITCODE.")
     }
 }
 
