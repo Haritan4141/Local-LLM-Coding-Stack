@@ -1,5 +1,7 @@
 # JonathanColetti Q5_K_M Vision 96K — BLUE Recommended
 
+Daily operation starts from `../00-Daily-Profiles/Profile-Selector_REMOTE.bat` on MAIN or `../00-Daily-Profiles/Profile-Selector_LOCAL.bat` on BLUE. This directory remains the canonical Stable/Turbo implementation source; Daily wrappers do not duplicate its settings.
+
 BLUE (`pc5700x / DESKTOP-L9HAM1G / 192.168.0.104`) のRTX 3090 24 GB + RTX 3060 12 GB dual-GPU専用loaderです。BLUEのRecommended Production profileであり、repository-wide CurrentはRTX5090 JonathanColetti Q6_Kのままです。
 
 | Item | Value |

@@ -1,5 +1,7 @@
 # Qwen3.8 JonathanColetti Q6_K Vision loaders
 
+Daily Quality Reference starts from `../00-Daily-Profiles/3-Quality-Reference.bat`, which safely releases any managed Turbo runtime before CALLing the canonical Balanced BAT in this directory. Safe, Coding-Fast, and older context loaders remain available here as Fallback / Advanced profiles.
+
 RTX 5090 32 GBでCurrentのJonathanColetti Q6_K本体を共有し、公式Vision projectorだけを追加した明示切替用loaderです。通常CurrentのLM Studioモデル枠とloaderは変更しません。
 
 | Item | Value |

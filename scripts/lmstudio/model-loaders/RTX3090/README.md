@@ -1,11 +1,16 @@
 # RTX3090 Remote Node Loaders
 
+## Daily use
+
+MAINからは `00-Daily-Profiles/Profile-Selector_REMOTE.bat`、BLUE実機上では `00-Daily-Profiles/Profile-Selector_LOCAL.bat` から Stable / Turbo / Quality Reference の3 Profileだけを選択してください。既存のmodel別directoryはAdvanced / Fallback / Researchとbenchmark再現用に保持します。
+
 `pc5700x / DESKTOP-L9HAM1G / 192.168.0.104 / RTX 3090 24 GB`上で実行するLM Studio loaderを、モデル・量子化別に管理します。
 
 ## Directory convention
 
 ```text
 RTX3090/
+  00-Daily-Profiles/
   Qwen3.8-JonathanColetti-Q5KM-Vision/
   Qwen3.8-JonathanColetti-Q6K-Vision/
   Qwen3.8-JonathanColetti-Q4KM/

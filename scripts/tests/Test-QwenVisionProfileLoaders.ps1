@@ -23,6 +23,8 @@ $mainRoot = 'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-
 $mainQ5Root = 'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision'
 $blueRoot = 'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision'
 $blueQ5Root = 'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q5KM-Vision'
+$mainDailyRoot = 'scripts/lmstudio/model-loaders/RTX5090/00-Daily-Profiles'
+$blueDailyRoot = 'scripts/lmstudio/model-loaders/RTX3090/00-Daily-Profiles'
 $turboRoot = 'scripts/standalone-turbo'
 $requiredPaths = @(
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat",
@@ -71,7 +73,26 @@ $requiredPaths = @(
     "$turboRoot/runtime-manifests/RTX5090.json",
     "$turboRoot/runtime-manifests/BLUE.json",
     'scripts/tests/Test-StandaloneTurboFailClosed.ps1',
-    'benchmarks/results/2026-08-25-standalone-mtp3-turbo-integration.md'
+    'benchmarks/results/2026-08-25-standalone-mtp3-turbo-integration.md',
+    'scripts/lmstudio/model-loaders/README.md',
+    'scripts/lmstudio/model-loaders/00-RTX5090-Daily-Profiles.bat',
+    'scripts/lmstudio/model-loaders/00-BLUE-Daily-Profiles-LOCAL.bat',
+    'scripts/lmstudio/model-loaders/00-BLUE-Daily-Profiles-REMOTE.bat',
+    "$mainDailyRoot/README.md",
+    "$mainDailyRoot/1-Stable.bat",
+    "$mainDailyRoot/2-Turbo.bat",
+    "$mainDailyRoot/3-Quality-Reference.bat",
+    "$mainDailyRoot/Profile-Selector.bat",
+    "$blueDailyRoot/README.md",
+    "$blueDailyRoot/1-Stable.bat",
+    "$blueDailyRoot/2-Turbo.bat",
+    "$blueDailyRoot/3-Quality-Reference.bat",
+    "$blueDailyRoot/Profile-Selector_LOCAL.bat",
+    "$blueDailyRoot/1-Stable_REMOTE.bat",
+    "$blueDailyRoot/2-Turbo_REMOTE.bat",
+    "$blueDailyRoot/3-Quality-Reference_REMOTE.bat",
+    "$blueDailyRoot/Profile-Selector_REMOTE.bat",
+    'profiles/Qwen3.8-Daily-Profiles.md'
 )
 foreach ($relativePath in $requiredPaths) {
     if (-not (Test-Path -LiteralPath (Get-RepoPath $relativePath) -PathType Leaf)) {
@@ -199,11 +220,26 @@ $selectorExpectations = @{
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Coding-Fast_REMOTE.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_370W-Performance_REMOTE.bat'
     )
+    "$mainDailyRoot/Profile-Selector.bat" = @(
+        '1-Stable.bat',
+        '2-Turbo.bat',
+        '3-Quality-Reference.bat'
+    )
+    "$blueDailyRoot/Profile-Selector_LOCAL.bat" = @(
+        '1-Stable.bat',
+        '2-Turbo.bat',
+        '3-Quality-Reference.bat'
+    )
+    "$blueDailyRoot/Profile-Selector_REMOTE.bat" = @(
+        '1-Stable_REMOTE.bat',
+        '2-Turbo_REMOTE.bat',
+        '3-Quality-Reference_REMOTE.bat'
+    )
 }
 foreach ($entry in $selectorExpectations.GetEnumerator()) {
     $selectorPath = Get-RepoPath $entry.Key
     $selectorText = Get-Content -LiteralPath $selectorPath -Raw
-    $calls = @([regex]::Matches($selectorText, '(?im)^call "%~dp0([^"\r\n]+\.bat)"$') | ForEach-Object { $_.Groups[1].Value })
+    $calls = @([regex]::Matches($selectorText, '(?im)^call "%~dp0([^"\r\n]+\.bat)"\r?$') | ForEach-Object { $_.Groups[1].Value })
     if (($calls -join '|') -ne (@($entry.Value) -join '|')) {
         $failures.Add("Selector call mapping mismatch: $($entry.Key)")
     }
@@ -213,6 +249,23 @@ foreach ($entry in $selectorExpectations.GetEnumerator()) {
     & cmd.exe /d /c "call `"$selectorPath`" 0" *> $null
     if ($LASTEXITCODE -ne 0) {
         $failures.Add("Selector Cancel smoke failed: $($entry.Key) :: exit $LASTEXITCODE")
+    }
+}
+
+$dailyQualityChecks = @(
+    @{ Path = "$mainDailyRoot/3-Quality-Reference.bat"; Patterns = @('Stop-ManagedTurbo.ps1', '-Profile RTX5090 -AllowNotRunning', 'Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat') },
+    @{ Path = "$blueDailyRoot/3-Quality-Reference.bat"; Patterns = @('Stop-ManagedTurbo.ps1', '-Profile BLUE -AllowNotRunning', 'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced.bat') },
+    @{ Path = "$blueDailyRoot/3-Quality-Reference_REMOTE.bat"; Patterns = @('Stop-BlueManagedTurboRemote.ps1', '-AllowNotRunning', 'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced_REMOTE.bat') }
+)
+foreach ($check in $dailyQualityChecks) {
+    $text = Get-Content -LiteralPath (Get-RepoPath $check.Path) -Raw
+    foreach ($pattern in $check.Patterns) {
+        if ($text.IndexOf($pattern, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+            $failures.Add("Daily Quality wrapper is missing '$pattern': $($check.Path)")
+        }
+    }
+    if ($text -notmatch '(?im)^set "RC=%ERRORLEVEL%"\r?$' -or $text -notmatch '(?im)^\s*exit /b %RC%\r?$') {
+        $failures.Add("Daily Quality wrapper does not preserve stop failure: $($check.Path)")
     }
 }
 

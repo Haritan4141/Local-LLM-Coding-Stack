@@ -1,5 +1,7 @@
 # Qwen3.8 JonathanColetti Q5_K_M Vision loaders
 
+Daily operation starts from `../00-Daily-Profiles/Profile-Selector.bat`. This directory remains the canonical Stable/Turbo implementation source; Daily wrappers do not duplicate its load settings.
+
 RTX 5090 32 GBのRecommended Production / Operational ProfileはJonathanColetti Q5_K_M Vision 96Kです。Repository lifecycleは`Candidate`のままとし、唯一の`Current`であるQ6_K本体、Q6_K Vision model枠、loader、API IDを変更・削除しません。
 
 | Item | Value |

@@ -1,5 +1,7 @@
 # JonathanColetti Q6_K Vision 64K — BLUE Reference and Fallback Profiles
 
+Daily Quality Reference starts from `../00-Daily-Profiles/3-Quality-Reference_REMOTE.bat` on MAIN or `../00-Daily-Profiles/3-Quality-Reference.bat` on BLUE. These wrappers safely release managed Turbo/tunnel state before CALLing the canonical Balanced BATs in this directory. Safe, Coding-Fast, 370W Performance, and compatibility aliases remain available here.
+
 BLUE (`pc5700x / DESKTOP-L9HAM1G / 192.168.0.104`)専用の、RTX 3090 24 GB + RTX 3060 12 GB dual-GPU loaderです。repository-wide CurrentはRTX5090 JonathanColetti Q6_Kのままで、このnode roleは別管理です。
 
 | Item | Value |

@@ -1,10 +1,17 @@
 # RTX5090 LM Studio Model Loaders
 
+## Daily use
+
+普段は `00-Daily-Profiles/Profile-Selector.bat` から Stable / Turbo / Quality Reference の3 Profileだけを選択してください。既存のmodel別directoryはAdvanced / Fallback / Researchとbenchmark再現用に保持します。
+
 RTX 5090 32 GB 向けのモデル起動BATを、モデル単位で分離して管理します。
 
 ```text
 RTX5090/
   README.md
+  00-Daily-Profiles/
+    README.md
+    Profile-Selector.bat
   Qwen3.8-JonathanColetti-Q6K/
     README.md
     Qwen3.8-JonathanColetti-Q6K_96K.bat
