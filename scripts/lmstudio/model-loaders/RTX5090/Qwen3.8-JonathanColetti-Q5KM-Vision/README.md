@@ -33,6 +33,14 @@ RTX 5090 32 GBのRecommended Production / Operational ProfileはJonathanColetti 
 
 32K/64Kは過去比較用のMTP OFF loaderとしてそのまま保持し、Production defaultにはしません。最終設定変更は96K loaderだけに適用します。
 
+## Standalone MTP3 Turbo
+
+`Qwen3.8-JonathanColetti-Q5KM-Vision_96K_Turbo.bat`は、official llama.cpp commit `f280b26983ad0fdb705a0d9ebf0503e76f2899b0`の外部runtimeを使う明示選択専用Turboです。Stableと同じmodel/projector、98,304 context、Q8_0/Q8_0、MTP3、batch1024、ubatch512、parallel1、Flash Attention、Visionを、`127.0.0.1:18080`のstandalone serverで実行します。API aliasは`qwen3.8-27b-uncensored-vision-q5km-turbo`です。
+
+`Qwen3.8-JonathanColetti-Q5KM-Vision_96K_Stable.bat`はmanaged Turboだけを安全停止し、portとVRAM解放後に既存`_96K.bat`をCALLする復旧wrapperです。既存Stable BATは変更していません。selectorはStableをRecommendedの`[1]`、Turboを`[2]`とし、Q6 Balanced/Safe/Coding-Fastを保持します。
+
+Turbo用Gooseは`Start-Goose-Jonathan-Q5KM-Vision96K-Turbo.bat`を使います。built-in `openai` providerへprocess-localで接続し、90,112 context / 16,384 output / compact 0.3を維持します。永続Goose configは変更しません。詳細は`../../../../standalone-turbo/README.md`と`benchmarks/results/2026-08-25-standalone-mtp3-turbo-integration.md`を参照してください。DFlash2は統合していません。
+
 最終sweepは98,304 context、Q8_0/Q8_0、eval batch 2048、effective ubatch 512、parallel 1、Flash Attention/full offload、PL 402W、temperature 0、reasoning OFFを固定し、MTP OFF→2→3→4→OFF sentinelを各workload warm-up 1 + formal 3で比較しました。draft 3はText 46.54、Coding 63.09、Vision 59.10、Long 53.42 tok/s、4-workload geomean 55.18 tok/s、weighted acceptance 84.06%、formal quality 12/12でした。OFF比でTextは8.88%低下しましたが、Coding/Vision/Longは24.03%/16.05%/15.55%向上し、geomeanは約10.97%向上しました。draft 4はgeomean 55.06 tok/s、acceptance 79.93%、Peak 26,692 MiBで、draft 3より総合優位を示さなかったため採用していません。OFF sentinel driftは全workload 0.5%未満です。
 
 draft 3固定のbatch 1024/2048比較では、約24Kの固有nonce付きLong Promptで1024が2,132.05 tok/s・TTFT 11.3648秒、2048が2,129.33 tok/s・11.3727秒でした。速度差がなく1024の方がShared/RAMをわずかに抑えたため、Productionはbatch 1024を採用します。最終設定のload時Dedicated使用量は26,432 MiB、raw headroom 6,175 MiB、420 MiB reserve差引後5,755 MiB（約5.62 GiB）、Shared増分0.309 GiBです。

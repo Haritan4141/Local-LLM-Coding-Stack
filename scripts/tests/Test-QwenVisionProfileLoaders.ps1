@@ -23,12 +23,16 @@ $mainRoot = 'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-
 $mainQ5Root = 'scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision'
 $blueRoot = 'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision'
 $blueQ5Root = 'scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q5KM-Vision'
+$turboRoot = 'scripts/standalone-turbo'
 $requiredPaths = @(
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat",
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat",
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_Coding-Fast.bat",
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat",
     "$mainQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K.bat",
+    "$mainQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_Stable.bat",
+    "$mainQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_Turbo.bat",
+    "$mainQ5Root/Start-Goose-Jonathan-Q5KM-Vision96K-Turbo.ps1",
     "$mainQ5Root/Start-Goose-Jonathan-Q5KM-Vision96K-Candidate.ps1",
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W.bat",
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced.bat",
@@ -46,7 +50,28 @@ $requiredPaths = @(
     "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W.bat",
     "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W.ps1",
     "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_REMOTE.bat",
-    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_REMOTE.ps1"
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_REMOTE.ps1",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Stable.bat",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Turbo.bat",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Turbo.ps1",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Stable_REMOTE.bat",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Turbo_REMOTE.bat",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Turbo_REMOTE.ps1",
+    "$blueQ5Root/Start-Goose-Jonathan-Q5KM-Vision96K-BLUE-Turbo_REMOTE.ps1",
+    "$turboRoot/Turbo.Common.psm1",
+    "$turboRoot/Install-ManagedTurboRuntime.ps1",
+    "$turboRoot/Start-ManagedTurbo.ps1",
+    "$turboRoot/Stop-ManagedTurbo.ps1",
+    "$turboRoot/Test-ManagedTurbo.ps1",
+    "$turboRoot/Start-BlueManagedTurboRemote.ps1",
+    "$turboRoot/Stop-BlueManagedTurboRemote.ps1",
+    "$turboRoot/Start-Goose-ManagedTurbo.ps1",
+    "$turboRoot/Invoke-ManagedTurboSmoke.ps1",
+    "$turboRoot/README.md",
+    "$turboRoot/runtime-manifests/RTX5090.json",
+    "$turboRoot/runtime-manifests/BLUE.json",
+    'scripts/tests/Test-StandaloneTurboFailClosed.ps1',
+    'benchmarks/results/2026-08-25-standalone-mtp3-turbo-integration.md'
 )
 foreach ($relativePath in $requiredPaths) {
     if (-not (Test-Path -LiteralPath (Get-RepoPath $relativePath) -PathType Leaf)) {
@@ -152,20 +177,23 @@ foreach ($check in @(
 
 $selectorExpectations = @{
     "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat" = @(
-        '..\Qwen3.8-JonathanColetti-Q5KM-Vision\Qwen3.8-JonathanColetti-Q5KM-Vision_96K.bat',
+        '..\Qwen3.8-JonathanColetti-Q5KM-Vision\Qwen3.8-JonathanColetti-Q5KM-Vision_96K_Stable.bat',
+        '..\Qwen3.8-JonathanColetti-Q5KM-Vision\Qwen3.8-JonathanColetti-Q5KM-Vision_96K_Turbo.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_Coding-Fast.bat'
     )
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat" = @(
-        '..\Qwen3.8-JonathanColetti-Q5KM-Vision\Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W.bat',
+        '..\Qwen3.8-JonathanColetti-Q5KM-Vision\Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Stable.bat',
+        '..\Qwen3.8-JonathanColetti-Q5KM-Vision\Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Turbo.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Coding-Fast.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_370W-Performance.bat'
     )
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_REMOTE-Profile-Selector.bat" = @(
-        '..\Qwen3.8-JonathanColetti-Q5KM-Vision\Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_REMOTE.bat',
+        '..\Qwen3.8-JonathanColetti-Q5KM-Vision\Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Stable_REMOTE.bat',
+        '..\Qwen3.8-JonathanColetti-Q5KM-Vision\Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Turbo_REMOTE.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced_REMOTE.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W_REMOTE.bat',
         'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Coding-Fast_REMOTE.bat',
@@ -190,8 +218,10 @@ foreach ($entry in $selectorExpectations.GetEnumerator()) {
 
 $powerShellFiles = @(
     Get-Item -LiteralPath (Get-RepoPath "$mainQ5Root/Start-Goose-Jonathan-Q5KM-Vision96K-Candidate.ps1")
+    Get-Item -LiteralPath (Get-RepoPath "$mainQ5Root/Start-Goose-Jonathan-Q5KM-Vision96K-Turbo.ps1")
     Get-ChildItem -LiteralPath (Get-RepoPath $blueRoot) -File -Filter '*.ps1'
     Get-ChildItem -LiteralPath (Get-RepoPath $blueQ5Root) -File -Filter '*.ps1'
+    Get-ChildItem -LiteralPath (Get-RepoPath $turboRoot) -File | Where-Object { $_.Extension -in @('.ps1', '.psm1') }
 )
 foreach ($file in $powerShellFiles) {
     $tokens = $null
@@ -199,6 +229,65 @@ foreach ($file in $powerShellFiles) {
     [void][System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$tokens, [ref]$errors)
     if ($errors.Count -gt 0) {
         $failures.Add("PowerShell syntax error: $($file.Name) :: $($errors[0].Message)")
+    }
+}
+
+$mainTurboManifest = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/runtime-manifests/RTX5090.json") -Raw | ConvertFrom-Json
+$blueTurboManifest = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/runtime-manifests/BLUE.json") -Raw | ConvertFrom-Json
+foreach ($entry in @(
+    [pscustomobject]@{ profile = $mainTurboManifest; host = 'DESKTOP-5NPLIIV'; sha = '103eb1ee3cbc55f08ee4df180b09305c17b2a844364436417f8f022326ef35f5'; alias = 'qwen3.8-27b-uncensored-vision-q5km-turbo' },
+    [pscustomobject]@{ profile = $blueTurboManifest; host = 'DESKTOP-L9HAM1G'; sha = '970fa271bf4b8b2354cd399a702c8f882da3a14710d4730833cb687f64154ca4'; alias = 'qwen3.8-27b-uncensored-vision-q5km-blue-turbo' }
+)) {
+    $profile = $entry.profile
+    if ($profile.runtime.source_commit -ne 'f280b26983ad0fdb705a0d9ebf0503e76f2899b0' -or
+        $profile.runtime.executable_expected_sha256 -ne $entry.sha -or
+        $profile.target_host.computer_name -ne $entry.host -or
+        $profile.server.host -ne '127.0.0.1' -or [int]$profile.server.port -ne 18080 -or
+        $profile.server.api_model_alias -ne $entry.alias -or
+        [int]$profile.configuration.context_tokens -ne 98304 -or
+        $profile.configuration.kv_cache_k -ne 'q8_0' -or $profile.configuration.kv_cache_v -ne 'q8_0' -or
+        [int]$profile.configuration.mtp_draft_max_tokens -ne 3 -or
+        [int]$profile.configuration.eval_batch_size -ne 1024 -or
+        [int]$profile.configuration.ubatch_size -ne 512 -or
+        [int]$profile.configuration.parallel -ne 1 -or
+        $profile.configuration.vision -ne $true -or $profile.configuration.dflash2 -ne $false) {
+        $failures.Add("Standalone Turbo runtime manifest is not pinned to the qualified profile: $($entry.host)")
+    }
+}
+if ([int]$blueTurboManifest.server.main_tunnel_port -ne 18081 -or
+    $blueTurboManifest.configuration.split_mode -ne 'layer' -or
+    $blueTurboManifest.configuration.tensor_split -ne '0.7108,0.2892' -or
+    $blueTurboManifest.configuration.load_mode -ne 'no-mmap') {
+    $failures.Add('BLUE Turbo manifest does not preserve tunnel18081/layer split/0.7108,0.2892/no-mmap.')
+}
+
+$turboStart = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Start-ManagedTurbo.ps1") -Raw
+$turboStop = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Stop-ManagedTurbo.ps1") -Raw
+$blueRemoteStart = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Start-BlueManagedTurboRemote.ps1") -Raw
+$blueRemoteStop = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Stop-BlueManagedTurboRemote.ps1") -Raw
+foreach ($check in @(
+    @{ Text = $turboStart; Pattern = [regex]::Escape("'--ctx-size', [string]`$manifest.configuration.context_tokens"); Description = 'Turbo context argument' },
+    @{ Text = $turboStart; Pattern = [regex]::Escape("'--batch-size', [string]`$manifest.configuration.eval_batch_size"); Description = 'Turbo batch argument' },
+    @{ Text = $turboStart; Pattern = [regex]::Escape("'--ubatch-size', [string]`$manifest.configuration.ubatch_size"); Description = 'Turbo ubatch argument' },
+    @{ Text = $turboStart; Pattern = [regex]::Escape("'--spec-type', 'draft-mtp'"); Description = 'Turbo target-contained MTP' },
+    @{ Text = $turboStart; Pattern = [regex]::Escape("'--tensor-split', [string]`$manifest.configuration.tensor_split"); Description = 'BLUE qualified tensor split' },
+    @{ Text = $turboStart; Pattern = 'Assert-TurboLmsIdle'; Description = 'LM Studio active/queued protection' },
+    @{ Text = $turboStart; Pattern = 'executable_expected_sha256'; Description = 'runtime SHA startup validation' },
+    @{ Text = $turboStart; Pattern = 'model\.sha256'; Description = 'model SHA startup validation' },
+    @{ Text = $turboStart; Pattern = 'projector_sha256'; Description = 'projector SHA startup validation' },
+    @{ Text = $turboStop; Pattern = 'Assert-ManagedTurboProcess'; Description = 'PID/path/command/port stop validation' },
+    @{ Text = $blueRemoteStart; Pattern = [regex]::Escape('127.0.0.1:${localPort}:127.0.0.1:'); Description = 'BLUE localhost SSH forward' },
+    @{ Text = $blueRemoteStart; Pattern = 'ExitOnForwardFailure=yes'; Description = 'SSH forward fail-closed option' },
+    @{ Text = $blueRemoteStop; Pattern = 'is not the managed BLUE Turbo tunnel'; Description = 'unknown SSH PID protection' }
+)) {
+    Assert-Contains @check
+}
+foreach ($text in @($turboStart, $turboStop, $blueRemoteStart, $blueRemoteStop)) {
+    if ($text -match '(?i)New-NetFirewallRule|Set-NetFirewallRule|netsh\s+advfirewall|New-Service|Set-Service|schtasks|dflash2') {
+        $failures.Add('Standalone Turbo helper contains a forbidden Firewall/service/autostart/DFlash2 operation.')
+    }
+    if ($text -match '(?i)Stop-Process\s+-Name|taskkill') {
+        $failures.Add('Standalone Turbo helper contains a broad process-kill operation.')
     }
 }
 

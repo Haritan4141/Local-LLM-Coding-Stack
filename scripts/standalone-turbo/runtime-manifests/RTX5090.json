@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "profile_id": "rtx5090-q5km-vision-96k-mtp3-turbo",
+  "display_name": "RTX5090 Q5_K_M Vision 96K Standalone MTP3 Turbo",
+  "target_host": {
+    "computer_name": "DESKTOP-5NPLIIV",
+    "ipv4": "192.168.0.100"
+  },
+  "runtime": {
+    "source_repository": "https://github.com/ggml-org/llama.cpp",
+    "source_commit": "f280b26983ad0fdb705a0d9ebf0503e76f2899b0",
+    "build_date": "2026-08-25T10:43:42+09:00",
+    "cuda_architecture_requested": "120",
+    "cuda_architecture_emitted": "sm_120a",
+    "external_path": "%LOCALAPPDATA%\\Local-LLM-Coding-Stack\\runtimes\\llama.cpp-f280b269-sm120",
+    "executable": "llama-server.exe",
+    "executable_expected_sha256": "103eb1ee3cbc55f08ee4df180b09305c17b2a844364436417f8f022326ef35f5",
+    "bundle_manifest": "runtime-bundle-manifest.json",
+    "required_files": [
+      "llama-server.exe",
+      "llama-server-impl.dll",
+      "llama-common.dll",
+      "llama.dll",
+      "mtmd.dll",
+      "ggml.dll",
+      "ggml-base.dll",
+      "ggml-cpu.dll",
+      "ggml-cuda.dll"
+    ]
+  },
+  "model": {
+    "name": "JonathanColetti Qwen3.8-27B-Uncensored Vision Q5_K_M",
+    "path": "%USERPROFILE%\\.lmstudio\\models\\JonathanColetti\\Qwen3.8-27B-Uncensored-GGUF-Vision-Q5KM\\Qwen3.8-27B-Uncensored-Q5_K_M.gguf",
+    "sha256": "24780644a95f759a9aeeb228c3d852028f2fd40ce0b74d68134246ec4a959547",
+    "projector_path": "%USERPROFILE%\\.lmstudio\\models\\JonathanColetti\\Qwen3.8-27B-Uncensored-GGUF-Vision-Q5KM\\mmproj-Qwen3.8-27B-Uncensored-vision-f16.gguf",
+    "projector_sha256": "5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c"
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 18080,
+    "api_model_alias": "qwen3.8-27b-uncensored-vision-q5km-turbo"
+  },
+  "configuration": {
+    "context_tokens": 98304,
+    "kv_cache_k": "q8_0",
+    "kv_cache_v": "q8_0",
+    "mtp_enabled": true,
+    "mtp_draft_max_tokens": 3,
+    "mtp_draft_kv_k": "q8_0",
+    "mtp_draft_kv_v": "q8_0",
+    "eval_batch_size": 1024,
+    "ubatch_size": 512,
+    "parallel": 1,
+    "flash_attention": true,
+    "vision": true,
+    "dflash2": false,
+    "gpu_layers": "all",
+    "load_mode": "mmap+mlock",
+    "split_mode": null,
+    "tensor_split": null
+  },
+  "gpus": [
+    {
+      "name": "NVIDIA GeForce RTX 5090",
+      "pci_bus_id": "00000000:01:00.0",
+      "power_limit_w": 402,
+      "llama_device": "CUDA0",
+      "vram_release_max_mib": 8192,
+      "vram_loaded_min_mib": 20000
+    }
+  ],
+  "tool_smoke": {
+    "sku": "MAIN-5090",
+    "warehouse": "TOKYO-1"
+  },
+  "qualification_report": "benchmarks/results/2026-08-25-rtx5090-standalone-mtp3-turbo-phase2b.md"
+}

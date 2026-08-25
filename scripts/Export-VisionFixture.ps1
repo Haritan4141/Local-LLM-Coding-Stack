@@ -41,15 +41,16 @@ if (-not (Test-Path -LiteralPath $outputDirectory -PathType Container)) {
 }
 
 $sourceUri = [uri]$sourceFullPath
-& $chrome `
-    --headless=new `
-    --disable-gpu `
-    --hide-scrollbars `
-    --window-size=960,540 `
-    "--screenshot=$outputFullPath" `
+$chromeProcess = Start-Process -FilePath $chrome -ArgumentList @(
+    '--headless=new',
+    '--disable-gpu',
+    '--hide-scrollbars',
+    '--window-size=960,540',
+    "--screenshot=$outputFullPath",
     $sourceUri.AbsoluteUri
+) -WindowStyle Hidden -Wait -PassThru
 
-$chromeFailed = $null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0
+$chromeFailed = $chromeProcess.ExitCode -ne 0
 if ($chromeFailed -or -not (Test-Path -LiteralPath $outputFullPath -PathType Leaf)) {
     throw "Chrome failed to render the Vision fixture: $outputFullPath"
 }

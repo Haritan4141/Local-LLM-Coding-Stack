@@ -56,6 +56,9 @@ Q6_Kの同じ64K F16 comparisonは速度が同等で、Q8よりDedicated headroo
 
 - BLUE local Q5 Recommended: `scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q5KM-Vision/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W.bat`
 - MAIN remote Q5 Recommended: 同ディレクトリの`Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_REMOTE.bat`
+- BLUE local Q5 Turbo explicit-only: 同ディレクトリの`Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Turbo.bat`
+- MAIN remote Q5 Turbo explicit-only: 同ディレクトリの`Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Turbo_REMOTE.bat`。MAIN `127.0.0.1:18081`からBLUE localhost `127.0.0.1:18080`へmanaged SSH forwarding
+- BLUE local / MAIN remote Stable recovery: 同ディレクトリの`_96K_259W_Stable.bat` / `_96K_259W_Stable_REMOTE.bat`
 - BLUE local Q6 Safe/Balanced/Coding-Fast: `scripts/lmstudio/model-loaders/RTX3090/Qwen3.8-JonathanColetti-Q6K-Vision/`の既存個別BAT
 - MAIN remote Q6 Safe/Balanced/Coding-Fast: 対応する既存`_REMOTE.bat`
 - Local/REMOTE selector: `Qwen3.8-JonathanColetti-Q6K-Vision_Profile-Selector.bat` / `Qwen3.8-JonathanColetti-Q6K-Vision_REMOTE-Profile-Selector.bat`
@@ -65,6 +68,8 @@ Q6_Kの同じ64K F16 comparisonは速度が同等で、Q8よりDedicated headroo
 local loaderはidentity、IP、GPU名・PCI Bus ID、model、Vision、active predictionを確認し、RTX3090 UUIDだけへ選択したPower Limitを設定します。Q5 loaderはロード後のcombined/per-GPU Shared gateも自動監査し、FAIL時はQ5 instanceをunloadします。REMOTE launcherはMAINのLM Studioを変更しません。Q6の旧`_64K` local/REMOTE名は259W Safeへ委譲する互換エイリアスです。
 
 2026-08-25のQ6 Safe→Q5 Recommended→Q6 Balanced→Q5 Recommended切替とQ5 REMOTE経路はPASSしました。終了状態はQ5対象1件がIDLE、96K、Q8_0/Q8_0、MTP3、batch1024、ubatch512、parallel1、Vision true、259W/170Wです。
+
+2026-08-25にofficial llama.cpp `f280b26983ad0fdb705a0d9ebf0503e76f2899b0`のStandalone MTP3 Turboを明示選択profileとして統合しました。Stable Remote→Turbo Remote→Stable Remote→Turbo Remote→Stable Remote、MAINとの同時endpoint、Vision 7/7、Tool Calling、Goose built-in `openai` tool-useを実機確認しています。Turbo終了後はBLUE port 18080とMAIN tunnel port 18081がfree、standalone/tunnel 0件、上記Stable Q5対象がIDLE / queued 0へ復帰しました。Stableは引き続きRecommended Production、Turboはexplicit-onlyです。
 
 ## Client profiles
 
