@@ -55,7 +55,7 @@ Release is a fail-closed end-of-session operation. It refuses active or queued L
 
 ## Goose
 
-The Turbo Goose launchers use Goose's built-in `openai` provider and process-local environment only. RTX5090 uses localhost 18080; BLUE uses the managed MAIN tunnel on localhost 18081. Settings remain context limit 90,112, max output 16,384, compact threshold 0.3, and temperature 0. Persistent Goose configuration is not edited.
+The Turbo Goose launchers use Goose's built-in `openai` provider and process-local environment only. RTX5090 uses localhost 18080; BLUE uses the managed MAIN tunnel on localhost 18081. Settings use context limit 90,112, selectable max output 16,384 or 32,768, compact threshold 0.3, and temperature 0. Persistent Goose configuration is not edited. Output16K remains the normal selection; Output32K is explicit long-output use after both systems completed a 17K+ Goose-path qualification.
 
 ## Validation and evidence
 
@@ -65,3 +65,4 @@ Formal integration evidence is in `benchmarks/results/2026-08-25-standalone-mtp3
 
 - `benchmarks/results/2026-08-25-rtx5090-standalone-mtp3-turbo-phase2b.md`
 - `benchmarks/results/2026-08-25-blue-standalone-mtp3-turbo-phase2b.md`
+- `benchmarks/results/2026-08-26-goose-turbo-output32k-qualification.md`

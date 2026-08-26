@@ -4,10 +4,12 @@ param(
         'MAIN-Stable16K',
         'MAIN-Stable32K',
         'MAIN-Turbo16K',
+        'MAIN-Turbo32K',
         'MAIN-Quality32K',
         'BLUE-Stable16K',
         'BLUE-Stable32K',
         'BLUE-Turbo16K',
+        'BLUE-Turbo32K',
         'BLUE-Quality32K'
     )][string]$Profile,
     [switch]$NoLaunch
@@ -43,6 +45,12 @@ $profiles = @{
         Provider = 'openai'; Model = 'qwen3.8-27b-uncensored-vision-q5km-turbo'; Endpoint = 'http://127.0.0.1:18080'
         RuntimeKind = 'Turbo'; Loader = Join-Path $mainDailyRoot '2-Turbo.bat'; TurboProfile = 'RTX5090'
     }
+    'MAIN-Turbo32K' = [ordered]@{
+        Target = 'MAIN RTX5090'; Role = 'Turbo'; Runtime = 'official llama.cpp'; ModelDisplay = 'Q5_K_M Vision'
+        RuntimeContext = 98304; ClientContext = 90112; Output = 32768
+        Provider = 'openai'; Model = 'qwen3.8-27b-uncensored-vision-q5km-turbo'; Endpoint = 'http://127.0.0.1:18080'
+        RuntimeKind = 'Turbo'; Loader = Join-Path $mainDailyRoot '2-Turbo.bat'; TurboProfile = 'RTX5090'
+    }
     'MAIN-Quality32K' = [ordered]@{
         Target = 'MAIN RTX5090'; Role = 'Quality Reference'; Runtime = 'LM Studio'; ModelDisplay = 'Q6_K Vision'
         RuntimeContext = 65536; ClientContext = 64512; Output = 32768
@@ -64,6 +72,12 @@ $profiles = @{
     'BLUE-Turbo16K' = [ordered]@{
         Target = 'BLUE RTX3090+RTX3060'; Role = 'Turbo'; Runtime = 'official llama.cpp'; ModelDisplay = 'Q5_K_M Vision'
         RuntimeContext = 98304; ClientContext = 90112; Output = 16384
+        Provider = 'openai'; Model = 'qwen3.8-27b-uncensored-vision-q5km-blue-turbo'; Endpoint = 'http://127.0.0.1:18081'
+        RuntimeKind = 'Turbo'; Loader = Join-Path $blueDailyRoot '2-Turbo_REMOTE.bat'; TurboProfile = 'BLUE'
+    }
+    'BLUE-Turbo32K' = [ordered]@{
+        Target = 'BLUE RTX3090+RTX3060'; Role = 'Turbo'; Runtime = 'official llama.cpp'; ModelDisplay = 'Q5_K_M Vision'
+        RuntimeContext = 98304; ClientContext = 90112; Output = 32768
         Provider = 'openai'; Model = 'qwen3.8-27b-uncensored-vision-q5km-blue-turbo'; Endpoint = 'http://127.0.0.1:18081'
         RuntimeKind = 'Turbo'; Loader = Join-Path $blueDailyRoot '2-Turbo_REMOTE.bat'; TurboProfile = 'BLUE'
     }
@@ -268,7 +282,11 @@ if ($definition.RuntimeKind -eq 'Turbo') {
 
     Write-Host 'Starting Goose...'
     $gooseTurbo = Join-Path $turboRoot 'Start-Goose-ManagedTurbo.ps1'
-    $arguments = @('-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $gooseTurbo, '-Profile', $definition.TurboProfile)
+    $arguments = @(
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', $gooseTurbo,
+        '-Profile', $definition.TurboProfile,
+        '-MaxOutputTokens', [string]$definition.Output
+    )
     if ($NoLaunch) { $arguments += '-NoLaunch' }
     & powershell.exe @arguments
     if ($LASTEXITCODE -ne 0) { throw "Goose Turbo launcher failed with exit code $LASTEXITCODE." }

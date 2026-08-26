@@ -20,6 +20,8 @@ Repository lifecycle `Current` was not changed. Model files, LM Studio applicati
 | 6 | BLUE Stable 96K / Output 32K | BLUE LM Studio Q5_K_M Vision | `custom_lm_studio_3090_remote` / `192.168.0.104:1234` | Static/profile test PASS; same canonical runtime as choice 5 |
 | 7 | BLUE Turbo 96K / Output 16K | BLUE managed official llama.cpp plus MAIN tunnel | `openai` / `127.0.0.1:18081` | PASS |
 | 8 | BLUE Quality Reference 64K / Output 32K | BLUE LM Studio Q6_K Vision | `custom_lm_studio_3090_remote` / `192.168.0.104:1234` | PASS |
+| 9 | MAIN Turbo 96K / Output 32K | managed official llama.cpp | `openai` / `127.0.0.1:18080` | Added after separate 17K+ Output32K qualification; PASS |
+| 10 | BLUE Turbo 96K / Output 32K | BLUE managed official llama.cpp plus MAIN tunnel | `openai` / `127.0.0.1:18081` | Added after separate 17K+ Output32K qualification; PASS |
 | 0 | Cancel | no change | no change | PASS, exit code 0 |
 
 Invalid menu input returned exit code 2. The BAT remains a thin selector; runtime settings stay in the existing canonical wrappers and Turbo manifests.

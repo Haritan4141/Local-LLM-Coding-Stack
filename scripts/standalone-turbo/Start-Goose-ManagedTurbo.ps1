@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)][ValidateSet('RTX5090', 'BLUE')][string]$Profile,
+    [ValidateSet(16384, 32768)][int]$MaxOutputTokens = 16384,
     [switch]$NoLaunch
 )
 
@@ -47,7 +48,7 @@ $overrides = [ordered]@{
     GOOSE_PROVIDER = 'openai'
     GOOSE_MODEL = [string]$manifest.server.api_model_alias
     GOOSE_CONTEXT_LIMIT = '90112'
-    GOOSE_MAX_TOKENS = '16384'
+    GOOSE_MAX_TOKENS = [string]$MaxOutputTokens
     GOOSE_AUTO_COMPACT_THRESHOLD = '0.3'
     GOOSE_TEMPERATURE = '0'
     OPENAI_HOST = $baseUrl
@@ -73,5 +74,5 @@ finally {
 Start-Sleep -Seconds 2
 if (@(Get-Process -Name 'Goose' -ErrorAction SilentlyContinue).Count -eq 0) { throw 'Goose Desktop did not remain running.' }
 Write-Host "[OK] Goose started through built-in openai provider at $baseUrl." -ForegroundColor Green
-Write-Host '[OK] Process-only limits: context 90112, max output 16384, compact threshold 0.3.' -ForegroundColor Green
+Write-Host "[OK] Process-only limits: context 90112, max output $MaxOutputTokens, compact threshold 0.3." -ForegroundColor Green
 Write-Host '[INFO] Persistent Goose configuration was not changed.'

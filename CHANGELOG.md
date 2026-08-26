@@ -6,6 +6,7 @@
 
 ### Added
 
+- MAIN RTX5090とBLUE RTX3090+RTX3060のGoose Turbo Output32Kを実機qualification。process-local `GOOSE_MAX_TOKENS=32768`がserver側`n_predict=32768`へ反映され、MAIN 17,100 / BLUE 17,183 output tokens、全連番、98,304 runtime context、完了後idle、永続Goose config SHA不変でPASSした。既存menu番号を維持して`[9] MAIN Turbo 96K / Output32K`と`[10] BLUE Turbo 96K / Output32K`を追加し、Output16Kを通常選択として保持する。
 - RTX5090 MAIN、BLUE local、MAIN→BLUE remoteのDaily selectorへ`[4] Release`を追加。LM Studioのactive/queued prediction、Turbo `/slots`、managed PID/path/command/port、BLUE host/IPとMAIN tunnel ownershipをfail closedで検証し、idleなloaded modelまたは管理対象Turboだけを解放する。Windows PowerShell 5.1のtop-level slot arrayを明示展開し、実行ログをrepository外へ保存、失敗時は画面をpauseする。BLUE remoteでは管理対象tunnelも解放し、LM Studio server、Firewall、Power Limit、Goose設定、モデルファイルは変更しない。
 - `00-Goose-Daily-Profiles.bat`をGooseの日常統合入口へ拡張。MAIN/BLUEのStable、Turbo、Quality Referenceについて、既存canonical runtime起動、provider/model/context/output/endpoint cross-check、Goose client設定、Goose Desktop起動までを一括実行する。Stable/QualityはLM Studioの永続profile、Turboは`openai` providerのprocess-local設定を使用し、Turbo 32Kは未qualificationのため追加しない。Goose起動中はruntime変更前にfail closedし、Cancelは無変更で終了する。
 - MAIN/BLUEの統合Goose入口を実機regressionし、Stable、Turbo、Quality Referenceのmodel/provider/endpoint表示とshort smokeを確認。MAIN Turboでは17,936-token promptを`n_ctx_slot=98,304`、Goose client 90,112で処理し、`400 exceed_context_size`なし、`truncated=0`を確認した。終了後は両PCをQ5_K_M Vision 96K Stable、idle/queued0へ復旧し、Turbo process/tunnelと18080/18081 listenerを0にした。

@@ -49,7 +49,7 @@ Phase 1/1.5後のRTX5090 Q6_K Vision 64K Balanced（MTP4 / Q8_0 / eval batch 204
 
 RTX5090 Recommended ProductionはJonathanColetti Q5_K_M Vision / 96K / Q8_0 / MTP3 / eval batch1024です。最終設定でText 47.02、Coding 63.08、Vision 59.98 tok/s（7/7）、69,139-token入力、exact Tool Calling、isolated Agentic Coding 10/10を確認しました。load時raw headroomは6,175 MiB、420 MiB reserve差引後5,755 MiBです。今回の実用fixtureではPromotionを妨げる品質差を観測していない、という限定した結論であり、Q5/Q6の完全同品質は主張しません。互換名`Goose Q5KM Vision 96K Candidate`ショートカットは90,112-token client limit、16,384 max output、0.3 compact thresholdを維持します。Repository lifecycle CurrentはQ6_Kのままです。
 
-Gooseの日常統合入口は`00-Goose-Daily-Profiles.bat`です。MAIN/BLUEのStable、Turbo、Quality Referenceを選ぶと、既存canonical runtimeの起動、provider・model・context・output・endpointのcross-check、Goose設定、Goose Desktop起動までを一括実行します。Stable/QualityはLM Studio providerと永続profile、Turboは`openai` providerとprocess-local設定を使用し、Turboの永続configは変更しません。Q5 Stableは`96K / 16K`または`96K / 32K`、Turboはqualification済みの`96K / 16K`だけ、Q6 Quality Referenceは`64K / 32K`です。統合入口の実機回帰結果は`benchmarks/results/2026-08-26-goose-daily-profiles-integration.md`を参照してください。
+Gooseの日常統合入口は`00-Goose-Daily-Profiles.bat`です。MAIN/BLUEのStable、Turbo、Quality Referenceを選ぶと、既存canonical runtimeの起動、provider・model・context・output・endpointのcross-check、Goose設定、Goose Desktop起動までを一括実行します。Stable/QualityはLM Studio providerと永続profile、Turboは`openai` providerとprocess-local設定を使用し、Turboの永続configは変更しません。Q5 StableとTurboは`96K / 16K`または`96K / 32K`、Q6 Quality Referenceは`64K / 32K`です。Turbo 32KはMAINで17,100、BLUEで17,183 output tokensをGoose経由で完走し、16Kを通常選択、32Kを明示的な長出力選択として採用しました。結果は`benchmarks/results/2026-08-26-goose-daily-profiles-integration.md`と`benchmarks/results/2026-08-26-goose-turbo-output32k-qualification.md`を参照してください。
 
 ## Remote nodes
 

@@ -72,7 +72,7 @@ try {
         }
     }
 
-    & cmd.exe /d /c "call `"$dailyEntry`" 9" *> $null
+    & cmd.exe /d /c "call `"$dailyEntry`" 11" *> $null
     if ($LASTEXITCODE -ne 2) {
         throw "Goose Daily invalid-selection regression expected exit 2, observed $LASTEXITCODE."
     }
@@ -82,16 +82,18 @@ try {
         '1' = 'MAIN-Stable16K'
         '2' = 'MAIN-Stable32K'
         '3' = 'MAIN-Turbo16K'
+        '9' = 'MAIN-Turbo32K'
         '4' = 'MAIN-Quality32K'
         '5' = 'BLUE-Stable16K'
         '6' = 'BLUE-Stable32K'
         '7' = 'BLUE-Turbo16K'
+        '10' = 'BLUE-Turbo32K'
         '8' = 'BLUE-Quality32K'
     }
     foreach ($entry in $expectedMenuMappings.GetEnumerator()) {
         Assert-Contains -Text $dailyText -Expected "if `"%PROFILE_CHOICE%`"==`"$($entry.Key)`" set `"PROFILE_NAME=$($entry.Value)`""
     }
-    foreach ($expected in @('Start-GooseDailyProfile.ps1', '[3] Turbo', '[7] Turbo', '[8] Quality Reference')) {
+    foreach ($expected in @('Start-GooseDailyProfile.ps1', '[3] Turbo', '[9] Turbo', '[7] Turbo', '[10] Turbo', '[8] Quality Reference')) {
         Assert-Contains -Text $dailyText -Expected $expected
     }
     if ($dailyText -match '(?im)^\s*(lms|node|ssh|nvidia-smi)\b') {
@@ -109,6 +111,9 @@ try {
         "Get-Process -Name 'Goose'",
         'Invoke-CanonicalBatch',
         'Start-Goose-ManagedTurbo.ps1',
+        '-MaxOutputTokens',
+        'MAIN-Turbo32K',
+        'BLUE-Turbo32K',
         'Test-ManagedTurbo.ps1',
         'Set-GooseProfile.ps1',
         '/api/v1/models',
@@ -331,7 +336,7 @@ try {
         throw 'Goose config changed during the invalid BLUE provider fail-closed test.'
     }
 
-    Write-Host 'Goose Daily integration test passed: 8-option menu, Cancel/invalid, orchestration guards, MAIN/BLUE Stable profiles, MAIN/BLUE Quality profiles, backups and endpoint fail-closed behavior verified.' -ForegroundColor Green
+    Write-Host 'Goose Daily integration test passed: 10-option menu, Cancel/invalid, orchestration guards, MAIN/BLUE Stable/Turbo16K/Turbo32K/Quality mappings, backups and endpoint fail-closed behavior verified.' -ForegroundColor Green
 } finally {
     Remove-TestArtifacts
 }

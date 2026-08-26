@@ -70,12 +70,14 @@ $requiredPaths = @(
     "$turboRoot/Stop-BlueManagedTurboRemote.ps1",
     "$turboRoot/Release-BlueManagedRuntimeRemote.ps1",
     "$turboRoot/Start-Goose-ManagedTurbo.ps1",
+    "$turboRoot/Invoke-GooseTurboLongOutputQualification.ps1",
     "$turboRoot/Invoke-ManagedTurboSmoke.ps1",
     "$turboRoot/README.md",
     "$turboRoot/runtime-manifests/RTX5090.json",
     "$turboRoot/runtime-manifests/BLUE.json",
     'scripts/tests/Test-StandaloneTurboFailClosed.ps1',
     'benchmarks/results/2026-08-25-standalone-mtp3-turbo-integration.md',
+    'benchmarks/results/2026-08-26-goose-turbo-output32k-qualification.md',
     'scripts/lmstudio/model-loaders/README.md',
     'scripts/lmstudio/model-loaders/00-RTX5090-Daily-Profiles.bat',
     'scripts/lmstudio/model-loaders/00-BLUE-Daily-Profiles-LOCAL.bat',
@@ -103,6 +105,18 @@ foreach ($relativePath in $requiredPaths) {
     if (-not (Test-Path -LiteralPath (Get-RepoPath $relativePath) -PathType Leaf)) {
         $failures.Add("Missing profile loader path: $relativePath")
     }
+}
+
+$turboGooseLauncher = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Start-Goose-ManagedTurbo.ps1") -Raw
+$turboGooseQualification = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Invoke-GooseTurboLongOutputQualification.ps1") -Raw
+foreach ($check in @(
+    @{ Text = $turboGooseLauncher; Pattern = '\[ValidateSet\(16384, 32768\)\]\[int\]\$MaxOutputTokens = 16384'; Description = 'Turbo Goose 16K default with explicit 32K allowance' },
+    @{ Text = $turboGooseLauncher; Pattern = "GOOSE_MAX_TOKENS = \[string\]\`$MaxOutputTokens"; Description = 'Turbo Goose process-local dynamic output limit' },
+    @{ Text = $turboGooseQualification; Pattern = 'MinimumOutputTokens = 17000'; Description = 'Turbo Goose 17K qualification gate' },
+    @{ Text = $turboGooseQualification; Pattern = 'full_sequence_valid'; Description = 'Turbo Goose full sequence evidence' },
+    @{ Text = $turboGooseQualification; Pattern = 'persistent_config_unchanged'; Description = 'Turbo Goose persistent config preservation evidence' }
+)) {
+    Assert-Contains -Text $check.Text -Pattern $check.Pattern -Description $check.Description
 }
 
 $mainBalanced = Get-Content -LiteralPath (Get-RepoPath "$mainRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat") -Raw

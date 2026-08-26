@@ -7,10 +7,10 @@ Goose daily integrated entry: `scripts/lmstudio/model-loaders/00-Goose-Daily-Pro
 | Goose choice | Runtime | Provider / endpoint | Client limit / output |
 |---|---|---|---:|
 | MAIN Stable | MAIN LM Studio Stable | `lmstudio` / `127.0.0.1:1234` | 90,112 / 16K or 32K |
-| MAIN Turbo | MAIN official llama.cpp | `openai` / `127.0.0.1:18080` | 90,112 / 16K |
+| MAIN Turbo | MAIN official llama.cpp | `openai` / `127.0.0.1:18080` | 90,112 / 16K or 32K |
 | MAIN Quality | MAIN LM Studio Q6 Balanced | `lmstudio` / `127.0.0.1:1234` | 64,512 / 32K |
 | BLUE Stable | BLUE LM Studio Stable | `custom_lm_studio_3090_remote` / `192.168.0.104:1234` | 90,112 / 16K or 32K |
-| BLUE Turbo | BLUE official llama.cpp + MAIN tunnel | `openai` / `127.0.0.1:18081` | 90,112 / 16K |
+| BLUE Turbo | BLUE official llama.cpp + MAIN tunnel | `openai` / `127.0.0.1:18081` | 90,112 / 16K or 32K |
 | BLUE Quality | BLUE LM Studio Q6 Balanced | `custom_lm_studio_3090_remote` / `192.168.0.104:1234` | 64,512 / 32K |
 
 ## RTX5090 MAIN
@@ -73,4 +73,4 @@ Final verified state:
 - RTX5090: LM Studio Q5_K_M Vision 98,304, Q8_0/Q8_0, MTP3, batch1024, ubatch512, parallel1, IDLE, queued0, 402 W; MAIN ports 18080/18081 free; active Turbo state/process 0.
 - BLUE: LM Studio Q5_K_M Vision 98,304, Q8_0/Q8_0, MTP3, batch1024, ubatch512, priorityOrder RTX3090→RTX3060, parallel1, IDLE, queued0, 259 W / 170 W; BLUE 18080 and MAIN 18081 free; active Turbo/tunnel state/process 0.
 
-The integrated Goose entry was separately validated on 2026-08-26 across MAIN/BLUE Stable, Turbo, and Quality Reference, including short Goose Desktop prompts and a 17,936-token MAIN Turbo prompt at `n_ctx_slot = 98,304`. See `benchmarks/results/2026-08-26-goose-daily-profiles-integration.md`.
+The integrated Goose entry was separately validated on 2026-08-26 across MAIN/BLUE Stable, Turbo, and Quality Reference, including short Goose Desktop prompts and a 17,936-token MAIN Turbo prompt at `n_ctx_slot = 98,304`. Output32K was then qualified through Goose at 17,100 output tokens on MAIN and 17,183 on BLUE, with complete sequences and unchanged persistent config. See `benchmarks/results/2026-08-26-goose-daily-profiles-integration.md` and `benchmarks/results/2026-08-26-goose-turbo-output32k-qualification.md`.
