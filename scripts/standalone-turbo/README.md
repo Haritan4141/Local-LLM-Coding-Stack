@@ -33,7 +33,7 @@ BLUE's detached runtime launcher is created through `Win32_Process.Create` so na
 
 ## Start, stop, and recovery
 
-Use the profile selectors or the named BAT files. Selectors only dispatch to a BAT; Stable remains option 1 and Turbo is option 2.
+Use the profile selectors or the named BAT files. Selectors only dispatch to a BAT; Stable remains option 1, Turbo is option 2, and Release is option 4.
 
 | Operation | Launcher |
 |---|---|
@@ -43,10 +43,15 @@ Use the profile selectors or the named BAT files. Selectors only dispatch to a B
 | BLUE local Stable recovery | `Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Stable.bat` |
 | BLUE Turbo from MAIN | `Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Turbo_REMOTE.bat` |
 | BLUE Stable from MAIN | `Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Stable_REMOTE.bat` |
+| RTX5090 runtime release | Daily selector `[4]` / `RTX5090/00-Daily-Profiles/4-Release.bat` |
+| BLUE local runtime release | Daily selector `[4]` / `RTX3090/00-Daily-Profiles/4-Release.bat` |
+| BLUE runtime release from MAIN | Daily selector `[4]` / `RTX3090/00-Daily-Profiles/4-Release_REMOTE.bat` |
 
 Startup fails closed unless host/IP, GPU name and PCI Bus ID, current Power Limit, runtime SHA, runtime commit/device mapping, GGUF/projector SHA, ports, LM Studio idle/queued state, and released VRAM agree. A generating or queued LM Studio model is never unloaded. An unknown listener or process is never stopped.
 
 State, archived state, logs, bundle manifests, and smoke evidence are outside Git under `%LOCALAPPDATA%\Local-LLM-Coding-Stack\turbo` and the managed runtime directories. Stop verifies PID, executable path, command line, model, alias, port ownership, and tunnel target before terminating only the managed process. Stable recovery waits for port and VRAM release before calling the unchanged Stable loader.
+
+Release is a fail-closed end-of-session operation. It refuses active or queued LM Studio predictions, flattens the Windows PowerShell 5.1 top-level `/slots` JSON array before checking every slot for `is_processing=false`, and preserves unknown listeners or processes. It then unloads idle LM Studio models or stops only the ownership-validated managed Turbo process. BLUE Remote also removes only its validated MAIN tunnel. It does not stop the LM Studio server or change Firewall, Power Limit, model files, or Goose configuration. Daily wrappers save output under `%LOCALAPPDATA%\Local-LLM-Coding-Stack\release-logs` and pause on failure so the error remains visible.
 
 ## Goose
 

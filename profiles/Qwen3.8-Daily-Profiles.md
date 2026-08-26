@@ -2,6 +2,17 @@
 
 These are the official daily Operational Profile entry points for Qwen3.8. They do not change the sole repository lifecycle `Current` model.
 
+Goose daily integrated entry: `scripts/lmstudio/model-loaders/00-Goose-Daily-Profiles.bat`. It selects the canonical runtime, cross-checks the effective provider/model/context/output/endpoint, and then launches Goose Desktop. Stable/Quality use persistent LM Studio profiles; Turbo uses the built-in `openai` provider with process-local settings and does not change persistent Goose configuration.
+
+| Goose choice | Runtime | Provider / endpoint | Client limit / output |
+|---|---|---|---:|
+| MAIN Stable | MAIN LM Studio Stable | `lmstudio` / `127.0.0.1:1234` | 90,112 / 16K or 32K |
+| MAIN Turbo | MAIN official llama.cpp | `openai` / `127.0.0.1:18080` | 90,112 / 16K |
+| MAIN Quality | MAIN LM Studio Q6 Balanced | `lmstudio` / `127.0.0.1:1234` | 64,512 / 32K |
+| BLUE Stable | BLUE LM Studio Stable | `custom_lm_studio_3090_remote` / `192.168.0.104:1234` | 90,112 / 16K or 32K |
+| BLUE Turbo | BLUE official llama.cpp + MAIN tunnel | `openai` / `127.0.0.1:18081` | 90,112 / 16K |
+| BLUE Quality | BLUE LM Studio Q6 Balanced | `custom_lm_studio_3090_remote` / `192.168.0.104:1234` | 64,512 / 32K |
+
 ## RTX5090 MAIN
 
 | Profile | Backend / model | Effective settings | Endpoint / power | Launcher | Intended use |
@@ -11,6 +22,8 @@ These are the official daily Operational Profile entry points for Qwen3.8. They 
 | Quality Reference | LM Studio / Jonathan Q6_K Vision Balanced | 65,536 context; MTP4; Q8_0/Q8_0; batch2048; ubatch512; parallel1; Vision | `http://127.0.0.1:1234/v1`; 402 W | `scripts/lmstudio/model-loaders/RTX5090/00-Daily-Profiles/3-Quality-Reference.bat` | Compare a questionable Q5 output |
 
 Daily selector: `scripts/lmstudio/model-loaders/RTX5090/00-Daily-Profiles/Profile-Selector.bat`
+
+End-of-session Release: selector `[4]` / `scripts/lmstudio/model-loaders/RTX5090/00-Daily-Profiles/4-Release.bat`
 
 Root one-click: `scripts/lmstudio/model-loaders/00-RTX5090-Daily-Profiles.bat`
 
@@ -26,6 +39,8 @@ MAIN remote selector: `scripts/lmstudio/model-loaders/RTX3090/00-Daily-Profiles/
 
 BLUE local selector: `scripts/lmstudio/model-loaders/RTX3090/00-Daily-Profiles/Profile-Selector_LOCAL.bat`
 
+End-of-session Release: selector `[4]`; MAIN REMOTE uses `4-Release_REMOTE.bat`, BLUE local uses `4-Release.bat`.
+
 Root MAIN one-click: `scripts/lmstudio/model-loaders/00-BLUE-Daily-Profiles-REMOTE.bat`
 
 ## Profile meaning and retained roles
@@ -33,6 +48,8 @@ Root MAIN one-click: `scripts/lmstudio/model-loaders/00-BLUE-Daily-Profiles-REMO
 Quality Reference is not a guarantee that every Q6_K answer is better than Stable. It is a higher-precision quantization reference for investigating a questionable Q5_K_M result. Because the Reference context is 64K, do not use it as a direct comparison for a task over 64K.
 
 Stable is **ACTIVE / RECOMMENDED**. Turbo is **ACTIVE / EXPLICIT** and does not replace Stable despite its measured speed. Quality Reference is **ACTIVE / REFERENCE**.
+
+Release is an operation, not a fourth Profile. It loads nothing: after fail-closed idle/ownership checks it unloads the active LM Studio model or stops the managed Turbo runtime. BLUE REMOTE also removes its validated MAIN tunnel. It leaves LM Studio server, Firewall, Power Limit, Goose configuration, and model files unchanged.
 
 Q6 Safe remains **FALLBACK**; Coding-Fast remains **ADVANCED**; BLUE 370W remains **ADVANCED PERFORMANCE**; HauhauCS remains **RESEARCH / CANDIDATE**; DFlash2 remains **EXPERIMENTAL**; n-gram Coding remains **REJECTED FOR PROFILE / RESEARCH RESULT ONLY**.
 
@@ -55,3 +72,5 @@ Final verified state:
 
 - RTX5090: LM Studio Q5_K_M Vision 98,304, Q8_0/Q8_0, MTP3, batch1024, ubatch512, parallel1, IDLE, queued0, 402 W; MAIN ports 18080/18081 free; active Turbo state/process 0.
 - BLUE: LM Studio Q5_K_M Vision 98,304, Q8_0/Q8_0, MTP3, batch1024, ubatch512, priorityOrder RTX3090→RTX3060, parallel1, IDLE, queued0, 259 W / 170 W; BLUE 18080 and MAIN 18081 free; active Turbo/tunnel state/process 0.
+
+The integrated Goose entry was separately validated on 2026-08-26 across MAIN/BLUE Stable, Turbo, and Quality Reference, including short Goose Desktop prompts and a 17,936-token MAIN Turbo prompt at `n_ctx_slot = 98,304`. See `benchmarks/results/2026-08-26-goose-daily-profiles-integration.md`.

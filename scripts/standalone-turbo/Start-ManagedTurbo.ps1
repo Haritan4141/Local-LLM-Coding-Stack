@@ -5,6 +5,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+Import-Module Microsoft.PowerShell.Utility -Force -ErrorAction Stop
 Import-Module (Join-Path $PSScriptRoot 'Turbo.Common.psm1') -Force
 
 $manifest = Get-TurboProfileManifest -Profile $Profile
@@ -42,7 +43,7 @@ foreach ($required in @($manifest.runtime.required_files)) {
         throw "Managed runtime bundle is incomplete; missing $required"
     }
 }
-$exeHash = (Get-FileHash -LiteralPath $runtime.executable -Algorithm SHA256).Hash.ToLowerInvariant()
+$exeHash = Get-TurboFileSha256 -Path $runtime.executable
 if ($exeHash -ne $manifest.runtime.executable_expected_sha256) {
     throw "Managed llama-server.exe SHA mismatch: $exeHash"
 }
@@ -71,10 +72,10 @@ foreach ($gpu in @($manifest.gpus)) {
 }
 
 Write-Host '[INFO] Verifying target GGUF SHA-256...'
-$modelHash = (Get-FileHash -LiteralPath $runtime.model -Algorithm SHA256).Hash.ToLowerInvariant()
+$modelHash = Get-TurboFileSha256 -Path $runtime.model
 if ($modelHash -ne $manifest.model.sha256) { throw "Target GGUF SHA mismatch: $modelHash" }
 Write-Host '[INFO] Verifying Vision projector SHA-256...'
-$projectorHash = (Get-FileHash -LiteralPath $runtime.projector -Algorithm SHA256).Hash.ToLowerInvariant()
+$projectorHash = Get-TurboFileSha256 -Path $runtime.projector
 if ($projectorHash -ne $manifest.model.projector_sha256) { throw "Vision projector SHA mismatch: $projectorHash" }
 
 $lmsBefore = @(Assert-TurboLmsIdle)

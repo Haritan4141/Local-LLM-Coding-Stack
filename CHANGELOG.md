@@ -6,6 +6,10 @@
 
 ### Added
 
+- RTX5090 MAIN、BLUE local、MAIN→BLUE remoteのDaily selectorへ`[4] Release`を追加。LM Studioのactive/queued prediction、Turbo `/slots`、managed PID/path/command/port、BLUE host/IPとMAIN tunnel ownershipをfail closedで検証し、idleなloaded modelまたは管理対象Turboだけを解放する。Windows PowerShell 5.1のtop-level slot arrayを明示展開し、実行ログをrepository外へ保存、失敗時は画面をpauseする。BLUE remoteでは管理対象tunnelも解放し、LM Studio server、Firewall、Power Limit、Goose設定、モデルファイルは変更しない。
+- `00-Goose-Daily-Profiles.bat`をGooseの日常統合入口へ拡張。MAIN/BLUEのStable、Turbo、Quality Referenceについて、既存canonical runtime起動、provider/model/context/output/endpoint cross-check、Goose client設定、Goose Desktop起動までを一括実行する。Stable/QualityはLM Studioの永続profile、Turboは`openai` providerのprocess-local設定を使用し、Turbo 32Kは未qualificationのため追加しない。Goose起動中はruntime変更前にfail closedし、Cancelは無変更で終了する。
+- MAIN/BLUEの統合Goose入口を実機regressionし、Stable、Turbo、Quality Referenceのmodel/provider/endpoint表示とshort smokeを確認。MAIN Turboでは17,936-token promptを`n_ctx_slot=98,304`、Goose client 90,112で処理し、`400 exceed_context_size`なし、`truncated=0`を確認した。終了後は両PCをQ5_K_M Vision 96K Stable、idle/queued0へ復旧し、Turbo process/tunnelと18080/18081 listenerを0にした。
+- BLUE Goose custom providerを選ぶ際、既存provider名、OpenAI engine、`192.168.0.104:1234`のLAN endpoint、認証不要をfail closedで照合し、Q5 Stableと既存Q6 Referenceのmodel定義を両方保持する。異なるendpointや重複modelでは永続configを変更しない回帰testを追加。
 - RED `pc7600x / DESKTOP-LMB720F / 192.168.0.103 / RX 9070 XT 16 GB`をAMD Remote LLM Node Candidateとして構築。LM Studio 0.4.21+2へROCm 2.29.1を追加・選択し、既存Vulkan 2.29.1はfallbackとして保持した。
 - Jonathan公式IQ4_XS（15,309,039,008 bytes / SHA-256 `53adc4bbed67044d662273356bbf3a50fdec667ac21bbf18d13e5815fbccc7f5`）をLM Studio外部領域へ導入。GGUFはGitへ保存していない。
 - RED用96K/64K MAIN REMOTE loaderを追加。SSH Alias、hostname、IP、Private/LocalSubnet Firewall、ROCm/gfx1201、iGPU無効、artifact、active prediction、effective settings、Dedicated/Shared gateをfail closedで監査する。

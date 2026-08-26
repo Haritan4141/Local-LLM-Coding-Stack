@@ -64,9 +64,11 @@ $requiredPaths = @(
     "$turboRoot/Install-ManagedTurboRuntime.ps1",
     "$turboRoot/Start-ManagedTurbo.ps1",
     "$turboRoot/Stop-ManagedTurbo.ps1",
+    "$turboRoot/Release-ManagedRuntime.ps1",
     "$turboRoot/Test-ManagedTurbo.ps1",
     "$turboRoot/Start-BlueManagedTurboRemote.ps1",
     "$turboRoot/Stop-BlueManagedTurboRemote.ps1",
+    "$turboRoot/Release-BlueManagedRuntimeRemote.ps1",
     "$turboRoot/Start-Goose-ManagedTurbo.ps1",
     "$turboRoot/Invoke-ManagedTurboSmoke.ps1",
     "$turboRoot/README.md",
@@ -82,15 +84,18 @@ $requiredPaths = @(
     "$mainDailyRoot/1-Stable.bat",
     "$mainDailyRoot/2-Turbo.bat",
     "$mainDailyRoot/3-Quality-Reference.bat",
+    "$mainDailyRoot/4-Release.bat",
     "$mainDailyRoot/Profile-Selector.bat",
     "$blueDailyRoot/README.md",
     "$blueDailyRoot/1-Stable.bat",
     "$blueDailyRoot/2-Turbo.bat",
     "$blueDailyRoot/3-Quality-Reference.bat",
+    "$blueDailyRoot/4-Release.bat",
     "$blueDailyRoot/Profile-Selector_LOCAL.bat",
     "$blueDailyRoot/1-Stable_REMOTE.bat",
     "$blueDailyRoot/2-Turbo_REMOTE.bat",
     "$blueDailyRoot/3-Quality-Reference_REMOTE.bat",
+    "$blueDailyRoot/4-Release_REMOTE.bat",
     "$blueDailyRoot/Profile-Selector_REMOTE.bat",
     'profiles/Qwen3.8-Daily-Profiles.md'
 )
@@ -223,17 +228,20 @@ $selectorExpectations = @{
     "$mainDailyRoot/Profile-Selector.bat" = @(
         '1-Stable.bat',
         '2-Turbo.bat',
-        '3-Quality-Reference.bat'
+        '3-Quality-Reference.bat',
+        '4-Release.bat'
     )
     "$blueDailyRoot/Profile-Selector_LOCAL.bat" = @(
         '1-Stable.bat',
         '2-Turbo.bat',
-        '3-Quality-Reference.bat'
+        '3-Quality-Reference.bat',
+        '4-Release.bat'
     )
     "$blueDailyRoot/Profile-Selector_REMOTE.bat" = @(
         '1-Stable_REMOTE.bat',
         '2-Turbo_REMOTE.bat',
-        '3-Quality-Reference_REMOTE.bat'
+        '3-Quality-Reference_REMOTE.bat',
+        '4-Release_REMOTE.bat'
     )
 }
 foreach ($entry in $selectorExpectations.GetEnumerator()) {
@@ -316,8 +324,10 @@ if ([int]$blueTurboManifest.server.main_tunnel_port -ne 18081 -or
 
 $turboStart = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Start-ManagedTurbo.ps1") -Raw
 $turboStop = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Stop-ManagedTurbo.ps1") -Raw
+$runtimeRelease = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Release-ManagedRuntime.ps1") -Raw
 $blueRemoteStart = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Start-BlueManagedTurboRemote.ps1") -Raw
 $blueRemoteStop = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Stop-BlueManagedTurboRemote.ps1") -Raw
+$blueRemoteRelease = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Release-BlueManagedRuntimeRemote.ps1") -Raw
 foreach ($check in @(
     @{ Text = $turboStart; Pattern = [regex]::Escape("'--ctx-size', [string]`$manifest.configuration.context_tokens"); Description = 'Turbo context argument' },
     @{ Text = $turboStart; Pattern = [regex]::Escape("'--batch-size', [string]`$manifest.configuration.eval_batch_size"); Description = 'Turbo batch argument' },
@@ -329,18 +339,50 @@ foreach ($check in @(
     @{ Text = $turboStart; Pattern = 'model\.sha256'; Description = 'model SHA startup validation' },
     @{ Text = $turboStart; Pattern = 'projector_sha256'; Description = 'projector SHA startup validation' },
     @{ Text = $turboStop; Pattern = 'Assert-ManagedTurboProcess'; Description = 'PID/path/command/port stop validation' },
+    @{ Text = $runtimeRelease; Pattern = 'Assert-TurboLmsIdle'; Description = 'Release active/queued LM Studio protection' },
+    @{ Text = $runtimeRelease; Pattern = 'Assert-ManagedTurboProcess'; Description = 'Release managed Turbo ownership validation' },
+    @{ Text = $runtimeRelease; Pattern = '/slots'; Description = 'Release active Turbo prediction protection' },
+    @{ Text = $runtimeRelease; Pattern = [regex]::Escape('$slotResponse | ForEach-Object { $_ }'); Description = 'Windows PowerShell 5.1 slot-array flattening' },
+    @{ Text = $runtimeRelease; Pattern = [regex]::Escape('lms unload --all'); Description = 'Release LM Studio unload operation' },
     @{ Text = $blueRemoteStart; Pattern = [regex]::Escape('127.0.0.1:${localPort}:127.0.0.1:'); Description = 'BLUE localhost SSH forward' },
     @{ Text = $blueRemoteStart; Pattern = 'ExitOnForwardFailure=yes'; Description = 'SSH forward fail-closed option' },
-    @{ Text = $blueRemoteStop; Pattern = 'is not the managed BLUE Turbo tunnel'; Description = 'unknown SSH PID protection' }
+    @{ Text = $blueRemoteStop; Pattern = 'is not the managed BLUE Turbo tunnel'; Description = 'unknown SSH PID protection' },
+    @{ Text = $blueRemoteRelease; Pattern = [regex]::Escape("`$sshAlias = [string]`$manifest.target_host.ssh_alias"); Description = 'BLUE release manifest SSH alias' },
+    @{ Text = $blueRemoteRelease; Pattern = [regex]::Escape("`$expectedIp = [string]`$manifest.target_host.ipv4"); Description = 'BLUE release expected IPv4' },
+    @{ Text = $blueRemoteRelease; Pattern = 'is not the managed BLUE Turbo tunnel'; Description = 'BLUE release unknown tunnel protection' },
+    @{ Text = $blueRemoteRelease; Pattern = 'Release-ManagedRuntime\.ps1'; Description = 'BLUE remote managed release helper' },
+    @{ Text = $blueRemoteRelease; Pattern = [regex]::Escape('$remoteModelResponse | ForEach-Object { $_ }'); Description = 'Windows PowerShell 5.1 remote lms array flattening' }
 )) {
     Assert-Contains @check
 }
-foreach ($text in @($turboStart, $turboStop, $blueRemoteStart, $blueRemoteStop)) {
+foreach ($text in @($turboStart, $turboStop, $runtimeRelease, $blueRemoteStart, $blueRemoteStop, $blueRemoteRelease)) {
     if ($text -match '(?i)New-NetFirewallRule|Set-NetFirewallRule|netsh\s+advfirewall|New-Service|Set-Service|schtasks|dflash2') {
         $failures.Add('Standalone Turbo helper contains a forbidden Firewall/service/autostart/DFlash2 operation.')
     }
     if ($text -match '(?i)Stop-Process\s+-Name|taskkill') {
         $failures.Add('Standalone Turbo helper contains a broad process-kill operation.')
+    }
+}
+
+$dailyReleaseChecks = @(
+    @{ Path = "$mainDailyRoot/4-Release.bat"; Patterns = @('Release-ManagedRuntime.ps1', '-Profile RTX5090') },
+    @{ Path = "$blueDailyRoot/4-Release.bat"; Patterns = @('Release-ManagedRuntime.ps1', '-Profile BLUE') },
+    @{ Path = "$blueDailyRoot/4-Release_REMOTE.bat"; Patterns = @('Release-BlueManagedRuntimeRemote.ps1') }
+)
+foreach ($check in $dailyReleaseChecks) {
+    $text = Get-Content -LiteralPath (Get-RepoPath $check.Path) -Raw
+    foreach ($pattern in $check.Patterns) {
+        if ($text.IndexOf($pattern, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+            $failures.Add("Daily Release wrapper is missing '$pattern': $($check.Path)")
+        }
+    }
+    if ($text -notmatch '(?im)^set "RC=%ERRORLEVEL%"\r?$' -or $text -notmatch '(?im)^\s*exit /b %RC%\r?$') {
+        $failures.Add("Daily Release wrapper does not preserve failure: $($check.Path)")
+    }
+    foreach ($safetyPattern in @('release-logs', 'type "%LOG_FILE%"', 'pause')) {
+        if ($text.IndexOf($safetyPattern, [StringComparison]::OrdinalIgnoreCase) -lt 0) {
+            $failures.Add("Daily Release wrapper is missing error visibility '$safetyPattern': $($check.Path)")
+        }
     }
 }
 

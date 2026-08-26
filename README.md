@@ -49,6 +49,8 @@ Phase 1/1.5後のRTX5090 Q6_K Vision 64K Balanced（MTP4 / Q8_0 / eval batch 204
 
 RTX5090 Recommended ProductionはJonathanColetti Q5_K_M Vision / 96K / Q8_0 / MTP3 / eval batch1024です。最終設定でText 47.02、Coding 63.08、Vision 59.98 tok/s（7/7）、69,139-token入力、exact Tool Calling、isolated Agentic Coding 10/10を確認しました。load時raw headroomは6,175 MiB、420 MiB reserve差引後5,755 MiBです。今回の実用fixtureではPromotionを妨げる品質差を観測していない、という限定した結論であり、Q5/Q6の完全同品質は主張しません。互換名`Goose Q5KM Vision 96K Candidate`ショートカットは90,112-token client limit、16,384 max output、0.3 compact thresholdを維持します。Repository lifecycle CurrentはQ6_Kのままです。
 
+Gooseの日常統合入口は`00-Goose-Daily-Profiles.bat`です。MAIN/BLUEのStable、Turbo、Quality Referenceを選ぶと、既存canonical runtimeの起動、provider・model・context・output・endpointのcross-check、Goose設定、Goose Desktop起動までを一括実行します。Stable/QualityはLM Studio providerと永続profile、Turboは`openai` providerとprocess-local設定を使用し、Turboの永続configは変更しません。Q5 Stableは`96K / 16K`または`96K / 32K`、Turboはqualification済みの`96K / 16K`だけ、Q6 Quality Referenceは`64K / 32K`です。統合入口の実機回帰結果は`benchmarks/results/2026-08-26-goose-daily-profiles-integration.md`を参照してください。
+
 ## Remote nodes
 
 RTX5090 localhost Currentを変更せず、`pc5700x / RTX 3090 24 GB + RTX 3060 12 GB`をLAN経由の補助LM Studio nodeとして分離管理します。
@@ -96,6 +98,8 @@ Q5 96K qualificationはText/Coding/Vision/Tool Calling/76,880-token入力とfres
 Currentモデルの96K / 64K / 32K BATは `scripts/lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K/` で管理します。同じQ6_Kへprojectorを追加するVision用BATは`Qwen3.8-JonathanColetti-Q6K-Vision/`、Recommended ProductionのQ5_K_M Vision 96Kは`Qwen3.8-JonathanColetti-Q5KM-Vision/`へ分離します。Candidate Q6_K_PとQ5_K_P fallbackも、量子化を明記した別ディレクトリです。RTX5090/BLUEのVision selectorは個別loaderをCALLするだけです。RTX3090はOperational Recommendedを`RTX3090/Qwen3.8-JonathanColetti-Q5KM-Vision/`、Q6 referenceを`Qwen3.8-JonathanColetti-Q6K-Vision/`、fallbackを`Qwen3.8-JonathanColetti-Q4KM/`、optional Candidateを`Qwen3.8-HauhauCS-Aggressive-Q4KP/`へ分離します。RX9070XTは`RX9070XT/Qwen3.8-JonathanColetti-IQ4XS/`にMAIN用64K/96K REMOTE loaderを置きます。別モデルを試す場合は、既存BATを上書きせず対象GPU配下へモデル・量子化別ディレクトリを追加します。
 
 BATはGGUFを内包・ダウンロードせず、LM Studioへインストール済みのモデルを `lms` CLIで参照します。実行時に `lms unload --all` を行うため、現在ロード中のモデルを解除する点に注意してください。
+
+Gooseを完全終了した状態で`scripts/lmstudio/model-loaders/00-Goose-Daily-Profiles.bat`を実行すれば、対応するRTX5090/BLUE Daily runtimeの起動、Goose profileの整合確認、Goose Desktop起動まで完結します。既存の個別runtime selectorとprofile helperは互換・保守用に保持します。詳細は`scripts/goose/README.md`を参照してください。
 
 新規ベンチマーク記録の雛形:
 

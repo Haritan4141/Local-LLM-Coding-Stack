@@ -56,7 +56,7 @@ launcherは次を行います。
 
 ## Q5_K_M 96Kから通常起動へ戻す場合
 
-`Set-Goose-Profile-Q6K-Vision64K.bat`は、通常のGoose shortcutを使用するための永続client profileをQ6_K Vision 64Kへ戻します。LM StudioのloadとGoose起動は行いません。
+通常のGoose shortcutでQuality Referenceを使う場合は`../../00-Goose-Daily-Profiles.bat`のMAIN Q6 Quality Referenceを選択します。`Set-Goose-Profile-Q6K-Vision64K.bat`は同じ永続client profileへ戻す互換入口として保持します。どちらもLM StudioのloadとGoose起動は行いません。
 
 | Goose setting | Q6_K Vision 64K value |
 |---|---:|

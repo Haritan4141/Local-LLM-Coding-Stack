@@ -6,6 +6,24 @@ function Resolve-TurboExpandedPath {
     return [System.IO.Path]::GetFullPath([Environment]::ExpandEnvironmentVariables($Path))
 }
 
+function Get-TurboFileSha256 {
+    param([Parameter(Mandatory)][string]$Path)
+
+    $stream = [IO.File]::Open($Path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::Read)
+    try {
+        $sha256 = [Security.Cryptography.SHA256]::Create()
+        try {
+            return ([BitConverter]::ToString($sha256.ComputeHash($stream))).Replace('-', '').ToLowerInvariant()
+        }
+        finally {
+            $sha256.Dispose()
+        }
+    }
+    finally {
+        $stream.Dispose()
+    }
+}
+
 function Get-TurboProfileManifest {
     param([Parameter(Mandatory)][ValidateSet('RTX5090', 'BLUE')][string]$Profile)
 

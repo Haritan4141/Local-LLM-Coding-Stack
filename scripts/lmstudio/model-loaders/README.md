@@ -2,7 +2,9 @@
 
 ## Daily entry points
 
-普段は Stable / Turbo / Quality Reference の3 Profileだけを使います。
+普段は Stable / Turbo / Quality Reference の3 Profileを使い、作業終了時は同じselectorのReleaseでloaded modelを解放できます。
+
+Goose Desktopから使う場合の日常統合入口は`00-Goose-Daily-Profiles.bat`です。MAIN/BLUEのruntime選択、provider/model/context/output/endpoint cross-check、Goose設定、Goose Desktop起動まで一括実行します。Stable/QualityはLM Studio provider、Turboは永続configを変更しないprocess-local `openai` providerです。
 
 | Target | Recommended entry point |
 |---|---|
@@ -21,6 +23,8 @@ StableはLM StudioのRecommended、Turboはofficial pinned llama.cppの明示選
 ## Implementation / Advanced
 
 既存model directoryとloader pathはbenchmark再現・rollback・互換性のため保持します。Daily selectorへ表示しない項目も削除・改名・移動しません。
+
+各Daily selectorの`[4] Release`はProfileではなく終了操作です。idle/queued/prediction状態とmanaged process ownershipを検証し、LM Studioのloaded modelまたはmanaged Turboだけを解放します。BLUE REMOTEでは管理対象MAIN tunnelも解放します。LM Studio server、Firewall、Power Limit、Goose設定は変更しません。
 
 | Category | Retained examples |
 |---|---|

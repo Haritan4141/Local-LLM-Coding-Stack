@@ -7,6 +7,7 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+Import-Module Microsoft.PowerShell.Utility -Force -ErrorAction Stop
 Import-Module (Join-Path $PSScriptRoot 'Turbo.Common.psm1') -Force
 
 $manifest = Get-TurboProfileManifest -Profile $Profile
@@ -22,7 +23,7 @@ if ($Mode -eq 'Local') {
     if (-not (Test-Path -LiteralPath $storage.active_state -PathType Leaf)) { throw 'Managed Turbo state is absent.' }
     $state = Get-Content -LiteralPath $storage.active_state -Raw -Encoding UTF8 | ConvertFrom-Json
     if ($state.ready -ne $true) { throw 'Managed Turbo state is not ready.' }
-    if ((Get-FileHash -LiteralPath $runtime.executable -Algorithm SHA256).Hash.ToLowerInvariant() -ne $manifest.runtime.executable_expected_sha256) {
+    if ((Get-TurboFileSha256 -Path $runtime.executable) -ne $manifest.runtime.executable_expected_sha256) {
         throw 'Managed runtime executable SHA changed after startup.'
     }
     Assert-ManagedTurboProcess -State $state -Manifest $manifest -RequireListener | Out-Null

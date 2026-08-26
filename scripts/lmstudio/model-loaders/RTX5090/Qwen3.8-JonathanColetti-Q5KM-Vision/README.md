@@ -53,7 +53,7 @@ draft 3固定のbatch 1024/2048比較では、約24Kの固有nonce付きLong Pro
 
 ## 通常のGoose起動を使う場合
 
-黒いlauncher consoleとGooseを分離し、LM Studio loaderと通常のGoose shortcutを手動で使う場合は、先に`Set-Goose-Profile-Q5KM-Vision96K.bat`を実行します。このprofile selectorはLM Studioをloadせず、Gooseを起動しません。永続Goose configの`lmstudio` model、client context limit、max output、compact thresholdだけを次へ切り替えて終了します。
+黒いlauncher consoleとGooseを分離し、LM Studio loaderと通常のGoose shortcutを手動で使う場合は、`../../00-Goose-Daily-Profiles.bat`を使用します。MAIN `96K / 16K`または`96K / 32K`を選択でき、provider、model、client context、max output、compact thresholdを同期して終了します。既存`Set-Goose-Profile-Q5KM-Vision96K.bat`は`96K / 16K`の互換入口として保持します。どちらもLM Studioをloadせず、Gooseを起動しません。
 
 | Goose setting | Q5_K_M Vision 96K value |
 |---|---:|
@@ -62,12 +62,14 @@ draft 3固定のbatch 1024/2048比較では、約24Kの固有nonce付きLong Pro
 | `GOOSE_MAX_TOKENS` | 16,384 |
 | `GOOSE_AUTO_COMPACT_THRESHOLD` | 0.3 |
 
+`96K / 32K`を選択した場合はmodel/context/thresholdを維持し、`GOOSE_MAX_TOKENS`だけ32,768になります。16K到達で不完全終了したAgent作業向けで、実際に長く生成すれば処理時間とsession context消費が増えます。
+
 1. Goose Desktopを完全終了する。
-2. `Set-Goose-Profile-Q5KM-Vision96K.bat`を実行する。
-3. `Qwen3.8-JonathanColetti-Q5KM-Vision_96K.bat`でLM Studioをloadする。
+2. `../../00-Goose-Daily-Profiles.bat`でMAIN `96K / 16K`または`96K / 32K`を選ぶ。
+3. `../../00-RTX5090-Daily-Profiles.bat`の`[1] Stable`でLM Studioをloadする。
 4. 通常のGoose shortcutから起動し、新しいchatを開始する。
 
-変更前configはrepository外の`%LOCALAPPDATA%\Local-LLM-Coding-Stack\goose-config-backups\`へ日時付きで保存します。Goose起動中は変更しません。Q6_K Vision 64Kへ戻す場合は、隣の`Qwen3.8-JonathanColetti-Q6K-Vision\Set-Goose-Profile-Q6K-Vision64K.bat`を使ってから64K loaderを実行します。
+変更前configはrepository外の`%LOCALAPPDATA%\Local-LLM-Coding-Stack\goose-config-backups\`へ日時付きで保存します。Goose起動中は変更しません。Q6_K Vision 64Kへ戻す場合は、Goose Daily ProfilesのMAIN Quality ReferenceとRTX5090 Daily Profilesの`[3] Quality Reference`を使用します。
 
 ## Runtime behavior and data boundary
 

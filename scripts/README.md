@@ -116,14 +116,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File `
 
 通常利用は互換名`Goose Q5KM Vision 96K Candidate`のデスクトップshortcutを使います。process-specific設定を確実に反映するため、実行前にGoose Desktopを完全終了してください。起動中は全`Goose` processを検知してruntime変更前に停止します。
 
-## Goose persistent profile selectors
+## Goose Daily integrated entry
 
-LM Studio loaderを手動実行し、Gooseを通常のshortcutから起動する場合は、先に対応するprofile selectorを実行します。
+通常運用では`lmstudio/model-loaders/00-Goose-Daily-Profiles.bat`だけを実行します。Gooseを完全終了した状態でProfileを選ぶと、既存canonical runtime wrapper、runtime/provider/model/endpoint cross-check、Goose client設定、Goose Desktop起動を順に実行します。
 
+- Daily入口: `lmstudio/model-loaders/00-Goose-Daily-Profiles.bat`
 - Q5_K_M Vision 96K: `lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision/Set-Goose-Profile-Q5KM-Vision96K.bat`
 - Q6_K Vision 64Kへ復元: `lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Set-Goose-Profile-Q6K-Vision64K.bat`
 
-共通helper `goose/Set-GooseProfile.ps1`は、Gooseが完全終了していることを確認し、永続configの`lmstudio` model、`GOOSE_CONTEXT_LIMIT`、`GOOSE_MAX_TOKENS`、`GOOSE_AUTO_COMPACT_THRESHOLD`だけを更新します。変更前configを`%LOCALAPPDATA%\Local-LLM-Coding-Stack\goose-config-backups\`へ保存し、更新値を再検証します。LM StudioのloadとGoose起動は行いません。
+Daily入口ではMAIN/BLUE Q5 Stableの`96K / 16K`・`96K / 32K`、Turboの`96K / 16K`、MAIN/BLUE Q6 Quality Referenceの`64K / 32K`を選択できます。Stable/Qualityは共通helper `goose/Set-GooseProfile.ps1`で永続configをbackup・同期し、Turboは既存`standalone-turbo/Start-Goose-ManagedTurbo.ps1`のprocess-local `openai` providerだけを使用します。Turbo 32Kは未qualificationです。個別Set-Goose BATは互換・保守用として引き続き利用できます。詳細は`goose/README.md`を参照してください。
 
 ## Export-VisionFixture.ps1
 

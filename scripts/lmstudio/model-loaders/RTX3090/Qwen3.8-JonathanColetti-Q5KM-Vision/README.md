@@ -18,6 +18,8 @@ BLUE (`pc5700x / DESKTOP-L9HAM1G / 192.168.0.104`) のRTX 3090 24 GB + RTX 3060 
 
 `Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W.bat`はBLUE上で実行し、`_REMOTE.bat`はMAINから実行します。いずれも最終的に同じ固定profileをロードします。REMOTE launcherはSSH Alias、hostname、IPv4、Power Limit、LAN API上のID/context/parallelを再確認します。
 
+MAINの通常のGoose Desktop shortcutでStableを使う場合は、先に`../../00-Goose-Daily-Profiles.bat`でBLUE `96K / 16K`または`96K / 32K`を選択します。selectorは`custom_lm_studio_3090_remote`のidentityと`http://192.168.0.104:1234/v1/chat/completions`を照合し、API identifier `qwen3.8-27b-uncensored-vision-q5km-blue`、90,112 client context、16,384または32,768 max outputへ同期します。LM Studio runtimeとPower Limitは変更しません。
+
 ## Standalone MTP3 Turbo
 
 Turboはofficial llama.cpp commit `f280b26983ad0fdb705a0d9ebf0503e76f2899b0`の外部`sm_86` runtimeを使う明示選択項目です。BLUE localhost `127.0.0.1:18080`だけで待受し、MAINからはmanaged SSH tunnel `127.0.0.1:18081 -> BLUE 127.0.0.1:18080`を使用します。API aliasは`qwen3.8-27b-uncensored-vision-q5km-blue-turbo`です。FirewallとSSH設定は変更しません。
