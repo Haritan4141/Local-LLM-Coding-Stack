@@ -52,10 +52,10 @@ During the BLUE run, host identity was rechecked as `pc5700x / DESKTOP-L9HAM1G`.
 
 ## Integration
 
-The Goose Daily selector retains all existing choice numbers and adds:
+The Goose Daily selector was renumbered sequentially from top to bottom on 2026-08-27. The qualified Output32K choices are now:
 
-- `[9] MAIN Turbo - Q5KM Vision 96K / Output 32K`
-- `[10] BLUE Turbo - Q5KM Vision 96K / Output 32K`
+- `[4] MAIN Turbo - Q5KM Vision 96K / Output 32K`
+- `[9] BLUE Turbo - Q5KM Vision 96K / Output 32K`
 
 Both selections reuse the already-qualified runtime manifests and canonical Turbo wrappers. Only the Goose child process receives `GOOSE_MAX_TOKENS=32768`; the 16K choices continue to pass 16,384 and persistent Goose configuration remains unchanged.
 

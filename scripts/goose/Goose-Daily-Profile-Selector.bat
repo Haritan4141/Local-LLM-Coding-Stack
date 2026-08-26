@@ -12,16 +12,16 @@ echo.
 echo  [1] Stable - Q5KM Vision 96K / Output 16K
 echo  [2] Stable - Q5KM Vision 96K / Output 32K
 echo  [3] Turbo  - Q5KM Vision 96K / Output 16K
-echo  [9] Turbo  - Q5KM Vision 96K / Output 32K
-echo  [4] Quality Reference - Q6K Vision 64K / Output 32K
+echo  [4] Turbo  - Q5KM Vision 96K / Output 32K
+echo  [5] Quality Reference - Q6K Vision 64K / Output 32K
 echo.
 echo  BLUE RTX3090+RTX3060
 echo.
-echo  [5] Stable - Q5KM Vision 96K / Output 16K
-echo  [6] Stable - Q5KM Vision 96K / Output 32K
-echo  [7] Turbo  - Q5KM Vision 96K / Output 16K
-echo  [10] Turbo - Q5KM Vision 96K / Output 32K
-echo  [8] Quality Reference - Q6K Vision 64K / Output 32K
+echo  [6] Stable - Q5KM Vision 96K / Output 16K
+echo  [7] Stable - Q5KM Vision 96K / Output 32K
+echo  [8] Turbo  - Q5KM Vision 96K / Output 16K
+echo  [9] Turbo  - Q5KM Vision 96K / Output 32K
+echo  [10] Quality Reference - Q6K Vision 64K / Output 32K
 echo  [0] Cancel
 echo.
 
@@ -35,13 +35,13 @@ if not defined PROFILE_CHOICE (
 if "%PROFILE_CHOICE%"=="1" set "PROFILE_NAME=MAIN-Stable16K"
 if "%PROFILE_CHOICE%"=="2" set "PROFILE_NAME=MAIN-Stable32K"
 if "%PROFILE_CHOICE%"=="3" set "PROFILE_NAME=MAIN-Turbo16K"
-if "%PROFILE_CHOICE%"=="9" set "PROFILE_NAME=MAIN-Turbo32K"
-if "%PROFILE_CHOICE%"=="4" set "PROFILE_NAME=MAIN-Quality32K"
-if "%PROFILE_CHOICE%"=="5" set "PROFILE_NAME=BLUE-Stable16K"
-if "%PROFILE_CHOICE%"=="6" set "PROFILE_NAME=BLUE-Stable32K"
-if "%PROFILE_CHOICE%"=="7" set "PROFILE_NAME=BLUE-Turbo16K"
-if "%PROFILE_CHOICE%"=="10" set "PROFILE_NAME=BLUE-Turbo32K"
-if "%PROFILE_CHOICE%"=="8" set "PROFILE_NAME=BLUE-Quality32K"
+if "%PROFILE_CHOICE%"=="4" set "PROFILE_NAME=MAIN-Turbo32K"
+if "%PROFILE_CHOICE%"=="5" set "PROFILE_NAME=MAIN-Quality32K"
+if "%PROFILE_CHOICE%"=="6" set "PROFILE_NAME=BLUE-Stable16K"
+if "%PROFILE_CHOICE%"=="7" set "PROFILE_NAME=BLUE-Stable32K"
+if "%PROFILE_CHOICE%"=="8" set "PROFILE_NAME=BLUE-Turbo16K"
+if "%PROFILE_CHOICE%"=="9" set "PROFILE_NAME=BLUE-Turbo32K"
+if "%PROFILE_CHOICE%"=="10" set "PROFILE_NAME=BLUE-Quality32K"
 if "%PROFILE_CHOICE%"=="0" exit /b 0
 
 if not defined PROFILE_NAME (

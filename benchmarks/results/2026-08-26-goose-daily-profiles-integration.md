@@ -26,6 +26,8 @@ Repository lifecycle `Current` was not changed. Model files, LM Studio applicati
 
 Invalid menu input returned exit code 2. The BAT remains a thin selector; runtime settings stay in the existing canonical wrappers and Turbo manifests.
 
+This table preserves the mapping used during the 2026-08-26 regression. On 2026-08-27, the current selector was renumbered sequentially: MAIN uses 1–5 and BLUE uses 6–10. Runtime/profile definitions did not change.
+
 ## Observed Goose regressions
 
 | Profile | Observed model in Goose | Short smoke |

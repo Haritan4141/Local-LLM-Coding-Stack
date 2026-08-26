@@ -9,13 +9,13 @@
 | 1 | MAIN Stable | LM Studio | `lmstudio` | 96K / 16K |
 | 2 | MAIN Stable | LM Studio | `lmstudio` | 96K / 32K |
 | 3 | MAIN Turbo | official llama.cpp | `openai`（process-local） | 96K / 16K |
-| 4 | MAIN Quality Reference | LM Studio Q6_K Vision | `lmstudio` | 64K / 32K |
-| 5 | BLUE Stable | BLUE LM Studio | `custom_lm_studio_3090_remote` | 96K / 16K |
-| 6 | BLUE Stable | BLUE LM Studio | `custom_lm_studio_3090_remote` | 96K / 32K |
-| 7 | BLUE Turbo | BLUE official llama.cpp + MAIN tunnel | `openai`（process-local） | 96K / 16K |
-| 8 | BLUE Quality Reference | BLUE LM Studio Q6_K Vision | `custom_lm_studio_3090_remote` | 64K / 32K |
-| 9 | MAIN Turbo | official llama.cpp | `openai`（process-local） | 96K / 32K |
-| 10 | BLUE Turbo | BLUE official llama.cpp + MAIN tunnel | `openai`（process-local） | 96K / 32K |
+| 4 | MAIN Turbo | official llama.cpp | `openai`（process-local） | 96K / 32K |
+| 5 | MAIN Quality Reference | LM Studio Q6_K Vision | `lmstudio` | 64K / 32K |
+| 6 | BLUE Stable | BLUE LM Studio | `custom_lm_studio_3090_remote` | 96K / 16K |
+| 7 | BLUE Stable | BLUE LM Studio | `custom_lm_studio_3090_remote` | 96K / 32K |
+| 8 | BLUE Turbo | BLUE official llama.cpp + MAIN tunnel | `openai`（process-local） | 96K / 16K |
+| 9 | BLUE Turbo | BLUE official llama.cpp + MAIN tunnel | `openai`（process-local） | 96K / 32K |
+| 10 | BLUE Quality Reference | BLUE LM Studio Q6_K Vision | `custom_lm_studio_3090_remote` | 64K / 32K |
 | 0 | Cancel | 変更なし | 変更なし | 起動なし |
 
 BLUE Quality Referenceは、新規runtimeの発明ではありません。既存のBLUE Q6 Balanced REMOTE wrapper、既存API ID `qwen3.8-27b-uncensored-vision-blue`、既存custom provider model定義を組み合わせます。

@@ -82,18 +82,18 @@ try {
         '1' = 'MAIN-Stable16K'
         '2' = 'MAIN-Stable32K'
         '3' = 'MAIN-Turbo16K'
-        '9' = 'MAIN-Turbo32K'
-        '4' = 'MAIN-Quality32K'
-        '5' = 'BLUE-Stable16K'
-        '6' = 'BLUE-Stable32K'
-        '7' = 'BLUE-Turbo16K'
-        '10' = 'BLUE-Turbo32K'
-        '8' = 'BLUE-Quality32K'
+        '4' = 'MAIN-Turbo32K'
+        '5' = 'MAIN-Quality32K'
+        '6' = 'BLUE-Stable16K'
+        '7' = 'BLUE-Stable32K'
+        '8' = 'BLUE-Turbo16K'
+        '9' = 'BLUE-Turbo32K'
+        '10' = 'BLUE-Quality32K'
     }
     foreach ($entry in $expectedMenuMappings.GetEnumerator()) {
         Assert-Contains -Text $dailyText -Expected "if `"%PROFILE_CHOICE%`"==`"$($entry.Key)`" set `"PROFILE_NAME=$($entry.Value)`""
     }
-    foreach ($expected in @('Start-GooseDailyProfile.ps1', '[3] Turbo', '[9] Turbo', '[7] Turbo', '[10] Turbo', '[8] Quality Reference')) {
+    foreach ($expected in @('Start-GooseDailyProfile.ps1', '[3] Turbo', '[4] Turbo', '[5] Quality Reference', '[8] Turbo', '[9] Turbo', '[10] Quality Reference')) {
         Assert-Contains -Text $dailyText -Expected $expected
     }
     if ($dailyText -match '(?im)^\s*(lms|node|ssh|nvidia-smi)\b') {
