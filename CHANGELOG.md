@@ -4,6 +4,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- 2026-08-30: BLUE Remote Turboの`Detached launcher exited before readiness`だけでは原因が分からない問題を修正。元の起動/検査/timeoutエラーを保ち、各GPUの現在使用量・最低基準・identity/telemetry不明を表示、MAIN側へ全文ログを保存する。Windows PowerShell 5.1でnative stderrが先に例外化して表示を切り詰める経路を回避し、Remote BATは失敗コードを維持してpauseする。
+- 2026-08-30: 既存managed Turboの再利用と既存BLUE tunnelの再利用にもlocal preflightを適用。検査に落ちた既存runtime/tunnelを自動停止せず、生成終了後の明示的な`[4] Release` → `[2] Turbo`を案内する。offline回帰テストを追加。Current、閾値、context/output、モデル、Power Limit、Firewall、Goose設定は変更しない。
+
 ### Added
 
 - MAIN RTX5090とBLUE RTX3090+RTX3060のGoose Turbo Output32Kを実機qualification。process-local `GOOSE_MAX_TOKENS=32768`がserver側`n_predict=32768`へ反映され、MAIN 17,100 / BLUE 17,183 output tokens、全連番、98,304 runtime context、完了後idle、永続Goose config SHA不変でPASSした。Daily menuを上から連番へ整理し、MAINを`[1]`～`[5]`、BLUEを`[6]`～`[10]`、Turbo Output32KをMAIN `[4]` / BLUE `[9]`として追加。Output16Kを通常選択として保持する。

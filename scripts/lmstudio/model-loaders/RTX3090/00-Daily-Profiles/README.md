@@ -33,3 +33,11 @@ Daily wrapperは既存canonical BATをCALLし、load configurationを複製し�
 ReleaseはBLUE側のLM Studioが`status=idle/loaded`かつ`queued=0`、またはTurboの`is_processing=false`を確認してからだけ動作します。Windows PowerShell 5.1のtop-level JSON arrayもslot単位へ展開して判定します。推論中、queued request、未知listener/PID、host/IP不一致では何も停止せずエラー終了します。REMOTEでは管理対象Turboの停止後に、ownershipを検証したMAIN tunnel 18081も解放します。LM Studio server自体とFirewallは変更しません。実行結果は各実行PCの`%LOCALAPPDATA%\Local-LLM-Coding-Stack\release-logs`へ保存し、失敗時は画面を閉じる前にpauseします。
 
 Q6 Safe、Coding-Fast、370W Performance、Jonathan Q4、HauhauCS、旧aliasはAdvanced / Fallback / Researchとして既存pathに保全されています。
+
+## Turbo起動時のGPUメモリー検査エラー
+
+`[2] Turbo`で`[TURBO_VRAM_RESIDENCY]`が出た場合、各GPUの現在使用量と最低基準値を確認してください。基準はRTX3090が12,000 MiB、RTX3060が6,000 MiBです。「空きVRAMが不足」という意味ではなく、起動済みモデルに期待するGPU使用量を確認できない状態です。APIが応答していても、再利用時にこの検査へ通らなければ起動成功とは表示しません。
+
+Gooseの生成・待ち行列を終了してから、**このruntimeメニューの`[4] Release` → `[2] Turbo`**を明示選択してください。Goose側メニューの番号とは異なります。自動停止・自動再試行はせず、Releaseが推論中や未知PID等を理由に拒否した場合は強制終了しないでください。
+
+Remote起動失敗の全文はMAINの`%LOCALAPPDATA%\Local-LLM-Coding-Stack\turbo\logs\blue-remote-start-failed-*.log`へ保存し、パスを画面に表示します。BLUE側の起動ログがある場合はそのパスも表示します。失敗時の画面はキーを押すまで残ります。

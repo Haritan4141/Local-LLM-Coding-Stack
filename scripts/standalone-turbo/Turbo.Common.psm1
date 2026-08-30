@@ -211,16 +211,55 @@ function Wait-TurboVramReleased {
 function Assert-TurboVramLoaded {
     param([Parameter(Mandatory)]$Manifest)
     $rows = @(Get-TurboGpuState)
+    $report = [Collections.Generic.List[string]]::new()
+    $failed = $false
     foreach ($expected in @($Manifest.gpus)) {
         $row = @($rows | Where-Object {
             $_.name.Trim() -eq $expected.name -and
             $_.pci_bus_id.Trim().ToUpperInvariant() -eq $expected.pci_bus_id
         })
-        if ($row.Count -ne 1 -or [double]$row[0].memory_used_mib -lt [double]$expected.vram_loaded_min_mib) {
-            throw "$($expected.name) does not show the qualified Turbo VRAM residency."
+        $identity = "$($expected.name) / PCI $($expected.pci_bus_id)"
+        if ($row.Count -ne 1) {
+            $report.Add("$identity : identity mismatch (expected 1 GPU, found $($row.Count)); memory usage unknown.")
+            $failed = $true
+            continue
         }
+        $used = 0.0
+        $valid = [double]::TryParse(([string]$row[0].memory_used_mib).Trim(), [Globalization.NumberStyles]::Float,
+            [Globalization.CultureInfo]::InvariantCulture, [ref]$used)
+        if (-not $valid -or [double]::IsNaN($used) -or [double]::IsInfinity($used) -or $used -lt 0) {
+            $report.Add("$identity : memory usage unavailable ('$($row[0].memory_used_mib)').")
+            $failed = $true
+            continue
+        }
+        $minimum = [double]$expected.vram_loaded_min_mib
+        $status = if ($used -ge $minimum) { 'PASS' } else { 'BELOW MINIMUM'; $failed = $true }
+        $report.Add(('{0} : current {1} MiB / required minimum {2} MiB [{3}]' -f $identity,
+            $used.ToString('0.##', [Globalization.CultureInfo]::InvariantCulture),
+            $minimum.ToString('0.##', [Globalization.CultureInfo]::InvariantCulture), $status))
+    }
+    if ($failed) {
+        throw ("[TURBO_VRAM_RESIDENCY] Turbo GPU memory verification failed.`n" + ($report -join "`n") +
+            "`nValues are total GPU memory.used from nvidia-smi, not free VRAM or process-specific residency." +
+            "`nThis does not by itself prove out-of-memory, model corruption, or Windows paging.")
     }
     return $rows
+}
+
+function Invoke-TurboSshText {
+    param([Parameter(Mandatory)][string]$SshAlias, [Parameter(Mandatory)][string]$Code)
+
+    $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($Code))
+    # PS 5.1 otherwise turns native stderr into a terminating, width-formatted ErrorRecord.
+    $previousPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $output = @(& ssh.exe -o BatchMode=yes -o ConnectTimeout=10 $SshAlias powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand $encoded 2>&1 |
+            ForEach-Object { $_.ToString() })
+        $exitCode = $LASTEXITCODE
+    }
+    finally { $ErrorActionPreference = $previousPreference }
+    return [pscustomobject]@{ exit_code = $exitCode; output = $output }
 }
 
 function Get-TurboPortListeners {

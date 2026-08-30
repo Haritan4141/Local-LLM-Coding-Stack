@@ -231,6 +231,14 @@ if (Test-Path -LiteralPath $visionProfileLoaderTest -PathType Leaf) {
     }
 }
 
+$turboDiagnosticTest = Join-Path $repoRoot 'scripts\tests\Test-TurboLauncherDiagnostics.ps1'
+if (Test-Path -LiteralPath $turboDiagnosticTest -PathType Leaf) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $turboDiagnosticTest
+    if ($LASTEXITCODE -ne 0) {
+        $failures.Add("Turbo launcher diagnostic regression test failed with exit code $LASTEXITCODE.")
+    }
+}
+
 $redLoaderTest = Join-Path $repoRoot 'scripts\tests\Test-RX9070XTRemoteLoaders.ps1'
 if (Test-Path -LiteralPath $redLoaderTest -PathType Leaf) {
     & powershell -NoProfile -ExecutionPolicy Bypass -File $redLoaderTest

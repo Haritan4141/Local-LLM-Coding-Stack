@@ -53,6 +53,18 @@ State, archived state, logs, bundle manifests, and smoke evidence are outside Gi
 
 Release is a fail-closed end-of-session operation. It refuses active or queued LM Studio predictions, flattens the Windows PowerShell 5.1 top-level `/slots` JSON array before checking every slot for `is_processing=false`, and preserves unknown listeners or processes. It then unloads idle LM Studio models or stops only the ownership-validated managed Turbo process. BLUE Remote also removes only its validated MAIN tunnel. It does not stop the LM Studio server or change Firewall, Power Limit, model files, or Goose configuration. Daily wrappers save output under `%LOCALAPPDATA%\Local-LLM-Coding-Stack\release-logs` and pause on failure so the error remains visible.
 
+### BLUE Turbo reports GPU memory verification failure
+
+Since 2026-08-30, reusing an existing Turbo process also runs the local read-only preflight; a responding API alone is insufficient. Reusing an existing MAIN tunnel checks BLUE locally over SSH before reporting success. Failure preserves the existing process/tunnel; there is no automatic Release, restart, or threshold relaxation.
+
+`[TURBO_VRAM_RESIDENCY]` reports both GPU names/PCI Bus IDs, current `nvidia-smi memory.used`, and the unchanged minimums (RTX3090: 12,000 MiB; RTX3060: 6,000 MiB). Missing/duplicate GPUs and unavailable measurements are reported as unknown, not zero. These are total per-GPU usage checks, not process-specific residency or free-memory checks. Low usage alone does not prove an OOM, model corruption, or Windows paging.
+
+When this occurs, finish/stop Goose generation and confirm there is no queued work. In **`00-BLUE-Daily-Profiles-REMOTE.bat`**, explicitly select **`[4] Release`**, then **`[2] Turbo`**. These are the LM Studio/Turbo runtime menu numbers, not the Goose profile menu numbers. If Release refuses active work, unknown ownership, or an identity mismatch, do not force-stop processes; investigate that error first. This is a recovery procedure, not a guaranteed fix for every startup failure.
+
+Remote launch/preflight/timeout errors now retain their original details instead of only saying the detached launcher exited. The complete diagnostic is printed and saved on MAIN under `%LOCALAPPDATA%\Local-LLM-Coding-Stack\turbo\logs\blue-remote-start-failed-*.log`. When a detached BLUE launch was attempted, its `blue-detached-launch-*.log` path on BLUE is also shown. The canonical Remote BAT retains the failure exit code and pauses. GPU/Power Limit/context/output settings are unchanged.
+
+Deployment verification: on 2026-08-30, `Start-ManagedTurbo.ps1`, `Test-ManagedTurbo.ps1` and `Turbo.Common.psm1` were synchronized to BLUE's external `C:\Users\Atsuki\Codex-RTX3090-Setup\standalone-turbo` with matching SHA-256. Previous copies are in its `backups\before-launcher-diagnostics-20260830-135118` directory. At 13:52:10 JST, read-only local preflight passed on BLUE; PID 8324 (started 13:42:31 JST) and its state-file hash were unchanged by verification. GPU usage was RTX3090 17,921 MiB / RTX3060 8,865 MiB, with PL 259W/170W. No loader, Release, inference, or restart was executed for this maintenance validation; failed-start diagnostics were exercised with offline fixtures.
+
 ## Goose
 
 The Turbo Goose launchers use Goose's built-in `openai` provider and process-local environment only. RTX5090 uses localhost 18080; BLUE uses the managed MAIN tunnel on localhost 18081. Settings use context limit 90,112, selectable max output 16,384 or 32,768, compact threshold 0.3, and temperature 0. Persistent Goose configuration is not edited. Output16K remains the normal selection; Output32K is explicit long-output use after both systems completed a 17K+ Goose-path qualification.
@@ -60,6 +72,8 @@ The Turbo Goose launchers use Goose's built-in `openai` provider and process-loc
 ## Validation and evidence
 
 `Test-QwenVisionProfileLoaders.ps1` covers file presence, selector mapping and Cancel, manifest pins, static safety rules, JSON, JavaScript, and Windows PowerShell syntax. `Test-StandaloneTurboFailClosed.ps1` is an RTX5090 hardware test that proves unknown port and unknown PID preservation with test-owned dummy processes.
+
+`Test-TurboLauncherDiagnostics.ps1` is an offline regression test using isolated mocks/fixtures. It does not run real loaders, SSH, GPU queries, or inference. It is included in `Test-Repository.ps1`; the hardware fail-closed test is not.
 
 Formal integration evidence is in `benchmarks/results/2026-08-25-standalone-mtp3-turbo-integration.md`. Qualification baselines are:
 

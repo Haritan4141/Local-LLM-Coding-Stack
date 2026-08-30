@@ -18,8 +18,14 @@ if ($stateExists) {
     $existingState = Get-Content -LiteralPath $storage.active_state -Raw -Encoding UTF8 | ConvertFrom-Json
     $existingProcess = Get-TurboProcessRecord -ProcessId ([int]$existingState.pid)
     if ($listeners.Count -gt 0) {
-        Assert-ManagedTurboProcess -State $existingState -Manifest $manifest -RequireListener | Out-Null
-        $api = Test-TurboApiState -Manifest $manifest
+        try {
+            # Reuse must pass the same read-only preflight as remote readiness.
+            # Keep this outside the new-process cleanup below: never kill an existing runtime on failure.
+            $api = & (Join-Path $PSScriptRoot 'Test-ManagedTurbo.ps1') -Profile $Profile -Mode Local
+        }
+        catch {
+            throw "Existing managed Turbo PID $($existingState.pid) failed reuse verification. It was not stopped or reloaded.`n$($_.Exception.Message)"
+        }
         Write-Host "[OK] $($manifest.display_name) is already running as managed PID $($existingState.pid)." -ForegroundColor Green
         $api
         exit 0

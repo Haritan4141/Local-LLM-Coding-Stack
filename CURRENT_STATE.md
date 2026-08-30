@@ -18,6 +18,12 @@ State captured: 2026-08-26 (Asia/Tokyo)
 - RTX5090 runtime at this capture: Jonathan Q5_K_M Vision 96K Recommended Production loaded as the sole model and IDLE; repository lifecycle Current remains unchanged.
 - RED `pc7600x` is now an independent AMD Remote Node Candidate: Jonathan IQ4_XS, API ID `qwen3.8-27b-uncensored-iq4xs-red`, 98,304 context, Q4_0/Q4_0, ROCm 2.29.1, MTP2, batch512, parallel1, Vision false. MAINから`192.168.0.103:1234`へ到達し、Goose simple inference / Developer tool pathを確認済みです。
 
+## Launcher maintenance (2026-08-30)
+
+- BLUE Remote Turboの起動診断を改善。既存Turbo/MAIN tunnel再利用にもBLUE側のread-only preflightを適用し、GPU名・PCI Bus ID・現在使用MiB・最低基準MiB、エラー全文とMAINログの保存先を表示する。VRAM不足と断定せず、復旧は生成終了後のruntimeメニュー`[4] Release` → `[2] Turbo`を明示選択する。既存runtimeを検査失敗だけで自動終了しない。
+- これはランチャー保守であり、上記2026-08-26の状態採取を再検証したものではない。Current、96K Stable/Turbo、16K/32K output、Power Limit、GPU設定は変更しない。
+- 2026-08-30T13:52:10+09:00にBLUE配置済みスクリプトのread-only preflightがPASS。稼働中Turbo PID8324とstate SHAは検査前後で同一。モデル起動・停止・推論は行わず、失敗表示はoffline fixtureで検証した。配置バックアップと詳細は`scripts/standalone-turbo/README.md`に記録。
+
 ## Effective profiles
 
 | Profile | Context tokens | Intended use |

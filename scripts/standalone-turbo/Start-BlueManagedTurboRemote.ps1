@@ -5,6 +5,8 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'Turbo.Common.psm1') -Force
 
+try {
+# The outer catch prints full messages before PowerShell can width-format native errors.
 $manifest = Get-TurboProfileManifest -Profile BLUE
 $sshAlias = [string]$manifest.target_host.ssh_alias
 $expectedHostname = [string]$manifest.target_host.computer_name
@@ -27,13 +29,15 @@ function Assert-MainHost {
 }
 
 function Assert-BlueIdentity {
-    $hostname = (@(& ssh -o BatchMode=yes $sshAlias hostname) -join '').Trim()
-    if ($LASTEXITCODE -ne 0 -or $hostname -ne $expectedHostname) {
-        throw "SSH alias $sshAlias returned '$hostname'; expected '$expectedHostname'."
+    $identityResult = Invoke-TurboSshText -SshAlias $sshAlias -Code '[Environment]::MachineName'
+    $hostname = ($identityResult.output -join "`n").Trim()
+    if ($identityResult.exit_code -ne 0 -or $hostname -ne $expectedHostname) {
+        throw "SSH alias $sshAlias could not verify hostname '$expectedHostname'.`n$hostname"
     }
     $ipCommand = "if ((Get-NetIPAddress -AddressFamily IPv4).IPAddress -contains '$expectedIp') { '$expectedIp' } else { exit 9 }"
-    $ip = (@(& ssh -o BatchMode=yes $sshAlias powershell.exe -NoProfile -Command $ipCommand) -join '').Trim()
-    if ($LASTEXITCODE -ne 0 -or $ip -ne $expectedIp) { throw "Remote IPv4 verification failed; expected $expectedIp." }
+    $ipResult = Invoke-TurboSshText -SshAlias $sshAlias -Code $ipCommand
+    $ip = ($ipResult.output -join "`n").Trim()
+    if ($ipResult.exit_code -ne 0 -or $ip -ne $expectedIp) { throw "Remote IPv4 verification failed; expected $expectedIp.`n$ip" }
 }
 
 function Assert-TunnelProcess {
@@ -69,6 +73,19 @@ if (Test-Path -LiteralPath $tunnelStatePath -PathType Leaf) {
     $existingProcess = Get-TurboProcessRecord -ProcessId ([int]$existing.pid)
     if ($listeners.Count -gt 0) {
         Assert-TunnelProcess -State $existing -RequireListener | Out-Null
+        $checkCode = @"
+`$ErrorActionPreference = 'Stop'
+`$ProgressPreference = 'SilentlyContinue'
+try {
+    & '$remoteTest' -Profile BLUE -Mode Local | Out-Null
+    Write-Output 'REMOTE_READY'
+}
+catch { Write-Output `$_.Exception.Message; exit 1 }
+"@
+        $checked = Invoke-TurboSshText -SshAlias $sshAlias -Code $checkCode
+        if ($checked.exit_code -ne 0 -or 'REMOTE_READY' -notin $checked.output) {
+            throw ("Existing BLUE runtime/tunnel failed reuse verification. Neither was stopped.`n" + ($checked.output -join "`n"))
+        }
         Test-TurboApiState -Manifest $manifest -BaseUrl "http://127.0.0.1:$localPort" | Out-Null
         Write-Host "[OK] Managed BLUE Turbo tunnel is already ready on 127.0.0.1:$localPort." -ForegroundColor Green
         exit 0
@@ -83,16 +100,17 @@ elseif ($listeners.Count -gt 0) {
 
 Write-Host "[INFO] Starting BLUE localhost Turbo through verified SSH alias $sshAlias..."
 $remoteStatePath = "C:\Users\Atsuki\AppData\Local\Local-LLM-Coding-Stack\turbo\$($manifest.profile_id).json"
-$remoteLaunchLog = "C:\Users\Atsuki\AppData\Local\Local-LLM-Coding-Stack\turbo\logs\blue-detached-launch-$(Get-Date -Format 'yyyyMMdd-HHmmss').log"
+$remoteLaunchLog = "C:\Users\Atsuki\AppData\Local\Local-LLM-Coding-Stack\turbo\logs\blue-detached-launch-$(Get-Date -Format 'yyyyMMdd-HHmmss-fff').log"
 $launchPayload = @"
 `$ErrorActionPreference = 'Stop'
+`$ProgressPreference = 'SilentlyContinue'
 New-Item -ItemType Directory -Path '$([IO.Path]::GetDirectoryName($remoteLaunchLog))' -Force | Out-Null
 try {
-    & '$remoteStart' -Profile BLUE | Out-File -LiteralPath '$remoteLaunchLog' -Append -Encoding UTF8
+    & '$remoteStart' -Profile BLUE *>&1 | Out-File -LiteralPath '$remoteLaunchLog' -Append -Encoding UTF8 -Width 4096
     exit 0
 }
 catch {
-    (`$_ | Out-String) | Out-File -LiteralPath '$remoteLaunchLog' -Append -Encoding UTF8
+    `$_.Exception.Message | Out-File -LiteralPath '$remoteLaunchLog' -Append -Encoding UTF8
     exit 1
 }
 "@
@@ -103,9 +121,9 @@ $createCode = @"
 if ([int]`$created.ReturnValue -ne 0) { throw "Win32_Process.Create failed with return value `$(`$created.ReturnValue)." }
 Write-Output "DETACHED_PID=`$(`$created.ProcessId)"
 "@
-$createEncoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($createCode))
-$createOutput = @(& ssh -o BatchMode=yes $sshAlias powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand $createEncoded 2>&1 | ForEach-Object { $_.ToString() })
-$createExit = $LASTEXITCODE
+$createdResult = Invoke-TurboSshText -SshAlias $sshAlias -Code $createCode
+$createOutput = $createdResult.output
+$createExit = $createdResult.exit_code
 $pidLine = @($createOutput | Where-Object { $_ -match '^DETACHED_PID=\d+$' } | Select-Object -Last 1)
 if ($createExit -ne 0 -or $pidLine.Count -ne 1) {
     throw "Detached BLUE Turbo launcher creation failed. Output: $($createOutput -join ' | ')"
@@ -114,6 +132,7 @@ $remoteLauncherPid = [int]($pidLine[0] -replace '^DETACHED_PID=', '')
 
 $readyCode = @"
 `$ErrorActionPreference = 'Stop'
+`$ProgressPreference = 'SilentlyContinue'
 `$deadline = (Get-Date).AddMinutes(8)
 `$lastError = ''
 do {
@@ -130,18 +149,28 @@ do {
     }
     `$launcher = Get-Process -Id $remoteLauncherPid -ErrorAction SilentlyContinue
     if (`$null -eq `$launcher) {
-        `$tail = if (Test-Path -LiteralPath '$remoteLaunchLog') { (Get-Content -LiteralPath '$remoteLaunchLog' -Tail 30 -ErrorAction SilentlyContinue) -join ' | ' } else { '<no launch log>' }
-        throw "Detached BLUE launcher exited before readiness. Last error: `$lastError. Log: `$tail"
+        if (`$lastError) {
+            Write-Output "[REMOTE_PREFLIGHT_FAILED] BLUE runtime failed readiness verification.`n`$lastError"
+        } else {
+            Write-Output '[REMOTE_LAUNCH_FAILED] BLUE launcher finished without a verified ready runtime.'
+        }
+        if (Test-Path -LiteralPath '$remoteLaunchLog') {
+            Get-Content -LiteralPath '$remoteLaunchLog' -Tail 40 -ErrorAction SilentlyContinue
+        }
+        Write-Output '[BLUE LOG] $remoteLaunchLog'
+        exit 1
     }
     Start-Sleep -Seconds 2
 } while ((Get-Date) -lt `$deadline)
-throw "Detached BLUE Turbo did not become ready before the timeout. Last error: `$lastError"
+Write-Output "[REMOTE_READY_TIMEOUT] BLUE Turbo readiness timed out.`n`$lastError"
+Write-Output '[BLUE LOG] $remoteLaunchLog'
+exit 1
 "@
-$readyEncoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($readyCode))
-$readyOutput = @(& ssh -o BatchMode=yes $sshAlias powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand $readyEncoded 2>&1 | ForEach-Object { $_.ToString() })
-$readyExit = $LASTEXITCODE
+$readyResult = Invoke-TurboSshText -SshAlias $sshAlias -Code $readyCode
+$readyOutput = $readyResult.output
+$readyExit = $readyResult.exit_code
 if ($readyExit -ne 0 -or 'REMOTE_READY' -notin $readyOutput) {
-    throw "Detached BLUE Turbo start failed. Output: $($readyOutput -join ' | ')"
+    throw ("BLUE Turbo startup was not accepted.`n" + ($readyOutput -join "`n"))
 }
 
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -212,3 +241,27 @@ catch {
 
 Write-Host "[OK] BLUE Turbo is available on MAIN at http://127.0.0.1:$localPort/v1" -ForegroundColor Green
 [pscustomobject]$state
+}
+catch {
+    $message = $_.Exception.Message
+    $lines = @('[ERROR] BLUE Turbo is not ready.', $message)
+    if ($message.Contains('[TURBO_VRAM_RESIDENCY]')) {
+        $lines += @(
+            '[NEXT] Finish/stop Goose generation and confirm there is no queued work.',
+            '[NEXT] In 00-BLUE-Daily-Profiles-REMOTE.bat, select [4] Release, then [2] Turbo.',
+            '[SAFE] If Release refuses active work or an unknown process, do not force-stop it.'
+        )
+    }
+    $lines += '[SAFE] Automatic Release/restart was NOT attempted. Existing runtime reuse failures preserve the runtime and tunnel.'
+    foreach ($line in $lines) { Write-Host $line -ForegroundColor Yellow }
+    try {
+        $diagnosticRoot = Join-Path $env:LOCALAPPDATA 'Local-LLM-Coding-Stack\turbo\logs'
+        New-Item -ItemType Directory -Path $diagnosticRoot -Force | Out-Null
+        $diagnosticPath = Join-Path $diagnosticRoot "blue-remote-start-failed-$(Get-Date -Format 'yyyyMMdd-HHmmss-fff').log"
+        $lines | Out-File -LiteralPath $diagnosticPath -Encoding UTF8
+        Write-Host "[MAIN LOG] $diagnosticPath"
+    }
+    catch { Write-Host "[WARN] Could not save diagnostic log: $($_.Exception.Message)" -ForegroundColor Yellow }
+    # Keep a terminating error for callers (including Goose); details were already printed unabridged.
+    throw 'BLUE Turbo startup failed. See the full diagnostic and MAIN LOG above.'
+}
