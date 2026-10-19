@@ -8,6 +8,8 @@ MAINからは `00-Daily-Profiles/Profile-Selector_REMOTE.bat`、BLUE実機上で
 
 ## Directory convention
 
+2026-10-06: 新規`Qwen3.8-JonathanColetti-IQ4XS-Vision/`はVision256Kの明示試用Candidate。Q8 KV／draft F16／MTP3／ubatch256／split75:25をmanaged standalone llama.cppで固定。Goose統合`[13]`、BLUE LOCAL/REMOTE runtime selector`[6]`から選択します。新Production/Currentではなく、既存Releaseは新stateもidle/ownership確認付きで解放します。
+
 ```text
 RTX3090/
   00-Daily-Profiles/

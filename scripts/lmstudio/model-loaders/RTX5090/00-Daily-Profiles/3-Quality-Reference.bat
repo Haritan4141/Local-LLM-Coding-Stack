@@ -4,10 +4,10 @@ chcp 65001 >nul
 title RTX5090 Qwen3.8 Quality Reference
 
 set "REPO_ROOT=%~dp0..\..\..\..\.."
-powershell -NoProfile -ExecutionPolicy Bypass -File "%REPO_ROOT%\scripts\standalone-turbo\Stop-ManagedTurbo.ps1" -Profile RTX5090 -AllowNotRunning
+powershell -NoProfile -ExecutionPolicy Bypass -File "%REPO_ROOT%\scripts\standalone-turbo\Release-ManagedRuntime.ps1" -Profile RTX5090
 set "RC=%ERRORLEVEL%"
 if not "%RC%"=="0" (
-    echo [ERROR] Managed Turbo could not be stopped safely. Quality Reference was not loaded.
+    echo [ERROR] Managed runtime could not be released safely. Quality Reference was not loaded.
     pause
     exit /b %RC%
 )

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][ValidateSet('RTX5090', 'BLUE')][string]$Profile,
+    [Parameter(Mandatory)][ValidateSet('RTX5090', 'BLUE', 'RTX5090-Quick', 'BLUE-Quick', 'BLUE-IQ4XS256K', 'RTX5090-IQ4XS256K')][string]$Profile,
     [ValidateSet('Local', 'Tunnel')][string]$Mode = 'Local',
     [string]$BaseUrl
 )
@@ -28,6 +28,7 @@ if ($Mode -eq 'Local') {
     }
     Assert-ManagedTurboProcess -State $state -Manifest $manifest -RequireListener | Out-Null
     Assert-TurboVramLoaded -Manifest $manifest | Out-Null
+    Assert-TurboExtendedMemory -Manifest $manifest | Out-Null
     if (@(Get-TurboLmsModels).Count -ne 0) { throw 'LM Studio has a loaded model while managed Turbo is active.' }
 }
 

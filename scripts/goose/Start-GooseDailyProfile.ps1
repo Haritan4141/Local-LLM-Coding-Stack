@@ -5,12 +5,16 @@ param(
         'MAIN-Stable32K',
         'MAIN-Turbo16K',
         'MAIN-Turbo32K',
+        'MAIN-Quick8K',
         'MAIN-Quality32K',
         'BLUE-Stable16K',
         'BLUE-Stable32K',
         'BLUE-Turbo16K',
         'BLUE-Turbo32K',
-        'BLUE-Quality32K'
+        'BLUE-Quick8K',
+        'BLUE-Quality32K',
+        'BLUE-Extended256K16K',
+        'MAIN-Extended256K16K'
     )][string]$Profile,
     [switch]$NoLaunch
 )
@@ -27,6 +31,12 @@ $mainDailyRoot = Join-Path $repoRoot 'scripts\lmstudio\model-loaders\RTX5090\00-
 $blueDailyRoot = Join-Path $repoRoot 'scripts\lmstudio\model-loaders\RTX3090\00-Daily-Profiles'
 
 $profiles = @{
+    'MAIN-Extended256K16K' = [ordered]@{
+        Target = 'MAIN RTX5090'; Role = 'Extended Context Candidate'; Runtime = 'official llama.cpp'; ModelDisplay = 'IQ4_XS Vision'
+        RuntimeContext = 262144; ClientContext = 237568; Output = 16384
+        Provider = 'openai'; Model = 'qwen3.8-27b-uncensored-vision-iq4xs-main-256k-gpt-4o'; Endpoint = 'http://127.0.0.1:18080'
+        RuntimeKind = 'Turbo'; Loader = Join-Path $mainDailyRoot 'Extended-Context.bat'; TurboProfile = 'RTX5090-IQ4XS256K'
+    }
     'MAIN-Stable16K' = [ordered]@{
         Target = 'MAIN RTX5090'; Role = 'Stable'; Runtime = 'LM Studio'; ModelDisplay = 'Q5_K_M Vision'
         RuntimeContext = 98304; ClientContext = 90112; Output = 16384
@@ -50,6 +60,12 @@ $profiles = @{
         RuntimeContext = 98304; ClientContext = 90112; Output = 32768
         Provider = 'openai'; Model = 'qwen3.8-27b-uncensored-vision-q5km-turbo'; Endpoint = 'http://127.0.0.1:18080'
         RuntimeKind = 'Turbo'; Loader = Join-Path $mainDailyRoot '2-Turbo.bat'; TurboProfile = 'RTX5090'
+    }
+    'MAIN-Quick8K' = [ordered]@{
+        Target = 'MAIN RTX5090'; Role = 'Quick Response Candidate'; Runtime = 'official llama.cpp'; ModelDisplay = 'Q5_K_M Vision'
+        RuntimeContext = 65536; ClientContext = 57344; Output = 8192
+        Provider = 'openai'; Model = 'qwen3.8-27b-uncensored-vision-q5km-quick-gpt-4o'; Endpoint = 'http://127.0.0.1:18080'
+        RuntimeKind = 'Turbo'; Loader = Join-Path $mainDailyRoot 'Quick-Response.bat'; TurboProfile = 'RTX5090-Quick'
     }
     'MAIN-Quality32K' = [ordered]@{
         Target = 'MAIN RTX5090'; Role = 'Quality Reference'; Runtime = 'LM Studio'; ModelDisplay = 'Q6_K Vision'
@@ -81,11 +97,23 @@ $profiles = @{
         Provider = 'openai'; Model = 'qwen3.8-27b-uncensored-vision-q5km-blue-turbo'; Endpoint = 'http://127.0.0.1:18081'
         RuntimeKind = 'Turbo'; Loader = Join-Path $blueDailyRoot '2-Turbo_REMOTE.bat'; TurboProfile = 'BLUE'
     }
+    'BLUE-Quick8K' = [ordered]@{
+        Target = 'BLUE RTX3090+RTX3060'; Role = 'Quick Response Candidate'; Runtime = 'official llama.cpp'; ModelDisplay = 'Q5_K_M Vision'
+        RuntimeContext = 65536; ClientContext = 57344; Output = 8192
+        Provider = 'openai'; Model = 'qwen3.8-27b-uncensored-vision-q5km-blue-quick-gpt-4o'; Endpoint = 'http://127.0.0.1:18081'
+        RuntimeKind = 'Turbo'; Loader = Join-Path $blueDailyRoot 'Quick-Response_REMOTE.bat'; TurboProfile = 'BLUE-Quick'
+    }
     'BLUE-Quality32K' = [ordered]@{
         Target = 'BLUE RTX3090+RTX3060'; Role = 'Quality Reference'; Runtime = 'LM Studio'; ModelDisplay = 'Q6_K Vision'
         RuntimeContext = 65536; ClientContext = 64512; Output = 32768
         Provider = 'custom_lm_studio_3090_remote'; Model = 'qwen3.8-27b-uncensored-vision-blue'; Endpoint = 'http://192.168.0.104:1234'
         RuntimeKind = 'LMStudioRemote'; Loader = Join-Path $blueDailyRoot '3-Quality-Reference_REMOTE.bat'; GooseProfile = 'BLUE-Q6K-Vision64K'
+    }
+    'BLUE-Extended256K16K' = [ordered]@{
+        Target = 'BLUE RTX3090+RTX3060'; Role = 'Extended Context Candidate'; Runtime = 'official llama.cpp'; ModelDisplay = 'IQ4_XS Vision'
+        RuntimeContext = 262144; ClientContext = 237568; Output = 16384
+        Provider = 'openai'; Model = 'qwen3.8-27b-uncensored-vision-iq4xs-blue-256k-gpt-4o'; Endpoint = 'http://127.0.0.1:18081'
+        RuntimeKind = 'Turbo'; Loader = Join-Path $blueDailyRoot 'Extended-Context_REMOTE.bat'; TurboProfile = 'BLUE-IQ4XS256K'
     }
 }
 
@@ -268,7 +296,7 @@ if ($definition.RuntimeKind -eq 'Turbo') {
     $configHashBefore = Get-FileSha256 -Path $configPath
     Invoke-CanonicalBatch -Path $definition.Loader
     $testScript = Join-Path $turboRoot 'Test-ManagedTurbo.ps1'
-    $mode = if ($definition.TurboProfile -eq 'BLUE') { 'Tunnel' } else { 'Local' }
+    $mode = if ($definition.TurboProfile.StartsWith('BLUE', [StringComparison]::OrdinalIgnoreCase)) { 'Tunnel' } else { 'Local' }
     & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $testScript -Profile $definition.TurboProfile -Mode $mode -BaseUrl $definition.Endpoint | Out-Null
     if ($LASTEXITCODE -ne 0) { throw "Turbo runtime/provider endpoint cross-check failed with exit code $LASTEXITCODE." }
 
@@ -276,8 +304,15 @@ if ($definition.RuntimeKind -eq 'Turbo') {
     $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
     $expectedPort = [uri]$definition.Endpoint
     if ($manifest.server.api_model_alias -ne $definition.Model -or [int]$manifest.configuration.context_tokens -ne [int]$definition.RuntimeContext -or
-        [int]$manifest.configuration.parallel -ne 1 -or $manifest.configuration.vision -ne $true -or $expectedPort.Port -notin @(18080, 18081)) {
+        [int]$manifest.configuration.parallel -ne 1 -or
+        [bool]$manifest.configuration.vision -ne [bool]($definition.ModelDisplay -like '*Vision*') -or
+        $expectedPort.Port -notin @(18080, 18081)) {
         throw 'Turbo manifest/provider/model/endpoint cross-check failed.'
+    }
+    if ($null -ne $manifest.PSObject.Properties['goose'] -and
+        ([int]$manifest.goose.client_context_tokens -ne [int]$definition.ClientContext -or
+         [int]$manifest.goose.max_output_tokens -ne [int]$definition.Output)) {
+        throw 'Candidate manifest/Goose client context/output cross-check failed.'
     }
 
     Write-Host 'Starting Goose...'

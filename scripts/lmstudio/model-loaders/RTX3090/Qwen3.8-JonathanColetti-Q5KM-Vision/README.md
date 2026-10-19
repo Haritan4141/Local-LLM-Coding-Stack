@@ -34,6 +34,12 @@ Turboはofficial llama.cpp commit `f280b26983ad0fdb705a0d9ebf0503e76f2899b0`の�
 
 Turboは98,304 context、Q8_0/Q8_0、MTP3、batch1024、ubatch512、parallel1、Flash Attention、Vision、layer split `0.7108,0.2892`、mmap OFFです。起動時に`pc5700x / DESKTOP-L9HAM1G / 192.168.0.104`、両GPUの名前・Bus ID、259W/170W、runtime/model/projector SHAを照合します。StableはRecommendedのままで、Turboはselector `[2]`です。DFlash2は統合していません。詳細は`../../../../standalone-turbo/README.md`を参照してください。
 
+## Quick Response 64K / 8K Candidate
+
+BLUE localでは`Qwen3.8-JonathanColetti-Q5KM_64K_259W_Quick.bat`、MAINからは`Qwen3.8-JonathanColetti-Q5KM_64K_259W_Quick_REMOTE.bat`を使用します。同じQ5_K_M本体とF16 Vision projectorを65,536 runtime context、57,344 Goose client context、8,192 max output、Q8_0/Q8_0、MTP1、Prompt cache ON、Reasoning Low / budget 2,048、parallel 1で起動します。API aliasは`qwen3.8-27b-uncensored-vision-q5km-blue-quick-gpt-4o`です。ローカルQwen名を画面に保ち、末尾の`gpt-4o`だけをGoose Desktop v1.49のVision能力判定へ使用します。実モデルはJonathanColetti Qwen3.8 Q5_K_M Visionのままです。canonical-only `gpt-4o`と旧`qwen3.8-27b-uncensored-q5km-blue-quick`は安全なRelease移行だけに限定します。
+
+GPU名・PCI Bus ID、RTX3090 259W / RTX3060 170W、既存layer split、localhost 18080とMAIN tunnel 18081を維持します。Gooseからは`../../00-Goose-Daily-Profiles.bat`のBLUE Quick Responseを選びます。画像入力に対応しますが、現時点は静的検証済み・Vision revision未実測であり、Codingや長いAgent loopには使用しません。
+
 ローカルloaderはactive/queued predictionがある場合、Power Limitにもruntimeにも触れず停止します。GPUはindexではなく名前 + PCI Bus IDで照合し、RTX3090のUUIDだけを259Wへ設定します。ロード後は公式SDK readbackで全設定とVisionを監査し、`lms ps`のIDLE/queued 0/96K/parallel1、両GPUの専用VRAM residency、Power Limitを確認します。さらにWDDM Shared GPU Memoryを測定し、combined `< 4 GiB`かつ各GPU `<= 2 GiB`を満たさなければ対象instanceをunloadして失敗終了します。
 
 実データとSDK dependencyはGit管理外です。

@@ -1,5 +1,6 @@
 {
   "schema_version": 1,
+  "profile_class": "turbo",
   "profile_id": "blue-q5km-vision-96k-mtp3-turbo",
   "display_name": "BLUE Q5_K_M Vision 96K Standalone MTP3 Turbo",
   "target_host": {

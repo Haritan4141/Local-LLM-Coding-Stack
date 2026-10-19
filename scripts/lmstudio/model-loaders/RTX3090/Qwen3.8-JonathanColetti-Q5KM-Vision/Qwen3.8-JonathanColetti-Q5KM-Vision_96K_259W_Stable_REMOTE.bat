@@ -4,9 +4,9 @@ chcp 65001 >nul
 title Restore BLUE JonathanColetti Q5_K_M Vision 96K Stable remotely
 
 set "REPO_ROOT=%~dp0..\..\..\..\.."
-powershell -NoProfile -ExecutionPolicy Bypass -File "%REPO_ROOT%\scripts\standalone-turbo\Stop-BlueManagedTurboRemote.ps1" -AllowNotRunning
+powershell -NoProfile -ExecutionPolicy Bypass -File "%REPO_ROOT%\scripts\standalone-turbo\Release-BlueManagedRuntimeRemote.ps1"
 if errorlevel 1 (
-    echo [ERROR] Managed BLUE Turbo/tunnel could not be stopped safely. Stable was not loaded.
+    echo [ERROR] Managed BLUE runtime/tunnel could not be released safely. Stable was not loaded.
     pause
     exit /b %errorlevel%
 )

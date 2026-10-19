@@ -1,5 +1,7 @@
 # BLUE Remote LLM Node
 
+2026-10-19実機確認: BLUEはstandalone IQ4_XS Vision256K Candidateで稼働、LM Studio loaded instancesは0。LM Studio実行ファイルは0.4.25.0。以下のLM Studio推奨構成・測定値は主に2026-08のbaselineであり、今日ロード中のprofileではありません。[現在状態](../../CURRENT_STATE.md)と[監査記録](../../research/2026-10-19-current-configuration-audit.md)を参照してください。
+
 MAINのVS Code / Kilo Code / Zoo Code等から家庭内LAN経由で利用する独立LM Studio nodeです。RTX5090 localhost環境とは別のBase URLとAPI identifierを使用します。BLUEのRecommended Production roleはrepository-wide Currentを増やしません。
 
 ## Identity
@@ -15,7 +17,7 @@ MAINのVS Code / Kilo Code / Zoo Code等から家庭内LAN経由で利用する�
 | Power Limit | Primary: RTX3090 259W / RTX3060 170W; Performance override: RTX3090 370W / RTX3060 170W |
 | RAM | 31.93 GiB |
 | NVIDIA driver | 591.86 |
-| LM Studio | 0.4.21.0 / CLI `71bd99c` |
+| LM Studio baseline（2026-08） | 0.4.21.0 / CLI `71bd99c`。2026-10-19実機は0.4.25.0 |
 | LAN URL | `http://192.168.0.104:1234` |
 | Model storage | LM Studio external data only; never Git |
 

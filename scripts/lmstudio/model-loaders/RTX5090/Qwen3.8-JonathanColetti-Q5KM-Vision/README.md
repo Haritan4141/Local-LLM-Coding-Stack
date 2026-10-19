@@ -39,9 +39,15 @@ RTX 5090 32 GBのRecommended Production / Operational ProfileはJonathanColetti 
 
 `Qwen3.8-JonathanColetti-Q5KM-Vision_96K_Turbo.bat`は、official llama.cpp commit `f280b26983ad0fdb705a0d9ebf0503e76f2899b0`の外部runtimeを使う明示選択専用Turboです。Stableと同じmodel/projector、98,304 context、Q8_0/Q8_0、MTP3、batch1024、ubatch512、parallel1、Flash Attention、Visionを、`127.0.0.1:18080`のstandalone serverで実行します。API aliasは`qwen3.8-27b-uncensored-vision-q5km-turbo`です。
 
-`Qwen3.8-JonathanColetti-Q5KM-Vision_96K_Stable.bat`はmanaged Turboだけを安全停止し、portとVRAM解放後に既存`_96K.bat`をCALLする復旧wrapperです。既存Stable BATは変更していません。selectorはStableをRecommendedの`[1]`、Turboを`[2]`とし、Q6 Balanced/Safe/Coding-Fastを保持します。
+`Qwen3.8-JonathanColetti-Q5KM-Vision_96K_Stable.bat`はmanaged TurboまたはQuickだけを安全停止し、portとVRAM解放後に既存`_96K.bat`をCALLする復旧wrapperです。既存Stable BATは変更していません。selectorはStableをRecommendedの`[1]`、Turboを`[2]`とし、Q6 Balanced/Safe/Coding-Fastを保持します。
 
 Turbo用Gooseは`Start-Goose-Jonathan-Q5KM-Vision96K-Turbo.bat`を使います。built-in `openai` providerへprocess-localで接続し、90,112 context / 16,384 output / compact 0.3を維持します。永続Goose configは変更しません。詳細は`../../../../standalone-turbo/README.md`と`benchmarks/results/2026-08-25-standalone-mtp3-turbo-integration.md`を参照してください。DFlash2は統合していません。
+
+## Quick Response 64K / 8K Candidate
+
+`Qwen3.8-JonathanColetti-Q5KM_64K_Quick.bat`は、同じQ5_K_M本体、F16 Vision projector、固定llama.cpp runtimeを使う通常会話・画像入力向けCandidateです。65,536 runtime context、57,344 Goose client context、8,192 max output、Q8_0/Q8_0、MTP1、Prompt cache ON、Reasoning Low / budget 2,048、parallel 1で動作します。API aliasは`qwen3.8-27b-uncensored-vision-q5km-quick-gpt-4o`です。ローカルQwen名を画面に保ち、末尾の`gpt-4o`だけをGoose Desktop v1.49のVision能力判定へ使用します。実モデルはJonathanColetti Qwen3.8 Q5_K_M Visionのままです。canonical-only `gpt-4o`と旧`qwen3.8-27b-uncensored-q5km-quick`は安全なRelease移行だけに限定し、新規起動では拒否します。
+
+Gooseからは`../../00-Goose-Daily-Profiles.bat`のMAIN Quick Responseを選びます。永続Goose configは変更しません。画像入力に対応しますが、Codingや長いAgent loopにはStable/Turbo/Qualityを使用してください。現時点は静的検証済み・Vision revision未実測であり、速度向上、画像精度、VRAM余裕、安定性は未確定です。
 
 最終sweepは98,304 context、Q8_0/Q8_0、eval batch 2048、effective ubatch 512、parallel 1、Flash Attention/full offload、PL 402W、temperature 0、reasoning OFFを固定し、MTP OFF→2→3→4→OFF sentinelを各workload warm-up 1 + formal 3で比較しました。draft 3はText 46.54、Coding 63.09、Vision 59.10、Long 53.42 tok/s、4-workload geomean 55.18 tok/s、weighted acceptance 84.06%、formal quality 12/12でした。OFF比でTextは8.88%低下しましたが、Coding/Vision/Longは24.03%/16.05%/15.55%向上し、geomeanは約10.97%向上しました。draft 4はgeomean 55.06 tok/s、acceptance 79.93%、Peak 26,692 MiBで、draft 3より総合優位を示さなかったため採用していません。OFF sentinel driftは全workload 0.5%未満です。
 
@@ -69,7 +75,7 @@ draft 3固定のbatch 1024/2048比較では、約24Kの固有nonce付きLong Pro
 3. `../../00-RTX5090-Daily-Profiles.bat`の`[1] Stable`でLM Studioをloadする。
 4. 通常のGoose shortcutから起動し、新しいchatを開始する。
 
-変更前configはrepository外の`%LOCALAPPDATA%\Local-LLM-Coding-Stack\goose-config-backups\`へ日時付きで保存します。Goose起動中は変更しません。Q6_K Vision 64Kへ戻す場合は、Goose Daily ProfilesのMAIN Quality ReferenceとRTX5090 Daily Profilesの`[3] Quality Reference`を使用します。
+変更前configはrepository外の`%LOCALAPPDATA%\Local-LLM-Coding-Stack\goose-config-backups\`へ日時付きで保存します。Goose起動中は変更しません。Q6_K Vision 64Kへ戻す場合は、Goose Daily ProfilesのMAIN Quality ReferenceとRTX5090 Daily Profilesの`[4] Quality Reference`を使用します。
 
 ## Runtime behavior and data boundary
 

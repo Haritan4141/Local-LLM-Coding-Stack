@@ -34,6 +34,7 @@ $requiredPaths = @(
     "$mainQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K.bat",
     "$mainQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_Stable.bat",
     "$mainQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_Turbo.bat",
+    "$mainQ5Root/Qwen3.8-JonathanColetti-Q5KM_64K_Quick.bat",
     "$mainQ5Root/Start-Goose-Jonathan-Q5KM-Vision96K-Turbo.ps1",
     "$mainQ5Root/Start-Goose-Jonathan-Q5KM-Vision96K-Candidate.ps1",
     "$blueRoot/Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W.bat",
@@ -59,6 +60,10 @@ $requiredPaths = @(
     "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Stable_REMOTE.bat",
     "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Turbo_REMOTE.bat",
     "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM-Vision_96K_259W_Turbo_REMOTE.ps1",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM_64K_259W_Quick.bat",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM_64K_259W_Quick.ps1",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM_64K_259W_Quick_REMOTE.bat",
+    "$blueQ5Root/Qwen3.8-JonathanColetti-Q5KM_64K_259W_Quick_REMOTE.ps1",
     "$blueQ5Root/Start-Goose-Jonathan-Q5KM-Vision96K-BLUE-Turbo_REMOTE.ps1",
     "$turboRoot/Turbo.Common.psm1",
     "$turboRoot/Install-ManagedTurboRuntime.ps1",
@@ -75,6 +80,8 @@ $requiredPaths = @(
     "$turboRoot/README.md",
     "$turboRoot/runtime-manifests/RTX5090.json",
     "$turboRoot/runtime-manifests/BLUE.json",
+    "$turboRoot/runtime-manifests/RTX5090-Quick.json",
+    "$turboRoot/runtime-manifests/BLUE-Quick.json",
     'scripts/tests/Test-StandaloneTurboFailClosed.ps1',
     'benchmarks/results/2026-08-25-standalone-mtp3-turbo-integration.md',
     'benchmarks/results/2026-08-26-goose-turbo-output32k-qualification.md',
@@ -87,17 +94,20 @@ $requiredPaths = @(
     "$mainDailyRoot/2-Turbo.bat",
     "$mainDailyRoot/3-Quality-Reference.bat",
     "$mainDailyRoot/4-Release.bat",
+    "$mainDailyRoot/Quick-Response.bat",
     "$mainDailyRoot/Profile-Selector.bat",
     "$blueDailyRoot/README.md",
     "$blueDailyRoot/1-Stable.bat",
     "$blueDailyRoot/2-Turbo.bat",
     "$blueDailyRoot/3-Quality-Reference.bat",
     "$blueDailyRoot/4-Release.bat",
+    "$blueDailyRoot/Quick-Response.bat",
     "$blueDailyRoot/Profile-Selector_LOCAL.bat",
     "$blueDailyRoot/1-Stable_REMOTE.bat",
     "$blueDailyRoot/2-Turbo_REMOTE.bat",
     "$blueDailyRoot/3-Quality-Reference_REMOTE.bat",
     "$blueDailyRoot/4-Release_REMOTE.bat",
+    "$blueDailyRoot/Quick-Response_REMOTE.bat",
     "$blueDailyRoot/Profile-Selector_REMOTE.bat",
     'profiles/Qwen3.8-Daily-Profiles.md'
 )
@@ -110,7 +120,7 @@ foreach ($relativePath in $requiredPaths) {
 $turboGooseLauncher = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Start-Goose-ManagedTurbo.ps1") -Raw
 $turboGooseQualification = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Invoke-GooseTurboLongOutputQualification.ps1") -Raw
 foreach ($check in @(
-    @{ Text = $turboGooseLauncher; Pattern = '\[ValidateSet\(16384, 32768\)\]\[int\]\$MaxOutputTokens = 16384'; Description = 'Turbo Goose 16K default with explicit 32K allowance' },
+    @{ Text = $turboGooseLauncher; Pattern = '\[ValidateSet\(8192, 16384, 32768\)\]\[int\]\$MaxOutputTokens = 16384'; Description = 'managed Goose 8K/16K/32K output allowance' },
     @{ Text = $turboGooseLauncher; Pattern = "GOOSE_MAX_TOKENS = \[string\]\`$MaxOutputTokens"; Description = 'Turbo Goose process-local dynamic output limit' },
     @{ Text = $turboGooseQualification; Pattern = 'MinimumOutputTokens = 17000'; Description = 'Turbo Goose 17K qualification gate' },
     @{ Text = $turboGooseQualification; Pattern = 'full_sequence_valid'; Description = 'Turbo Goose full sequence evidence' },
@@ -242,20 +252,26 @@ $selectorExpectations = @{
     "$mainDailyRoot/Profile-Selector.bat" = @(
         '1-Stable.bat',
         '2-Turbo.bat',
+        'Quick-Response.bat',
         '3-Quality-Reference.bat',
-        '4-Release.bat'
+        '4-Release.bat',
+        'Extended-Context.bat'
     )
     "$blueDailyRoot/Profile-Selector_LOCAL.bat" = @(
         '1-Stable.bat',
         '2-Turbo.bat',
+        'Quick-Response.bat',
         '3-Quality-Reference.bat',
-        '4-Release.bat'
+        '4-Release.bat',
+        'Extended-Context.bat'
     )
     "$blueDailyRoot/Profile-Selector_REMOTE.bat" = @(
         '1-Stable_REMOTE.bat',
         '2-Turbo_REMOTE.bat',
+        'Quick-Response_REMOTE.bat',
         '3-Quality-Reference_REMOTE.bat',
-        '4-Release_REMOTE.bat'
+        '4-Release_REMOTE.bat',
+        'Extended-Context_REMOTE.bat'
     )
 }
 foreach ($entry in $selectorExpectations.GetEnumerator()) {
@@ -275,9 +291,9 @@ foreach ($entry in $selectorExpectations.GetEnumerator()) {
 }
 
 $dailyQualityChecks = @(
-    @{ Path = "$mainDailyRoot/3-Quality-Reference.bat"; Patterns = @('Stop-ManagedTurbo.ps1', '-Profile RTX5090 -AllowNotRunning', 'Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat') },
-    @{ Path = "$blueDailyRoot/3-Quality-Reference.bat"; Patterns = @('Stop-ManagedTurbo.ps1', '-Profile BLUE -AllowNotRunning', 'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced.bat') },
-    @{ Path = "$blueDailyRoot/3-Quality-Reference_REMOTE.bat"; Patterns = @('Stop-BlueManagedTurboRemote.ps1', '-AllowNotRunning', 'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced_REMOTE.bat') }
+    @{ Path = "$mainDailyRoot/3-Quality-Reference.bat"; Patterns = @('Release-ManagedRuntime.ps1', '-Profile RTX5090', 'Qwen3.8-JonathanColetti-Q6K-Vision_64K_Balanced.bat') },
+    @{ Path = "$blueDailyRoot/3-Quality-Reference.bat"; Patterns = @('Release-ManagedRuntime.ps1', '-Profile BLUE', 'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced.bat') },
+    @{ Path = "$blueDailyRoot/3-Quality-Reference_REMOTE.bat"; Patterns = @('Release-BlueManagedRuntimeRemote.ps1', 'Qwen3.8-JonathanColetti-Q6K-Vision_64K_259W-Balanced_REMOTE.bat') }
 )
 foreach ($check in $dailyQualityChecks) {
     $text = Get-Content -LiteralPath (Get-RepoPath $check.Path) -Raw
@@ -336,6 +352,42 @@ if ([int]$blueTurboManifest.server.main_tunnel_port -ne 18081 -or
     $failures.Add('BLUE Turbo manifest does not preserve tunnel18081/layer split/0.7108,0.2892/no-mmap.')
 }
 
+$mainQuickManifest = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/runtime-manifests/RTX5090-Quick.json") -Raw | ConvertFrom-Json
+$blueQuickManifest = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/runtime-manifests/BLUE-Quick.json") -Raw | ConvertFrom-Json
+foreach ($entry in @(
+    [pscustomobject]@{ profile = $mainQuickManifest; host = 'DESKTOP-5NPLIIV'; alias = 'qwen3.8-27b-uncensored-vision-q5km-quick-gpt-4o'; legacy_alias = 'qwen3.8-27b-uncensored-q5km-quick' },
+    [pscustomobject]@{ profile = $blueQuickManifest; host = 'DESKTOP-L9HAM1G'; alias = 'qwen3.8-27b-uncensored-vision-q5km-blue-quick-gpt-4o'; legacy_alias = 'qwen3.8-27b-uncensored-q5km-blue-quick' }
+)) {
+    $profile = $entry.profile
+    if ($profile.profile_class -ne 'quick-response' -or
+        $profile.target_host.computer_name -ne $entry.host -or
+        $profile.server.api_model_alias -ne $entry.alias -or
+        @($profile.server.legacy_api_model_aliases).Count -ne 2 -or
+        'gpt-4o' -notin @($profile.server.legacy_api_model_aliases) -or
+        $entry.legacy_alias -notin @($profile.server.legacy_api_model_aliases) -or
+        [string]$profile.server.api_alias_purpose -notlike '*Goose v1.49 canonical Vision*' -or
+        [int]$profile.configuration.context_tokens -ne 65536 -or
+        $profile.configuration.kv_cache_k -ne 'q8_0' -or $profile.configuration.kv_cache_v -ne 'q8_0' -or
+        [int]$profile.configuration.mtp_draft_max_tokens -ne 1 -or
+        $profile.configuration.reasoning_mode -ne 'on' -or
+        $profile.configuration.reasoning_effort -ne 'low' -or
+        [int]$profile.configuration.reasoning_budget_tokens -ne 2048 -or
+        $profile.configuration.prompt_cache -ne $true -or
+        $profile.configuration.vision -ne $true -or
+        [string]::IsNullOrWhiteSpace([string]$profile.model.projector_path) -or
+        $profile.model.projector_sha256 -ne '5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c' -or
+        [int]$profile.goose.client_context_tokens -ne 57344 -or
+        [int]$profile.goose.max_output_tokens -ne 8192 -or
+        $profile.qualification_status -ne 'candidate-static-only') {
+        $failures.Add("Quick Response runtime manifest is not pinned to 64K/8K/MTP1/Reasoning-Low/Vision: $($entry.host)")
+    }
+}
+if ([int]$blueQuickManifest.server.main_tunnel_port -ne 18081 -or
+    $blueQuickManifest.configuration.tensor_split -ne '0.7108,0.2892' -or
+    $blueQuickManifest.configuration.load_mode -ne 'no-mmap') {
+    $failures.Add('BLUE Quick manifest does not preserve tunnel18081/layer split/0.7108,0.2892/no-mmap.')
+}
+
 $turboStart = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Start-ManagedTurbo.ps1") -Raw
 $turboStop = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Stop-ManagedTurbo.ps1") -Raw
 $runtimeRelease = Get-Content -LiteralPath (Get-RepoPath "$turboRoot/Release-ManagedRuntime.ps1") -Raw
@@ -347,6 +399,10 @@ foreach ($check in @(
     @{ Text = $turboStart; Pattern = [regex]::Escape("'--batch-size', [string]`$manifest.configuration.eval_batch_size"); Description = 'Turbo batch argument' },
     @{ Text = $turboStart; Pattern = [regex]::Escape("'--ubatch-size', [string]`$manifest.configuration.ubatch_size"); Description = 'Turbo ubatch argument' },
     @{ Text = $turboStart; Pattern = [regex]::Escape("'--spec-type', 'draft-mtp'"); Description = 'Turbo target-contained MTP' },
+    @{ Text = $turboStart; Pattern = [regex]::Escape("'--reasoning-effort', [string]`$manifest.configuration.reasoning_effort"); Description = 'Quick reasoning effort argument' },
+    @{ Text = $turboStart; Pattern = [regex]::Escape("'--reasoning-budget', [string]`$manifest.configuration.reasoning_budget_tokens"); Description = 'Quick reasoning budget argument' },
+    @{ Text = $turboStart; Pattern = [regex]::Escape("'--cache-prompt', '--cache-reuse'"); Description = 'Quick prompt cache arguments' },
+    @{ Text = $turboStart; Pattern = [regex]::Escape("`$arguments += @('--mmproj', `$runtime.projector)"); Description = 'Vision projector argument' },
     @{ Text = $turboStart; Pattern = [regex]::Escape("'--tensor-split', [string]`$manifest.configuration.tensor_split"); Description = 'BLUE qualified tensor split' },
     @{ Text = $turboStart; Pattern = 'Assert-TurboLmsIdle'; Description = 'LM Studio active/queued protection' },
     @{ Text = $turboStart; Pattern = 'executable_expected_sha256'; Description = 'runtime SHA startup validation' },
@@ -358,6 +414,10 @@ foreach ($check in @(
     @{ Text = $runtimeRelease; Pattern = '/slots'; Description = 'Release active Turbo prediction protection' },
     @{ Text = $runtimeRelease; Pattern = [regex]::Escape('$slotResponse | ForEach-Object { $_ }'); Description = 'Windows PowerShell 5.1 slot-array flattening' },
     @{ Text = $runtimeRelease; Pattern = [regex]::Escape('lms unload --all'); Description = 'Release LM Studio unload operation' },
+    @{ Text = $runtimeRelease; Pattern = [regex]::Escape("@('RTX5090', 'RTX5090-Quick', 'RTX5090-IQ4XS256K')"); Description = 'Release recognizes MAIN Turbo, Quick and extended states' },
+    @{ Text = $runtimeRelease; Pattern = [regex]::Escape("@('BLUE', 'BLUE-Quick', 'BLUE-IQ4XS256K')"); Description = 'Release recognizes BLUE Turbo, Quick and Extended states' },
+    @{ Text = $runtimeRelease; Pattern = 'AllowLegacyQuickTextOnly'; Description = 'one-time legacy Quick text-only release compatibility' },
+    @{ Text = $runtimeRelease; Pattern = 'AllowLegacyApiAlias'; Description = 'one-time legacy Quick API alias release compatibility' },
     @{ Text = $blueRemoteStart; Pattern = [regex]::Escape('127.0.0.1:${localPort}:127.0.0.1:'); Description = 'BLUE localhost SSH forward' },
     @{ Text = $blueRemoteStart; Pattern = 'ExitOnForwardFailure=yes'; Description = 'SSH forward fail-closed option' },
     @{ Text = $blueRemoteStop; Pattern = 'is not the managed BLUE Turbo tunnel'; Description = 'unknown SSH PID protection' },

@@ -1,10 +1,22 @@
 # Local LLM Coding Stack
 
-VS Code + Zoo Code + LM Studio + local LLM の安定運用、候補評価、モデル乗り換え履歴を継続管理するための専用プロジェクトです。
+MAIN / BLUE / GREENのlocal LLM、LM Studio / standalone llama.cpp、起動profile、実測とモデル選定履歴を管理するプロジェクトです。Agent Client / MCP / Skills / DeepSeek設定の記録は隣接する`Local-AI-Agent-Stack`が担当します。
 
 このリポジトリは「設定と判断の記録」を保持します。モデル本体、LM Studio の実データ、キャッシュ、生ログは保持しません。
 
-## Current stack
+## 現在の構成と確認範囲
+
+2026-10-19の実機監査では、BLUE（RTX3090 + RTX3060）のstandalone llama.cppでIQ4_XS Vision 256K Candidateが稼働し、MAINの既存SSH forward `127.0.0.1:18081`経由で到達しました。runtime contextは262,144、parallelは1です。MAIN側のstandalone `:18080`は待受なし、MAIN / BLUEのLM Studio loaded instancesは0でした。これは観測時点の状態であり、CandidateのCurrent昇格や長時間品質保証ではありません。
+
+MAINにはGoose Desktop 1.52.0とDeepSeek Harness（実行ファイルProductVersion `0.2.1.0`）があります。観測時はDeepSeekが起動中、Gooseは未起動でした。DeepSeekの保存既定値は`deepseek-account / deepseek-flash`で、local MAIN / BLUE routeは別途設定されています。保存設定と実際のsession選択は区別します。
+
+唯一のrepository lifecycle `Current`は引き続きtext Q6_Kです。実測済みQ5_K_M Vision 96K Recommended Production、Q6 Vision Balanced / Safe、Quick 64K Candidate、IQ4_XS 256K Candidateを別の役割として保持します。今日の実機状態は[CURRENT_STATE.md](CURRENT_STATE.md)、GitHub差分・公開対象・検証と未確認事項は[2026-10-19監査](research/2026-10-19-current-configuration-audit.md)を参照してください。
+
+監査中、`lms ps`がMAINのLM Studioを起動する副作用を生じました。モデルload/unloadや既存BLUE runtimeの操作は行っていません。以降はLMS CLIを使わず既存APIのGETだけで確認しました。詳細と影響範囲は監査記録に残しています。
+
+## 保持するQ6 Current baseline（2026-08）
+
+次の構成・測定値は登録済みbaselineです。今日ロード中のモデルや既定Clientを示しません。
 
 ```text
 VS Code
@@ -14,7 +26,7 @@ VS Code
   -> NVIDIA GeForce RTX 5090 32 GB
 ```
 
-Current の主な運用値:
+保持するCurrentのprofile値:
 
 | 項目 | 値 |
 |---|---:|
@@ -43,13 +55,13 @@ Current の主な運用値:
 
 Candidate は Current と分離して扱います。Aggressive Q6_K_P/Q5_K_Pの評価ではVisionとZoo Code連携を確認しましたが、速度・VRAM・Reasoningの回帰によりCurrentへ昇格しません。結果は `benchmarks/results/2026-08-20-hauhaucs-aggressive-ab.md` にあります。FastMTPはcustom patchが必要なため未検証です。
 
-JonathanColetti版には公式F16 Vision projectorが追加されました。既存Q6_Kを再ダウンロードせず、別のLM Studio model key/API IDとして分離したVision profileで32K・64K・96Kの画像認識7/7を確認しています。64Kを通常のVision presetとして推奨し、96Kは長context専用とします。2026-08-23からRTX5090のgoose Desktopは、このVision 64K profileをapp-global既定runtimeとして運用します。デスクトップの`Goose Vision 64K`ショートカットがモデル、Vision capability、context、Q8/Q8、MTP、parallelをpreflightし、必要な場合だけmanaged reloadしてgooseを起動します。これはgoose固有の運用判断であり、repository lifecycle Currentは通常text Q6_K / 96Kのままです。導入方式とclient別結果は`research/jonathan-q6k-vision-2026-08-23.md`、実測は`benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md`にあります。
+JonathanColetti版には公式F16 Vision projectorが追加されました。既存Q6_Kを再ダウンロードせず、別のLM Studio model key/API IDとして分離したVision profileで32K・64K・96Kの画像認識7/7を確認しています。64Kを通常のVision presetとして推奨し、96Kは長context専用とします。2026-08-23時点ではRTX5090のgoose Desktopに、このVision 64K profileをapp-global既定runtimeとして設定しました。今日の保存値は冒頭とCURRENT_STATEを参照してください。デスクトップの`Goose Vision 64K`ショートカットがモデル、Vision capability、context、Q8/Q8、MTP、parallelをpreflightし、必要な場合だけmanaged reloadしてgooseを起動します。これはgoose固有の運用判断であり、repository lifecycle Currentは通常text Q6_K / 96Kのままです。導入方式とclient別結果は`research/jonathan-q6k-vision-2026-08-23.md`、実測は`benchmarks/results/2026-08-23-rtx5090-jonathan-q6k-vision.md`にあります。
 
 Phase 1/1.5後のRTX5090 Q6_K Vision 64K Balanced（MTP4 / Q8_0 / eval batch 2048）はQuality/Performance Referenceです。既存64K loaderはSafe（MTP2 / Q8_0 / batch 2048）として変更せず保持し、Coding-Fast（MTP4 / Q4_0 / batch 2048）は明示選択時だけ使用します。既存Goose one-click startupはSafe preflightを維持します。Q6はdeprecatedではありません。Profile Selectorと実測根拠は各loader READMEおよび`benchmarks/results/2026-08-24-qwen38-vision-operational-profiles.md`を参照してください。
 
 RTX5090 Recommended ProductionはJonathanColetti Q5_K_M Vision / 96K / Q8_0 / MTP3 / eval batch1024です。最終設定でText 47.02、Coding 63.08、Vision 59.98 tok/s（7/7）、69,139-token入力、exact Tool Calling、isolated Agentic Coding 10/10を確認しました。load時raw headroomは6,175 MiB、420 MiB reserve差引後5,755 MiBです。今回の実用fixtureではPromotionを妨げる品質差を観測していない、という限定した結論であり、Q5/Q6の完全同品質は主張しません。互換名`Goose Q5KM Vision 96K Candidate`ショートカットは90,112-token client limit、16,384 max output、0.3 compact thresholdを維持します。Repository lifecycle CurrentはQ6_Kのままです。
 
-Gooseの日常統合入口は`00-Goose-Daily-Profiles.bat`です。MAIN/BLUEのStable、Turbo、Quality Referenceを選ぶと、既存canonical runtimeの起動、provider・model・context・output・endpointのcross-check、Goose設定、Goose Desktop起動までを一括実行します。Stable/QualityはLM Studio providerと永続profile、Turboは`openai` providerとprocess-local設定を使用し、Turboの永続configは変更しません。Q5 StableとTurboは`96K / 16K`または`96K / 32K`、Q6 Quality Referenceは`64K / 32K`です。Turbo 32KはMAINで17,100、BLUEで17,183 output tokensをGoose経由で完走し、16Kを通常選択、32Kを明示的な長出力選択として採用しました。結果は`benchmarks/results/2026-08-26-goose-daily-profiles-integration.md`と`benchmarks/results/2026-08-26-goose-turbo-output32k-qualification.md`を参照してください。
+Gooseの日常統合入口は`00-Goose-Daily-Profiles.bat`です。MAIN/BLUEのStable、Turbo、Quick Response Candidate、Quality Referenceを選ぶと、既存canonical runtimeの起動、provider・model・context・output・endpointのcross-check、Goose設定、Goose Desktop起動までを一括実行します。Stable/QualityはLM Studio providerと永続profile、Turbo/Quickは`openai` providerとprocess-local設定を使用し、永続configは変更しません。Q5 StableとTurboは`96K / 16K`または`96K / 32K`、QuickはVision対応`64K / 8K`・Reasoning Low/2048・MTP1、Q6 Quality Referenceは`64K / 32K`です。Goose v1.49向けQuickは画面上でローカルQwenだと分かるaliasを表示し、末尾の`gpt-4o` tokenだけをVision能力判定に使用します。接続先と実モデルはローカルJonathan Q5_K_M Visionです。Quickは未実測Candidateで、CurrentやStableを変更しません。Turbo 32Kのqualification結果は`benchmarks/results/2026-08-26-goose-turbo-output32k-qualification.md`、Quickの判断根拠は`research/2026-09-07-qwen38-quick-response-64k-8k.md`を参照してください。
 
 ## Remote nodes
 

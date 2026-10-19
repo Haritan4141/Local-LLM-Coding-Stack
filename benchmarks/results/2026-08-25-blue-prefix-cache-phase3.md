@@ -58,5 +58,5 @@ The Phase 3 raw set records the tested Turbo state and resource results but does
 
 Raw evidence remains outside Git under:
 
-- `C:\Users\Atsuki\Documents\DFlash2-Phase3\RTX3090-Dual\prefix-cache\session-20260825`
+- `C:\Users\Atsuki\Documents\Local-LLM-Research-Archive\2026-08\DFlash2-Phase3\RTX3090-Dual\prefix-cache\session-20260825`
 - `benchmarks/raw/blue-phase3-prefix-cache/session-20260825`

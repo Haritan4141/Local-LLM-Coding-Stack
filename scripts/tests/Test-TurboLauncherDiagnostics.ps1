@@ -171,7 +171,7 @@ try {
     $logText = Get-Content -LiteralPath $savedLogs[0].FullName -Raw
     Assert-Test ($logText.Contains($diagnosticSentinel)) 'Saved diagnostic was truncated.'
     Assert-Test (($display -join "`n").Contains($diagnosticSentinel)) 'Displayed diagnostic was truncated.'
-    foreach ($fragment in @('[4] Release', '[2] Turbo', 'queued work', 'Automatic Release/restart was NOT attempted')) {
+    foreach ($fragment in @('[5] Release', '[2] Turbo', 'queued work', 'Automatic Release/restart was NOT attempted')) {
         Assert-Test ($logText.Contains($fragment)) "Missing recovery instruction: $fragment"
     }
 }

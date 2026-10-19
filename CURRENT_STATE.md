@@ -1,8 +1,63 @@
 # Current State
 
-State captured: 2026-08-26 (Asia/Tokyo)
+Documentation reconciled: 2026-10-19 (Asia/Tokyo). Historical observations retain the dates shown below.
 
-## Operational status
+## 実機状態（2026-10-19T17:42–17:48+09:00）
+
+| 対象 | 今回確認した状態 | 根拠 / 限界 |
+|---|---|---|
+| MAIN | `DESKTOP-5NPLIIV / 192.168.0.100`。RTX5090 / PL402W / driver610.62 | hostname、IPv4、NVIDIA readback。driverを変更した日時・経緯は今回未監査 |
+| MAIN inference | standalone `:18080`待受なし。LM Studio `0.4.26.0`はloaded instances 0 | native `/api/v1/models`と`/api/v0/models`。`/v1/models`のcatalogをloaded stateと扱わない |
+| BLUE | `pc5700x / DESKTOP-L9HAM1G / 192.168.0.104`。RTX3090 + RTX3060 / PL259W + 170W / driver591.86 | SSH alias、hostname、期待IPv4、GPU名とPCI Bus IDを照合 |
+| BLUE inference | standalone IQ4_XS + F16 Vision Candidate、262,144 context、parallel1、1 slot idle | `127.0.0.1:18080`、MAIN既存SSH forward `127.0.0.1:18081`。`/props` / `/slots` / process argsを確認 |
+| BLUE LM Studio | `0.4.25.0`、`:1234`待受あり、loaded instances 0 | standaloneとは別process / API。既存LAN listenerを変更していない |
+| GREEN（旧project label RED） | `pc7600x / DESKTOP-LMB720F / 192.168.0.103`、LM Studio processあり、`:1234`待受なし | API到達不能。loaded stateは`UNVERIFIED`。旧`-red` identifierは保持 |
+| MAIN clients | Goose Desktop `1.52.0`導入済み・processなし。DeepSeek Harness ProductVersion `0.2.1.0`・processあり | installed file metadata / process観測。今回推論やDesktop操作はしていない |
+| Goose保存設定 | `custom_lm_studio_3090_remote` / Q5_K_M Vision BLUE / context90,112 / output16,384 / compact0.3 | 既存Global configの対象値だけを読み取り。standalone256Kとは別の保存profile |
+| DeepSeek保存設定 | default `deepseek-account / deepseek-flash`。BLUE local `:18081/v1`とMAIN local `:18080/v1`を保持、両route context262,144 / output16,384 | 保存defaultは10月11日のMAIN選択記録から変化。実sessionの選択・履歴は未監査 |
+
+監査上の副作用: `lms ps --json`が`Waking up LM Studio service...`を出力し、MAINのLM Studio processが17:42:54 JSTに起動した。モデル一覧は空、その後のnative APIもloaded0。監査前の無変更を主張せず、追加の停止・rollbackは行っていない。以降はLMS CLIを使用していない。既存BLUE runtime / tunnel、モデル、GPU設定、Client設定は操作していない。
+
+## 保持する登録・運用profile
+
+- 唯一のrepository lifecycle `Current`: `current-qwen38-27b-uncensored-q6k`（text Q6_K / LM Studio / Normal96K、64K、32K）。今日ロードされているという意味ではない。
+- 実測済みRecommended Production: MAIN / BLUEのQ5_K_M Vision96K。repository lifecycleは`Candidate`のまま。Q6 Vision Balanced Reference / Safe / explicit Coding-Fastも保持する。
+- Quick64K/8KはCandidate。IQ4_XS Vision256KはMAIN / BLUEの独立Candidateで、BLUEの稼働確認はCurrent / Production promotionではない。既存失敗と未受入項目を保持する。
+- GooseのClient / MCP / Skills / shell guard、DeepSeek provider / image compatibilityは`Local-AI-Agent-Stack`側が担当。本repositoryはmodel / runtime / loader / capacityの根拠を管理する。
+- 今日の監査、GitHub反映対象、検証の範囲は[監査記録](research/2026-10-19-current-configuration-audit.md)を参照。
+
+配置差分: BLUEの外部配置済み`Turbo.Common.psm1`とStart / Stop / Release / Testスクリプト5本は作業ツリーとLF正規化後もhash不一致。確認したBLUE / BLUE-Quick / BLUE-IQ4XS256Kの3 manifestsと`Read-BlueExtendedMemory.py`はbyte一致。GitHub更新と実機deployを区別し、今回同期・実行はしない。
+
+## 過去の確認・選定記録の読み方
+
+以下は2026-08-26 baselineと各見出しの日付に取得した記録であり、今日のloaded stateや保存defaultを表さない。過去の実測値・成功・失敗の確認日を2026-10-19へ付け替えない。今日の状態は上の実機表を優先する。
+
+## MAIN IQ4_XS Vision256K short acceptance (2026-10-11)
+
+Navigation follow-up: `00-RTX5090-Daily-Profiles.bat` now exposes runtime-only `[6] Extended Context - IQ4XS Vision 256K`, calling the existing wrapper/canonical loader. BLUE runtime choice6 and Goose integrated choices14/13 are unchanged. DeepSeek must select the same Host's MAIN / BLUE256K route after the server starts successfully; other Daily profiles do not auto-remap DeepSeek. Offline dispatch tests use copied BAT navigation and stubbed leaf loaders only. No real loader, model, server, Client lifecycle or Global settings were changed by this menu repair.
+
+Separate `RTX5090-IQ4XS256K` Candidate passed262144-context/Vision load, strict memory gate and short API/Goose/DeepSeek CLI calls. Goose Daily menu14 /input237568 /output16384 /compact0.6; DeepSeek `main-local` at localhost18080/v1. Repair preserved defaultBLUE; a subsequent Desktop save selected MAIN as the saved DeepSeek default at that date. BLUE provider unchanged.
+Initial estimated total-minus-used headroom1791MiB; final actual NVIDIA free samples1336–1359MiB (driver reserved420MiB), loadShared~0.947GiB. MAIN gate uses actual free VRAM; small headroom, not a sustained/full256K quality guarantee.
+Goose initial text_editor/no-shell instruction was not followed (one safe shell read); retained separately from the clarified controlled-shell PASS. DSH Desktop JSON_SCHEMA does not expand YAML merge keys; MAIN patch repaired with explicit API/reasoning and supported simple headers/compat aliases, actual installed parser and isolated chat/read/read_image re-tested PASS. User confirmed MAIN catalog display. Actual MAIN Desktop inference/image UX, Goose Desktop acceptance, long input, live compaction and loop quality remain Pending.
+No Current/Q5/Q6/BLUE/power/driver/Firewall/Global Goose/Kilo/Zoo changes. LM Studio loaded0; existing settings predate this task and its pre-loadSHA stayed unchanged. Details: `benchmarks/results/2026-10-11-main-iq4xs256k-qualification.md`.
+
+## Goose shell guard launch compatibility (2026-10-08)
+
+2026-10-11 follow-up: guard配置時のみsaved/restored process PATHへGit shを加え、direct/fallback shortcut targetのlaunchも保護。ユーザー通常終了後Gooseだけを既存BLUE256K client条件で再起動し、新backend sh/Hook readiness PASS。モデル/サーバー操作なし。詳細は`Local-AI-Agent-Stack/docs/goose-shell-guard-repair-20261011.md`。
+
+- User-approved launch-only integration with `Local-AI-Agent-Stack`'s Goose shell guard. The MAIN Start Menu shortcut now passes through a process-scoped Git `sh` launcher; `Start-Goose-ManagedTurbo.ps1` forwards shortcut arguments instead of dropping them. Direct Goose fallback remains visible. All Daily Profile environment overrides, 256K runtime / 232K client input / 16K output / compact0.6, manifests, models and server lifecycle code are unchanged.
+- No loader or model/server operation was executed for this change; existing Goose was not stopped. Offline launch tests and repository validation are recorded in `Local-AI-Agent-Stack/docs/goose-shell-guard-20261008.md`. Real Desktop adoption requires the next normal start via the shortcut/Daily Profile; existing sessions are not retroactively protected.
+
+## Latest BLUE-only qualification observation (2026-10-06)
+
+- Explicit user-requested IQ4_XS Vision256K trial loader added: Goose integrated`[13]`, BLUE runtime`[6]`, managed manifest`BLUE-IQ4XS256K`. Target Q8/draft F16/MTP3/ubatch256/split75:25; Goose process-only232K input/16K output/8K reserve/compact0.6（user-approved trial）. Startup/reuse Shared/free-VRAM gates enforced; no watchdog/restart or Production/Current promotion. Full repository/offline regression and BLUE idle-memory probe PASS; nine required files deployed with backup/SHA readback. Post-deployment observation2026-10-06T11:11:50Z: LM Studio loaded0, standalone0, no managed listeners, runtime binary/old manifests/global settings unchanged. No real model/Goose launch during implementation. Global settings and Q5/Q6/MAIN profiles preserved; Goose end-to-end acceptance pending. Implementation/rollback record: `research/2026-10-06-blue-iq4xs256k-trial-profile.md`.
+
+- Q4_K_M / IQ4_XS extended-context Vision research is `RESEARCH_COMPLETE_WITH_LIMITATIONS`, not a Production promotion. BLUE is `pc5700x / DESKTOP-L9HAM1G / 192.168.0.104`; LM Studio0.4.25+1 started empty and final readback2026-10-06T09:58:56Z confirms loaded instances0, standalone processes0 and no listeners on18080/18081/18082, driver591.86 and259W/170W unchanged. Historical loaded/idle observations below are not today's runtime.
+- Jonathan Q4/IQ4 target weights and F16 projector are unchanged upstream; IQ4_XS was downloaded and official SHA verified outside Git. Q4 plus Vision reached262,144 in pinned standalone llama.cpp with Q8 KV, ubatch256 and separately tested split75:25; this does not establish native LM Studio or Goose256K acceptance.
+- Both variants passed memory gates at192K/256K with Vision and Q8 KV. IQ4_XS256K passed the209,891-token retrieval plus cached Tool/Vision chain; Q4 failed that retrieval. Both192K and~8K tool-enabled controls had selection/argument failures; original coding FAIL retained, separate domain clarification3/3 each. Raw failures are not converted into full PASS. IQ4_XS is a next trial Candidate, not a certified daily256K preset or quality winner; native LM Studio/Goose acceptance remains pending. See `benchmarks/results/2026-10-06-blue-q4-vision-context.md` and its research note.
+- MAIN experiments, Q5 capacity retests, Global settings and production loaders are unchanged/out of scope. Q5 Vision96K Production and Q6 Current/Reference/Safe remain preserved; the new IQ4 trial has separate process-only context/output, no production baseline change; only the new IQ4 trial threshold is user-approved0.6.
+
+## Operational status（2026-08-26 capture）
 
 - Current model: `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF`
 - Variant: `Q6_K`
@@ -11,20 +66,33 @@ State captured: 2026-08-26 (Asia/Tokyo)
 - Client path: VS Code -> Zoo Code -> LM Studio -> local model
 - Max concurrent predictions: 1
 - Repository lifecycle Current remains API ID `qwen3.8-27b-uncensored`; its model files and loader presets were not overwritten.
-- BLUE currently has its independent Recommended Production profile loaded and IDLE: Jonathan Q5_K_M Vision, API ID `qwen3.8-27b-uncensored-vision-q5km-blue`, 98,304 context, Q8_0/Q8_0, RTX3090→RTX3060 priority order, embedded MTP ON / draft 3, eval batch 1024, effective ubatch 512, parallel 1, Vision true, RTX3090 259W / RTX3060 170W. This Remote Node role does not promote the Candidate to repository Current or replace the RTX5090 Current.
+- BLUE at the2026-08-26 capture had its independent Recommended Production profile loaded and IDLE: Jonathan Q5_K_M Vision, API ID `qwen3.8-27b-uncensored-vision-q5km-blue`, 98,304 context, Q8_0/Q8_0, RTX3090→RTX3060 priority order, embedded MTP ON / draft 3, eval batch 1024, effective ubatch 512, parallel 1, Vision true, RTX3090 259W / RTX3060 170W. This historical runtime capture is not today's loaded state. The Remote Node role does not promote the Candidate to repository Current or replace the RTX5090 Current.
 - RTX5090 Recommended Production / Operational Profile: Jonathan Q5_K_M Vision, API ID `qwen3.8-27b-uncensored-vision-q5km`, 98,304 context, Q8_0/Q8_0, MTP draft 3, eval batch 1024, effective ubatch 512, parallel 1, mmap+mlock, PL 402W. Its Goose profile keeps the 90,112 client context limit, 16,384 max output, and 0.3 compact threshold.
-- `00-Goose-Daily-Profiles.bat` is the integrated daily Goose entry for MAIN/BLUE Stable, Turbo and Quality Reference. It calls the existing canonical runtime wrapper, cross-checks runtime/provider/model/context/output/endpoint, applies the supported Goose client profile, and launches Goose Desktop. Stable/Quality use LM Studio plus persistent profiles; Turbo uses the built-in `openai` provider with process-local settings and leaves persistent Goose configuration unchanged. Stable and Turbo keep 16K/32K output choices; 16K remains the normal Turbo selection and 32K is explicit long-output use after 17K+ Goose-path qualification on both systems. Quality uses Q6 Vision 64K / 32K.
+- `00-Goose-Daily-Profiles.bat` is the integrated daily Goose entry for MAIN/BLUE Stable, Turbo, Quick Response Candidate and Quality Reference. It calls the existing canonical runtime wrapper, cross-checks runtime/provider/model/context/output/endpoint, applies the supported Goose client profile, and launches Goose Desktop. Stable/Quality use LM Studio plus persistent profiles; Turbo/Quick use the built-in `openai` provider with process-local settings and leave persistent Goose configuration unchanged. Stable and Turbo keep 16K/32K output choices; Quick is Vision-enabled 64K/8K; Quality uses Q6 Vision 64K/32K.
 - Q6_K Vision profiles remain fully supported: Balanced is the Quality/Performance Reference, Safe is the permanent known-good fallback, and Coding-Fast is explicit-only. The existing `Goose Vision 64K` Safe-preflight shortcut remains available.
 - RTX5090 runtime at this capture: Jonathan Q5_K_M Vision 96K Recommended Production loaded as the sole model and IDLE; repository lifecycle Current remains unchanged.
 - RED `pc7600x` is now an independent AMD Remote Node Candidate: Jonathan IQ4_XS, API ID `qwen3.8-27b-uncensored-iq4xs-red`, 98,304 context, Q4_0/Q4_0, ROCm 2.29.1, MTP2, batch512, parallel1, Vision false. MAINから`192.168.0.103:1234`へ到達し、Goose simple inference / Developer tool pathを確認済みです。
 
+## Quick Response Candidate (2026-09-07)
+
+- MAIN/BLUEへJonathan Q5_K_Mと既存F16 projectorを再利用するVision対応64K runtime / Goose output 8K Candidateを追加した。Q8_0/Q8_0、MTP1、Prompt cache、Reasoning ON / effort low / budget 2,048、parallel1を固定する。
+- 固定runtimeの必要CLI対応は両PCでread-only確認済み。初期のMAIN text-only revisionは65,536 context、MTP1、Reasoning Low/2,048、Vision falseとしてload/health/idleを確認した。F16 projector追加後のlive llama.cppは`Vision=true`だったが、Goose Desktop v1.49は未知のlocal aliasをVision非対応と扱い、添付を`[image omitted: model does not support vision]`へ置換していた。新規QuickはローカルQwen名を含むaliasを表示し、末尾の`gpt-4o` tokenだけをGooseのVision能力判定に利用する。実体はJonathan Q5_K_M Visionのままローカルendpointへ接続する。修正版のend-to-end画像入力・TTFT/tok/s/VRAM測定とBLUE loadは未実施。Current、Stable、Turbo、Quality Referenceへ昇格・置換していない。
+- MAIN/BLUE双方でF16 projectorのSHAを照合済み。canonical-only `gpt-4o`と旧Quick aliasはownership/path/hash/listener/APIを再検証するRelease時だけ許可し、新規起動では拒否する。BLUE外部runtimeのmanifest/common/release/stopはhost/IP確認、backup、SHA一致付きで同期済みで、friendly display alias版`BLUE-Quick.json`も`before-friendly-goose-alias-20260907-180735`へ旧版を保存して同期した。モデルは起動・停止していない。修正版を有効化するにはGooseを完全終了してDaily runtimeのRelease後、Goose DailyのQuickを選び直す。
+- 2026-09-07のMAIN二重起動競合を受け、MAIN/BLUE共通runtimeへprofile-family単位のprocess間Mutex、PID所有権付き失敗cleanup、厳密なhistory state回収を追加。孤児化したMAIN Quick PID65172は履歴・生成時刻・SHA・APIを照合して回収し、idle確認後のRelease、port18080、VRAM解放を実機PASSした。BLUEへ同じ修正をbackup/hash照合付きで静的同期し、モデルは起動していない。
+
 ## Launcher maintenance (2026-08-30)
 
-- BLUE Remote Turboの起動診断を改善。既存Turbo/MAIN tunnel再利用にもBLUE側のread-only preflightを適用し、GPU名・PCI Bus ID・現在使用MiB・最低基準MiB、エラー全文とMAINログの保存先を表示する。VRAM不足と断定せず、復旧は生成終了後のruntimeメニュー`[4] Release` → `[2] Turbo`を明示選択する。既存runtimeを検査失敗だけで自動終了しない。
+- BLUE Remote Turboの起動診断を改善。既存Turbo/MAIN tunnel再利用にもBLUE側のread-only preflightを適用し、GPU名・PCI Bus ID・現在使用MiB・最低基準MiB、エラー全文とMAINログの保存先を表示する。VRAM不足と断定せず、復旧は生成終了後のruntimeメニュー`[5] Release` → `[2] Turbo`を明示選択する。既存runtimeを検査失敗だけで自動終了しない。
 - これはランチャー保守であり、上記2026-08-26の状態採取を再検証したものではない。Current、96K Stable/Turbo、16K/32K output、Power Limit、GPU設定は変更しない。
 - 2026-08-30T13:52:10+09:00にBLUE配置済みスクリプトのread-only preflightがPASS。稼働中Turbo PID8324とstate SHAは検査前後で同一。モデル起動・停止・推論は行わず、失敗表示はoffline fixtureで検証した。配置バックアップと詳細は`scripts/standalone-turbo/README.md`に記録。
 
-## Effective profiles
+## BLUE external research archive (2026-09-01)
+
+- BLUE `pc5700x / DESKTOP-L9HAM1G / 192.168.0.104`のDocuments直下にあったQ5 qualification、DFlash2 Phase 2～4、LM Studio optimization Phase 1/1.5、Q6 128K evaluation / benchmarkの8フォルダを、`C:\Users\Atsuki\Documents\Local-LLM-Research-Archive\2026-08`へ移動した。
+- 3,055 files / 1,255,835,820 bytesを同一Cドライブ内で移動し、8件すべてで移動前後のfiles/directories/bytes/tree fingerprint一致、旧パス0件、新パス8件、process/Service/Scheduled Task参照0件を確認。実験用DFlash2 Q4_K_M GGUFは外部アーカイブへ保持し、Gitには保存しない。
+- Stable/Turbo loader、`C:\Users\Atsuki\Codex-RTX3090-Setup`、Current、context/output、Power Limit、Firewall、Goose設定は変更対象外。完全なold-to-new mappingと選択artifact SHAは外部`MOVE-MANIFEST-20260901-162331.json`に記録し、詳細は`research/2026-09-01-blue-experiment-archive.md`へcurated記録した。
+
+## Effective profiles（保持するQ6 baseline）
 
 | Profile | Context tokens | Intended use |
 |---|---:|---|
@@ -193,7 +261,7 @@ Identity、Firewall backup、モデルartifact、context別実測は`profiles/RT
 
 Goose Custom Provider `custom_lm_studio_rx9070xt_remote`を追加し、既定`active_provider: lmstudio`は変更していません。Desktop model switcherへ反映するにはGooseの完全終了・再起動が必要です。Managed loaderは`scripts/lmstudio/model-loaders/RX9070XT/Qwen3.8-JonathanColetti-IQ4XS/`です。
 
-## Next decision
+## Retained selection decisions（2026-08 baseline）
 
 1. JonathanColetti Q6_Kを唯一のCurrentとして維持する。
 2. RTX5090ではQ5_K_M Vision 96K / MTP3 / batch1024をRecommended Productionとして使用し、長い同一turn tool loopとdesktop responsivenessを継続観察する。

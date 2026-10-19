@@ -124,7 +124,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File `
 - Q5_K_M Vision 96K: `lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q5KM-Vision/Set-Goose-Profile-Q5KM-Vision96K.bat`
 - Q6_K Vision 64Kへ復元: `lmstudio/model-loaders/RTX5090/Qwen3.8-JonathanColetti-Q6K-Vision/Set-Goose-Profile-Q6K-Vision64K.bat`
 
-Daily入口ではMAIN/BLUE Q5 Stableの`96K / 16K`・`96K / 32K`、Turboの`96K / 16K`、MAIN/BLUE Q6 Quality Referenceの`64K / 32K`を選択できます。Stable/Qualityは共通helper `goose/Set-GooseProfile.ps1`で永続configをbackup・同期し、Turboは既存`standalone-turbo/Start-Goose-ManagedTurbo.ps1`のprocess-local `openai` providerだけを使用します。Turbo 32Kは未qualificationです。個別Set-Goose BATは互換・保守用として引き続き利用できます。詳細は`goose/README.md`を参照してください。
+Daily入口ではMAIN/BLUE Q5 Stableの`96K / 16K`・`96K / 32K`、Turboの`96K / 16K`・`96K / 32K`、Quick Response CandidateのVision対応`64K / 8K`、MAIN/BLUE Q6 Quality Referenceの`64K / 32K`を選択できます。Stable/Qualityは共通helper `goose/Set-GooseProfile.ps1`で永続configをbackup・同期し、Turbo/Quickは`standalone-turbo/Start-Goose-ManagedTurbo.ps1`のprocess-local `openai` providerだけを使用します。QuickはReasoning Low/2048、MTP1、Prompt cache、F16 projectorを使う未実測Candidateです。Goose v1.49ではローカルQwen名を含むaliasを表示し、末尾の`gpt-4o` tokenだけをVision能力判定に利用します。実モデルはローカルJonathan Q5_K_M Visionです。個別Set-Goose BATは互換・保守用として引き続き利用できます。詳細は`goose/README.md`を参照してください。
 
 ## Export-VisionFixture.ps1
 

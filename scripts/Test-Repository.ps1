@@ -52,6 +52,7 @@ $requiredPaths = @(
     'scripts/standalone-turbo/Invoke-GooseTurboLongOutputQualification.ps1',
     'scripts/tests/Test-GooseProfileSelector.ps1',
     'scripts/tests/Test-QwenVisionProfileLoaders.ps1',
+    'scripts/tests/Test-ManagedRuntimeLifecycle.ps1',
     'scripts/tests/Test-RX9070XTRemoteLoaders.ps1',
     'scripts/lmstudio/Load-ManagedModel.mjs',
     'scripts/lmstudio/Test-ManagedModel.mjs',
@@ -123,6 +124,7 @@ foreach ($relativePath in $requiredPaths) {
 }
 
 $excludedJsonRoots = @(
+    (Join-Path $repoRoot '.local-backups'),
     (Join-Path $repoRoot 'benchmarks\raw'),
     (Join-Path $repoRoot 'logs'),
     (Join-Path $repoRoot 'node_modules')
@@ -216,6 +218,14 @@ foreach ($blockedDirectory in @('models', 'model-data', 'runtime-data', '.lmstud
 }
 
 $gooseSelectorTest = Join-Path $repoRoot 'scripts\tests\Test-GooseProfileSelector.ps1'
+
+$gooseShortcutTest = Join-Path $repoRoot 'scripts\tests\Test-GooseShortcutLaunch.ps1'
+if (Test-Path -LiteralPath $gooseShortcutTest -PathType Leaf) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $gooseShortcutTest
+    if ($LASTEXITCODE -ne 0) { $failures.Add("Goose shortcut launch regression failed with exit code $LASTEXITCODE.") }
+}
+else { $failures.Add('Goose shortcut launch regression is missing.') }
+
 if (Test-Path -LiteralPath $gooseSelectorTest -PathType Leaf) {
     & powershell -NoProfile -ExecutionPolicy Bypass -File $gooseSelectorTest
     if ($LASTEXITCODE -ne 0) {
@@ -239,11 +249,69 @@ if (Test-Path -LiteralPath $turboDiagnosticTest -PathType Leaf) {
     }
 }
 
+$managedRuntimeLifecycleTest = Join-Path $repoRoot 'scripts\tests\Test-ManagedRuntimeLifecycle.ps1'
+if (Test-Path -LiteralPath $managedRuntimeLifecycleTest -PathType Leaf) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $managedRuntimeLifecycleTest
+    if ($LASTEXITCODE -ne 0) {
+        $failures.Add("Managed runtime lifecycle regression test failed with exit code $LASTEXITCODE.")
+    }
+}
+
+$compactionBudgetTest = Join-Path $repoRoot 'scripts\tests\Test-GooseCompactionBudget.ps1'
+if (Test-Path -LiteralPath $compactionBudgetTest -PathType Leaf) {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $compactionBudgetTest
+    if ($LASTEXITCODE -ne 0) {
+        $failures.Add("Goose compaction budget regression test failed with exit code $LASTEXITCODE.")
+    }
+}
+
 $redLoaderTest = Join-Path $repoRoot 'scripts\tests\Test-RX9070XTRemoteLoaders.ps1'
 if (Test-Path -LiteralPath $redLoaderTest -PathType Leaf) {
     & powershell -NoProfile -ExecutionPolicy Bypass -File $redLoaderTest
     if ($LASTEXITCODE -ne 0) {
         $failures.Add("RX9070XT loader regression test failed with exit code $LASTEXITCODE.")
+    }
+}
+
+$blueQ4QualificationTest = Join-Path $repoRoot 'scripts\tests\Test-BlueQ4VisionQualification.py'
+if (Test-Path -LiteralPath $blueQ4QualificationTest -PathType Leaf) {
+    & python -B $blueQ4QualificationTest
+    if ($LASTEXITCODE -ne 0) {
+        $failures.Add("BLUE Q4 isolated qualification regression test failed with exit code $LASTEXITCODE.")
+    }
+}
+
+$blueExtendedTest = Join-Path $repoRoot 'scripts\tests\Test-BlueExtendedProfile.ps1'
+if (-not (Test-Path -LiteralPath $blueExtendedTest -PathType Leaf)) {
+    $failures.Add('BLUE Extended Context dedicated test is missing.')
+}
+else {
+    & powershell -NoProfile -ExecutionPolicy Bypass -File $blueExtendedTest
+    if ($LASTEXITCODE -ne 0) { $failures.Add("BLUE Extended Context profile regression failed with exit code $LASTEXITCODE.") }
+}
+$blueExtendedMemoryTest = Join-Path $repoRoot 'scripts\tests\Test-BlueExtendedMemory.py'
+if (-not (Test-Path -LiteralPath $blueExtendedMemoryTest -PathType Leaf)) {
+    $failures.Add('BLUE Extended Context memory regression is missing.')
+}
+else {
+    & python -B $blueExtendedMemoryTest
+    if ($LASTEXITCODE -ne 0) { $failures.Add("BLUE Extended Context memory regression failed with exit code $LASTEXITCODE.") }
+}
+
+& node (Join-Path $repoRoot 'scripts\tests\Test-GooseSmokeTranscript.mjs')
+if ($LASTEXITCODE -ne 0) { $failures.Add('Goose transcript acceptance regression failed.') }
+foreach ($mainExtendedTest in @('Test-MainExtendedProfile.ps1', 'Test-MainExtendedMemory.py')) {
+    $mainTestPath = Join-Path $repoRoot "scripts\tests\$mainExtendedTest"
+    if (-not (Test-Path -LiteralPath $mainTestPath -PathType Leaf)) {
+        $failures.Add("MAIN extended regression is missing: $mainExtendedTest")
+    }
+    elseif ($mainExtendedTest.EndsWith('.py')) {
+        & python -B $mainTestPath
+        if ($LASTEXITCODE -ne 0) { $failures.Add("MAIN memory regression failed: $LASTEXITCODE") }
+    }
+    else {
+        & powershell -NoProfile -ExecutionPolicy Bypass -File $mainTestPath
+        if ($LASTEXITCODE -ne 0) { $failures.Add("MAIN profile regression failed: $LASTEXITCODE") }
     }
 }
 

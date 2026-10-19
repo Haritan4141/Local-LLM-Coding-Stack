@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][ValidateSet('RTX5090', 'BLUE')][string]$Profile
+    [Parameter(Mandatory)][ValidateSet('RTX5090', 'BLUE', 'RTX5090-Quick', 'BLUE-Quick', 'BLUE-IQ4XS256K', 'RTX5090-IQ4XS256K')][string]$Profile
 )
 
 Set-StrictMode -Version Latest
@@ -11,6 +11,8 @@ Import-Module (Join-Path $PSScriptRoot 'Turbo.Common.psm1') -Force
 $manifest = Get-TurboProfileManifest -Profile $Profile
 $runtime = Get-TurboRuntimeInfo -Manifest $manifest
 $storage = Get-TurboStorage -Manifest $manifest
+$operationLock = Enter-TurboOperationLock -Manifest $manifest -TimeoutSeconds 600
+try {
 $listeners = @(Get-TurboPortListeners -Port ([int]$manifest.server.port))
 $stateExists = Test-Path -LiteralPath $storage.active_state -PathType Leaf
 
@@ -28,7 +30,7 @@ if ($stateExists) {
         }
         Write-Host "[OK] $($manifest.display_name) is already running as managed PID $($existingState.pid)." -ForegroundColor Green
         $api
-        exit 0
+        return
     }
     if ($null -ne $existingProcess) {
         throw "Managed Turbo PID $($existingState.pid) exists without the expected listener. Refusing a second start."
@@ -41,7 +43,9 @@ elseif ($listeners.Count -gt 0) {
 }
 
 Assert-TurboHostAndGpu -Manifest $manifest | Out-Null
-foreach ($path in @($runtime.executable, $runtime.bundle_manifest, $runtime.model, $runtime.projector)) {
+$requiredArtifacts = @($runtime.executable, $runtime.bundle_manifest, $runtime.model)
+if ($manifest.configuration.vision -eq $true) { $requiredArtifacts += $runtime.projector }
+foreach ($path in $requiredArtifacts) {
     if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Required Turbo artifact is missing: $path" }
 }
 foreach ($required in @($manifest.runtime.required_files)) {
@@ -80,10 +84,14 @@ foreach ($gpu in @($manifest.gpus)) {
 Write-Host '[INFO] Verifying target GGUF SHA-256...'
 $modelHash = Get-TurboFileSha256 -Path $runtime.model
 if ($modelHash -ne $manifest.model.sha256) { throw "Target GGUF SHA mismatch: $modelHash" }
-Write-Host '[INFO] Verifying Vision projector SHA-256...'
-$projectorHash = Get-TurboFileSha256 -Path $runtime.projector
-if ($projectorHash -ne $manifest.model.projector_sha256) { throw "Vision projector SHA mismatch: $projectorHash" }
+$projectorHash = $null
+if ($manifest.configuration.vision -eq $true) {
+    Write-Host '[INFO] Verifying Vision projector SHA-256...'
+    $projectorHash = Get-TurboFileSha256 -Path $runtime.projector
+    if ($projectorHash -ne $manifest.model.projector_sha256) { throw "Vision projector SHA mismatch: $projectorHash" }
+}
 
+$extendedMemoryBefore = Assert-TurboExtendedMemory -Manifest $manifest
 $lmsBefore = @(Assert-TurboLmsIdle)
 $gpuBefore = @(Get-TurboGpuState)
 if ($lmsBefore.Count -gt 0) {
@@ -96,7 +104,6 @@ $gpuReleased = @(Wait-TurboVramReleased -Manifest $manifest)
 
 $arguments = @(
     '--model', $runtime.model,
-    '--mmproj', $runtime.projector,
     '--alias', [string]$manifest.server.api_model_alias,
     '--host', [string]$manifest.server.host,
     '--port', [string]$manifest.server.port,
@@ -109,22 +116,20 @@ $arguments = @(
     '--cache-type-v', [string]$manifest.configuration.kv_cache_v,
     '--gpu-layers', 'all'
 )
-if ($Profile -eq 'RTX5090') {
+if ($manifest.configuration.vision -eq $true) {
+    $arguments += @('--mmproj', $runtime.projector)
+}
+else {
+    $arguments += '--no-mmproj'
+}
+
+$isBlue = $Profile.StartsWith('BLUE', [StringComparison]::OrdinalIgnoreCase)
+if (-not $isBlue) {
     $arguments += @(
-        '--mmproj-offload',
         '--device', 'CUDA0',
-        '--load-mode', 'mmap+mlock',
-        '--spec-type', 'draft-mtp',
-        '--spec-draft-n-max', '3',
-        '--spec-draft-n-min', '0',
-        '--spec-draft-p-min', '0.00',
-        '--spec-draft-ngl', 'all',
-        '--spec-draft-device', 'CUDA0',
-        '--spec-draft-type-k', 'q8_0',
-        '--spec-draft-type-v', 'q8_0',
-        '--metrics', '--no-webui', '--jinja',
-        '--reasoning', 'off', '--reasoning-budget', '0'
+        '--load-mode', 'mmap+mlock'
     )
+    if ($manifest.configuration.vision -eq $true) { $arguments += '--mmproj-offload' }
 }
 else {
     $arguments += @(
@@ -132,13 +137,45 @@ else {
         '--device', 'CUDA0,CUDA1',
         '--split-mode', 'layer',
         '--tensor-split', [string]$manifest.configuration.tensor_split,
-        '--fit', 'off',
-        '--spec-type', 'draft-mtp',
-        '--spec-draft-n-max', '3',
-        '--spec-draft-n-min', '0',
-        '--spec-draft-p-min', '0',
-        '--metrics', '--no-webui'
+        '--fit', 'off'
     )
+}
+
+if ($manifest.configuration.mtp_enabled -eq $true) {
+    $arguments += @(
+        '--spec-type', 'draft-mtp',
+        '--spec-draft-n-max', [string]$manifest.configuration.mtp_draft_max_tokens,
+        '--spec-draft-n-min', '0',
+        '--spec-draft-p-min', '0.00'
+    )
+    if (-not $isBlue) {
+        $arguments += @('--spec-draft-ngl', 'all', '--spec-draft-device', 'CUDA0')
+    }
+    if ($null -ne $manifest.configuration.mtp_draft_kv_k) {
+        $arguments += @('--spec-draft-type-k', [string]$manifest.configuration.mtp_draft_kv_k)
+    }
+    if ($null -ne $manifest.configuration.mtp_draft_kv_v) {
+        $arguments += @('--spec-draft-type-v', [string]$manifest.configuration.mtp_draft_kv_v)
+    }
+}
+
+$arguments += @('--metrics', '--no-webui')
+if ($null -ne $manifest.configuration.PSObject.Properties['jinja'] -and $manifest.configuration.jinja -eq $true) {
+    $arguments += '--jinja'
+}
+if ($null -ne $manifest.configuration.PSObject.Properties['prompt_cache'] -and $manifest.configuration.prompt_cache -eq $true) {
+    $arguments += @('--cache-prompt', '--cache-reuse', [string]$manifest.configuration.cache_reuse_min_tokens)
+}
+if ($null -ne $manifest.configuration.PSObject.Properties['reasoning_mode']) {
+    $arguments += @(
+        '--reasoning', [string]$manifest.configuration.reasoning_mode,
+        '--reasoning-effort', [string]$manifest.configuration.reasoning_effort,
+        '--reasoning-budget', [string]$manifest.configuration.reasoning_budget_tokens
+    )
+    if ($null -ne $manifest.configuration.PSObject.Properties['reasoning_preserve'] -and
+        $manifest.configuration.reasoning_preserve -eq $false) {
+        $arguments += '--no-reasoning-preserve'
+    }
 }
 
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -161,8 +198,6 @@ $state = [ordered]@{
     api_model_alias = $manifest.server.api_model_alias
     model_path = $runtime.model
     model_sha256 = $modelHash
-    projector_path = $runtime.projector
-    projector_sha256 = $projectorHash
     start_time = (Get-Date).ToString('o')
     command_line_sanitized = @($runtime.executable) + $arguments
     stdout_log = $stdout
@@ -173,6 +208,10 @@ $state = [ordered]@{
     gpu_before = $gpuBefore
     gpu_released = $gpuReleased
     ready = $false
+}
+if ($manifest.configuration.vision -eq $true) {
+    $state['projector_path'] = $runtime.projector
+    $state['projector_sha256'] = $projectorHash
 }
 Write-TurboJson -InputObject $state -Path $storage.active_state -Depth 15
 
@@ -193,12 +232,17 @@ try {
 
     $api = Test-TurboApiState -Manifest $manifest
     $gpuLoaded = @(Assert-TurboVramLoaded -Manifest $manifest)
+    $extendedMemoryLoaded = Assert-TurboExtendedMemory -Manifest $manifest
     if (@(Get-TurboLmsModels).Count -ne 0) { throw 'LM Studio unexpectedly has a loaded model while Turbo is active.' }
     $processRecord = Assert-ManagedTurboProcess -State ([pscustomobject]$state) -Manifest $manifest -RequireListener
     $state['ready'] = $true
     $state['ready_at'] = (Get-Date).ToString('o')
     $state['effective_api'] = $api
     $state['gpu_loaded'] = $gpuLoaded
+    if ($null -ne $extendedMemoryLoaded) {
+        $state['extended_memory_before'] = $extendedMemoryBefore
+        $state['extended_memory_loaded'] = $extendedMemoryLoaded
+    }
     $state['observed_command_line'] = $processRecord.command_line
     Write-TurboJson -InputObject $state -Path $storage.active_state -Depth 15
 }
@@ -208,12 +252,20 @@ catch {
         Stop-Process -Id $process.Id -ErrorAction SilentlyContinue
         Wait-Process -Id $process.Id -Timeout 30 -ErrorAction SilentlyContinue
     }
-    Move-TurboStateToHistory -StatePath $storage.active_state -HistoryRoot $storage.history -Reason 'start-failed' | Out-Null
+    Move-TurboStateToHistory -StatePath $storage.active_state -HistoryRoot $storage.history -Reason 'start-failed' -ExpectedProcessId $process.Id | Out-Null
     throw
 }
 
 Write-Host "[OK] $($manifest.display_name) is healthy." -ForegroundColor Green
 Write-Host "[OK] Endpoint: http://127.0.0.1:$($manifest.server.port)/v1" -ForegroundColor Green
 Write-Host "[OK] Model alias: $($manifest.server.api_model_alias)" -ForegroundColor Green
-Write-Host '[OK] 96K / Q8-Q8 / MTP3 / batch1024 / ubatch512 / parallel1 / Vision.' -ForegroundColor Green
+Write-Host ("[OK] {0:N0} context / Q8-Q8 / MTP{1} / batch1024 / ubatch{2} / parallel1 / Vision={3}." -f
+    [int]$manifest.configuration.context_tokens,
+    [int]$manifest.configuration.mtp_draft_max_tokens,
+    [int]$manifest.configuration.ubatch_size,
+    [bool]$manifest.configuration.vision) -ForegroundColor Green
 [pscustomobject]$state
+}
+finally {
+    Exit-TurboOperationLock -Lock $operationLock
+}

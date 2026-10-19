@@ -167,6 +167,6 @@ Inferred: the remaining gap to RTX 5090 is consistent with the slower RTX 3060, 
 Full raw JSON, LM Studio stats logs, one-second GPU/RAM telemetry CSVs, deterministic fixture, harness, per-configuration `results.json`, and generated JSON/CSV/Markdown summaries remain outside Git at:
 
 - MAIN: `C:\Users\Haritan\Documents\LMStudio-Vision-Q6K-Benchmark`
-- BLUE: `C:\Users\Atsuki\Documents\LMStudio-Vision-Q6K-Benchmark`
+- BLUE: `C:\Users\Atsuki\Documents\Local-LLM-Research-Archive\2026-08\LMStudio-Vision-Q6K-Benchmark`
 
 Both PCs started with no loaded LM Studio model and ended with `lms ps --json` equal to `[]`. Global LM Studio settings and GPU priority were not changed.

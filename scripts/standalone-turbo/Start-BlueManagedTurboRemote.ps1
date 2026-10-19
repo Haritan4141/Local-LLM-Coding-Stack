@@ -1,5 +1,7 @@
 [CmdletBinding()]
-param()
+param(
+    [ValidateSet('BLUE', 'BLUE-Quick', 'BLUE-IQ4XS256K')][string]$Profile = 'BLUE'
+)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -7,7 +9,7 @@ Import-Module (Join-Path $PSScriptRoot 'Turbo.Common.psm1') -Force
 
 try {
 # The outer catch prints full messages before PowerShell can width-format native errors.
-$manifest = Get-TurboProfileManifest -Profile BLUE
+$manifest = Get-TurboProfileManifest -Profile $Profile
 $sshAlias = [string]$manifest.target_host.ssh_alias
 $expectedHostname = [string]$manifest.target_host.computer_name
 $expectedIp = [string]$manifest.target_host.ipv4
@@ -77,7 +79,7 @@ if (Test-Path -LiteralPath $tunnelStatePath -PathType Leaf) {
 `$ErrorActionPreference = 'Stop'
 `$ProgressPreference = 'SilentlyContinue'
 try {
-    & '$remoteTest' -Profile BLUE -Mode Local | Out-Null
+    & '$remoteTest' -Profile $Profile -Mode Local | Out-Null
     Write-Output 'REMOTE_READY'
 }
 catch { Write-Output `$_.Exception.Message; exit 1 }
@@ -106,7 +108,7 @@ $launchPayload = @"
 `$ProgressPreference = 'SilentlyContinue'
 New-Item -ItemType Directory -Path '$([IO.Path]::GetDirectoryName($remoteLaunchLog))' -Force | Out-Null
 try {
-    & '$remoteStart' -Profile BLUE *>&1 | Out-File -LiteralPath '$remoteLaunchLog' -Append -Encoding UTF8 -Width 4096
+    & '$remoteStart' -Profile $Profile *>&1 | Out-File -LiteralPath '$remoteLaunchLog' -Append -Encoding UTF8 -Width 4096
     exit 0
 }
 catch {
@@ -140,7 +142,7 @@ do {
         try {
             `$managedState = Get-Content -LiteralPath '$remoteStatePath' -Raw -Encoding UTF8 | ConvertFrom-Json
             if (`$managedState.ready -eq `$true) {
-                & '$remoteTest' -Profile BLUE -Mode Local -BaseUrl 'http://127.0.0.1:18080' | Out-Null
+                & '$remoteTest' -Profile $Profile -Mode Local -BaseUrl 'http://127.0.0.1:18080' | Out-Null
                 Write-Output 'REMOTE_READY'
                 exit 0
             }
@@ -193,6 +195,7 @@ $state = [ordered]@{
     local_port = $localPort
     remote_address = '127.0.0.1'
     remote_port = [int]$manifest.server.port
+    remote_profile = $Profile
     forward = $forward
     command_line_sanitized = @($sshExe) + $arguments
     stdout_log = $stdout
@@ -248,7 +251,7 @@ catch {
     if ($message.Contains('[TURBO_VRAM_RESIDENCY]')) {
         $lines += @(
             '[NEXT] Finish/stop Goose generation and confirm there is no queued work.',
-            '[NEXT] In 00-BLUE-Daily-Profiles-REMOTE.bat, select [4] Release, then [2] Turbo.',
+            '[NEXT] In 00-BLUE-Daily-Profiles-REMOTE.bat, select [5] Release, then [2] Turbo.',
             '[SAFE] If Release refuses active work or an unknown process, do not force-stop it.'
         )
     }

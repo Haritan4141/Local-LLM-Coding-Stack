@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "profile_class": "extended-context",
+  "profile_id": "blue-iq4xs-vision-256k-mtp3-candidate",
+  "display_name": "BLUE IQ4_XS Vision 256K Extended Context Candidate",
+  "status": "Candidate",
+  "target_host": {
+    "computer_name": "DESKTOP-L9HAM1G",
+    "ipv4": "192.168.0.104",
+    "ssh_alias": "pc5700x"
+  },
+  "runtime": {
+    "source_repository": "https://github.com/ggml-org/llama.cpp",
+    "source_commit": "f280b26983ad0fdb705a0d9ebf0503e76f2899b0",
+    "build_date": "2026-08-25T11:18:15+09:00",
+    "cuda_architecture_requested": "86",
+    "cuda_architecture_emitted": "sm_86",
+    "external_path": "%LOCALAPPDATA%\\Local-LLM-Coding-Stack\\runtimes\\llama.cpp-f280b269-sm86",
+    "executable": "llama-server.exe",
+    "executable_expected_sha256": "970fa271bf4b8b2354cd399a702c8f882da3a14710d4730833cb687f64154ca4",
+    "bundle_manifest": "runtime-bundle-manifest.json",
+    "required_files": [
+      "llama-server.exe",
+      "llama-server-impl.dll",
+      "llama-common.dll",
+      "llama.dll",
+      "mtmd.dll",
+      "ggml.dll",
+      "ggml-base.dll",
+      "ggml-cpu.dll",
+      "ggml-cuda.dll"
+    ]
+  },
+  "model": {
+    "name": "JonathanColetti Qwen3.8-27B-Uncensored Vision IQ4_XS",
+    "revision": "45d0fc0ad6cfcf9eeee6008ddaea925536409b18",
+    "path": "%USERPROFILE%\\.lmstudio\\models\\JonathanColetti\\Qwen3.8-27B-Uncensored-GGUF\\Qwen3.8-27B-Uncensored-IQ4_XS.gguf",
+    "sha256": "53adc4bbed67044d662273356bbf3a50fdec667ac21bbf18d13e5815fbccc7f5",
+    "projector_path": "%USERPROFILE%\\.lmstudio\\models\\JonathanColetti\\Qwen3.8-27B-Uncensored-GGUF\\Qwen3.8-27B-Uncensored-vision-f16.gguf",
+    "projector_sha256": "5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c"
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 18080,
+    "main_tunnel_port": 18081,
+    "api_model_alias": "qwen3.8-27b-uncensored-vision-iq4xs-blue-256k-gpt-4o",
+    "api_alias_purpose": "Local Qwen identity; trailing gpt-4o token supplies existing Goose Vision capability metadata only. No OpenAI network connection."
+  },
+  "configuration": {
+    "context_tokens": 262144,
+    "kv_cache_k": "q8_0",
+    "kv_cache_v": "q8_0",
+    "mtp_enabled": true,
+    "mtp_draft_max_tokens": 3,
+    "mtp_draft_kv_k": "f16",
+    "mtp_draft_kv_v": "f16",
+    "eval_batch_size": 1024,
+    "ubatch_size": 256,
+    "parallel": 1,
+    "flash_attention": true,
+    "vision": true,
+    "dflash2": false,
+    "gpu_layers": "all",
+    "load_mode": "no-mmap",
+    "split_mode": "layer",
+    "tensor_split": "0.75,0.25",
+    "jinja": true,
+    "prompt_cache": true,
+    "cache_reuse_min_tokens": 0,
+    "reasoning_mode": "off",
+    "reasoning_effort": "default",
+    "reasoning_budget_tokens": 0,
+    "reasoning_preserve": false
+  },
+  "goose": {
+    "client_context_tokens": 237568,
+    "max_output_tokens": 16384,
+    "auto_compact_threshold": 0.6,
+    "temperature": 0,
+    "input_growth_reserve_tokens": 8192
+  },
+  "memory_gate": {
+    "probe": "Read-BlueExtendedMemory.py",
+    "combined_shared_gib_strictly_below": 4,
+    "each_gpu_shared_gib_max": 2,
+    "each_gpu_free_mib_min": 1024
+  },
+  "gpus": [
+    {
+      "name": "NVIDIA GeForce RTX 3090",
+      "pci_bus_id": "00000000:0B:00.0",
+      "power_limit_w": 259,
+      "llama_device": "CUDA0",
+      "vram_release_max_mib": 4096,
+      "vram_loaded_min_mib": 12000
+    },
+    {
+      "name": "NVIDIA GeForce RTX 3060",
+      "pci_bus_id": "00000000:01:00.0",
+      "power_limit_w": 170,
+      "llama_device": "CUDA1",
+      "vram_release_max_mib": 4096,
+      "vram_loaded_min_mib": 6000
+    }
+  ],
+  "qualification_status": "memory-and-one-long-chain-qualified; Goose Desktop trial pending; retained instruction/quality failures",
+  "qualification_report": "benchmarks/results/2026-10-06-blue-q4-vision-context.md"
+}

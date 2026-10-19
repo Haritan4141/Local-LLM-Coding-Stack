@@ -58,5 +58,5 @@ Phase 4 ended with candidate standalone and tunnel stopped, BLUE port 18080 and 
 
 Raw evidence remains outside Git under:
 
-- `C:\Users\Atsuki\Documents\DFlash2-Phase4\RTX3090-Dual\ngram-coding`
+- `C:\Users\Atsuki\Documents\Local-LLM-Research-Archive\2026-08\DFlash2-Phase4\RTX3090-Dual\ngram-coding`
 - `benchmarks/raw/blue-phase4-ngram/session-20260825`

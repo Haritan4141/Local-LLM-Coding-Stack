@@ -40,7 +40,10 @@ benchmarks/raw/*
 *.dmp
 
 # Editor and operating-system noise.
+.local-backups/
 node_modules/
+__pycache__/
+*.py[cod]
 .vscode/settings.json
 .DS_Store
 Thumbs.db

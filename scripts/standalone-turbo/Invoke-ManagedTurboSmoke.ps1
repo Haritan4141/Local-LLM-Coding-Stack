@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][ValidateSet('RTX5090', 'BLUE')][string]$Profile,
+    [Parameter(Mandatory)][ValidateSet('RTX5090', 'BLUE', 'RTX5090-Quick', 'BLUE-Quick')][string]$Profile,
     [Parameter(Mandatory)][ValidateSet('Text', 'Vision', 'Tool', 'Goose')][string]$Kind,
     [Parameter(Mandatory)][string]$BaseUrl,
     [string]$Marker

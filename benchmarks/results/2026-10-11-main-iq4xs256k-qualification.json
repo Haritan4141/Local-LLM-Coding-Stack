@@ -1,0 +1,35 @@
+{
+  "schema_version":1,
+  "status":"PASS_WITH_PENDING_LONG_CONTEXT_AND_DESKTOP_ACCEPTANCE",
+  "profile":"RTX5090-IQ4XS256K",
+  "host":"DESKTOP-5NPLIIV",
+  "runtime_context":262144,"goose_input":237568,"output":16384,"compaction":0.6,
+  "vision":true,"parallel":1,
+  "weight_sha256":"53adc4bbed67044d662273356bbf3a50fdec667ac21bbf18d13e5815fbccc7f5",
+  "projector_sha256":"5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c",
+  "initial_sampled_min_total_minus_used_mib":1791,
+  "final_actual_free_mib":1336,
+  "previous_actual_free_mib":1359,
+  "final_driver_reserved_mib":420,
+  "initial_smoke_max_used_mib":30816,
+  "load_shared_bytes":1016500224,
+  "direct_api":{"text":true,"tool":true,"vision":true},
+  "goose":{"controlled_shell":true,"call_count":1,"initial_no_shell_instruction_compliance":false,"daily_preflight_no_launch":true,"desktop_acceptance":null},
+  "deepseek":{"chat":true,"native_read":true,"native_image":true,"request_max_tokens":16384,"desktop_config_parser_verified":true,"original_merge_failure_reproduced":true,"desktop_catalog_user_confirmed":true,"desktop_saved_default_provider":"main-local","desktop_selection_only_provider_and_model_changed":true,"desktop_acceptance":null},
+  "full_256k_input_quality":null,
+  "live_compaction":null,"loop_prevention_effectiveness":null,
+  "formal_benchmark":false,"current_promoted":false,
+  "regression": {
+    "agent_stack_npm_tests": {"pass":77,"fail":0,"skipped":0},
+    "coding_stack_repository_validation":true,
+    "main_profile_cases":15,"main_memory_cases":11,"blue_profile_cases":16,
+    "goose_transcript_cases":8,"diff_check":true,"secret_findings":0,
+    "protected_hashes_unchanged":10
+  },
+  "evidence":[
+    "benchmarks/raw/main-iq4xs256k-2026-10-11T03-48-22-686Z",
+    "benchmarks/raw/main-iq4xs256k-2026-10-11T03-49-48-227Z",
+    "Local-AI-Agent-Stack/.local-backups/main-iq4xs256k-20261011",
+    "Local-AI-Agent-Stack/.local-backups/dsh-main-yaml-repair-20261011-132901"
+  ]
+}

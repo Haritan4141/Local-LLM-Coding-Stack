@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "profile_id": "candidate-blue-jonathan-q4km-vision-extended-context",
+  "status": "Candidate",
+  "operational_role": "isolated extended-context qualification; not a daily loader or Current",
+  "host": {
+    "alias": "pc5700x",
+    "computer_name": "DESKTOP-L9HAM1G",
+    "ip": "192.168.0.104",
+    "gpus": ["RTX 3090 24GB", "RTX 3060 12GB"],
+    "power_limits_w": [259, 170]
+  },
+  "model": {
+    "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+    "revision": "45d0fc0ad6cfcf9eeee6008ddaea925536409b18",
+    "quantization": "Q4_K_M",
+    "file": "Qwen3.8-27B-Uncensored-Q4_K_M.gguf",
+    "bytes": 16810714528,
+    "sha256": "4c5e2db039e9325ac7724c8846c71356a24ad1cdfa28002d73ecb6be645f9675",
+    "vision": true,
+    "projector": "Qwen3.8-27B-Uncensored-vision-f16.gguf",
+    "projector_sha256": "5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c"
+  },
+  "experimental_runtime": {
+    "kind": "standalone llama.cpp; not LM Studio native acceptance",
+    "commit": "f280b26983ad0fdb705a0d9ebf0503e76f2899b0",
+    "executable_sha256": "970fa271bf4b8b2354cd399a702c8f882da3a14710d4730833cb687f64154ca4",
+    "bind": "127.0.0.1:18082",
+    "alias": "blue-q4-vision-qualification",
+    "context_candidates_tokens": [131072, 196608, 262144],
+    "target_kv_k": "q8_0",
+    "target_kv_v": "q8_0",
+    "draft_kv": "f16/f16 actual log readback",
+    "mtp_draft_tokens": 3,
+    "batch": 1024,
+    "ubatch": 256,
+    "gpu_split_cuda0_3090_cuda1_3060": [0.75, 0.25],
+    "flash_attention": true,
+    "parallel": 1,
+    "mmap": false,
+    "reasoning": "off"
+  },
+  "safety_gate": {
+    "combined_shared_gib_strictly_below": 4,
+    "each_gpu_shared_gib_max": 2,
+    "each_gpu_dedicated_headroom_mib_strictly_above": 0,
+    "daily_headroom_mib_recommendation": 1024,
+    "restore_observed_start": "empty LM Studio / no standalone server"
+  },
+  "evaluation_status": "research complete with limitations; 256K memory PASS, original coding and tool-enabled retrieval failures retained; native/Goose acceptance pending",
+  "max_memory_gate_pass_context_tokens": 262144,
+  "daily_operating_context_tokens": null,
+  "all_quality_gates_pass": false,
+  "unchanged_baseline": "Q5 Vision 96K Production; Q6 Current/Reference/Safe; Global client settings",
+  "research": "research/2026-10-06-blue-q4-vision-context.md",
+  "results": "benchmarks/results/2026-10-06-blue-q4-vision-context.md"
+}

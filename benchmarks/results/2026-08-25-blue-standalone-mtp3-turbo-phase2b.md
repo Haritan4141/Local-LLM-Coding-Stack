@@ -116,7 +116,7 @@ The official build also passed the unchanged Strict Shared gate. This pinned off
 
 BLUE primary raw evidence remains outside Git under:
 
-`C:\Users\Atsuki\Documents\DFlash2-Phase2\RTX3090-Dual\phase2b-mtp3`
+`C:\Users\Atsuki\Documents\Local-LLM-Research-Archive\2026-08\DFlash2-Phase2\RTX3090-Dual\phase2b-mtp3`
 
 MAIN-side orchestration, snapshots, and the isolated Goose fixture remain in the Git-ignored session-local path:
 

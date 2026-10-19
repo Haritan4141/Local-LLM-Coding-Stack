@@ -2,14 +2,14 @@
 
 ## Purpose
 
-This repository is the source of truth for the local coding stack built around VS Code, Zoo Code, LM Studio, and local LLMs. It covers the RTX 5090 32 GB workstation Current and separately managed LAN Remote LLM Nodes. Maintain model selection, effective settings, benchmarks, research notes, node profiles, and migration history here.
+This repository is the source of truth for local model selection, LM Studio / standalone llama.cpp runtimes, managed loaders, capacity, benchmarks, node profiles, and migration history. It covers the RTX 5090 32 GB workstation Current and separately managed LAN Remote LLM Nodes. Agent clients, MCP, Skills, Goose shell guards, and DeepSeek client configuration are documented in the adjacent `Local-AI-Agent-Stack`; use its dated records without treating old defaults as live settings.
 
 ## Current baseline
 
 - `current-qwen38-27b-uncensored-q6k` is the only `Current` model.
 - `candidate-hauhaucs-aggressive-mtp` is an evaluated `Candidate`; its 2026-08-20 comparison did not meet the promotion gate, so it must not replace Current.
 - A future HauhauCS Balanced-MTP release is `Watch`, not an available or validated model.
-- `CURRENT_STATE.md` and `configs/current/` describe the operating baseline.
+- `configs/current/` preserves the sole lifecycle Current baseline; the dated live section of `CURRENT_STATE.md` describes observed operation. Loaded runtime, saved client default, Recommended Production role, and lifecycle Current are separate facts. An active Candidate does not imply promotion.
 - `profiles/RTX3090-Remote/` describes the independent `pc5700x` LAN node. A Remote Node role does not create another repository-wide Current model.
 - The node hardware is RTX 3090 24 GB + RTX 3060 12 GB. Its independent Recommended Production profile is Jonathan Vision Q5_K_M at 96K, Q8_0/Q8_0, priority-order dual GPU, MTP 3, eval batch 1024, and parallel 1. Q6_K Balanced 64K is the Quality/Performance Reference and Q6_K Safe remains the permanent known-good rollback. This node role remains a `Candidate` in repository lifecycle terms and does not create a second Current.
 - RTX5090 Recommended Production is Jonathan Vision Q5_K_M at 96K, Q8_0/Q8_0, MTP 3, eval batch 1024, effective ubatch 512, mmap+mlock, parallel 1, and PL 402W. Its repository lifecycle remains `Candidate`; the sole `Current` remains Q6_K. RTX5090 Q6_K Vision 64K Balanced (MTP 4 / Q8_0 / batch 2048) remains the Quality/Performance Reference, the existing MTP 2 / Q8_0 / batch 2048 loader remains Safe, and Coding-Fast remains explicit-only. Do not deprecate or delete these Q6 profiles.
@@ -40,6 +40,7 @@ This repository is the source of truth for the local coding stack built around V
 13. A LAN LM Studio firewall rule must be inbound TCP on the selected port, Private, LocalSubnet, and Edge Traversal Block. Never broaden it to Public or RemoteAddress Any, and do not reset the firewall.
 14. After changing a Zoo Code Remote Node profile, start a new task and verify with `lms ps` that only the intended model is loaded at the intended context with parallel 1. Do not accept measurements from implicit auto-load or multi-model VRAM contention.
 15. Never overwrite, rename, or remove a known-good Safe profile when adding an optimization profile. `Coding-Fast` is explicit workload-specific selection only and must not be described or wired as the General Default.
+16. For audits that must not start or change runtime, inspect existing processes/listeners and use GET on already-listening APIs. Do not use `lms ps` as a side-effect-free probe: it can wake LM Studio. An unavailable API means `UNVERIFIED`, not zero loaded models. `/v1/models` may include unloaded catalog entries; prefer native loaded-instance state.
 
 ## Required update workflow
 

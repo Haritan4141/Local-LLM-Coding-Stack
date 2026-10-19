@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "profile_id": "candidate-blue-jonathan-iq4xs-vision-extended-context",
+  "status": "Candidate",
+  "operational_role": "explicit BLUE256K trial loader available; not Production or Current",
+  "host": {
+    "alias": "pc5700x",
+    "computer_name": "DESKTOP-L9HAM1G",
+    "ip": "192.168.0.104",
+    "gpus": ["RTX 3090 24GB", "RTX 3060 12GB"],
+    "power_limits_w": [259, 170]
+  },
+  "model": {
+    "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+    "revision": "45d0fc0ad6cfcf9eeee6008ddaea925536409b18",
+    "quantization": "IQ4_XS",
+    "file": "Qwen3.8-27B-Uncensored-IQ4_XS.gguf",
+    "bytes": 15309039008,
+    "sha256": "53adc4bbed67044d662273356bbf3a50fdec667ac21bbf18d13e5815fbccc7f5",
+    "vision": true,
+    "projector": "Qwen3.8-27B-Uncensored-vision-f16.gguf",
+    "projector_sha256": "5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c"
+  },
+  "experimental_runtime": {
+    "kind": "standalone llama.cpp; not LM Studio native acceptance",
+    "commit": "f280b26983ad0fdb705a0d9ebf0503e76f2899b0",
+    "executable_sha256": "970fa271bf4b8b2354cd399a702c8f882da3a14710d4730833cb687f64154ca4",
+    "bind": "127.0.0.1:18082",
+    "alias": "blue-q4-vision-qualification",
+    "context_candidates_tokens": [196608, 262144],
+    "target_kv_k": "q8_0",
+    "target_kv_v": "q8_0",
+    "draft_kv": "f16/f16 actual log readback required",
+    "mtp_draft_tokens": 3,
+    "batch": 1024,
+    "ubatch": 256,
+    "gpu_split_cuda0_3090_cuda1_3060": [0.75, 0.25],
+    "flash_attention": true,
+    "parallel": 1,
+    "mmap": false,
+    "reasoning": "off"
+  },
+  "safety_gate": {
+    "combined_shared_gib_strictly_below": 4,
+    "each_gpu_shared_gib_max": 2,
+    "each_gpu_dedicated_headroom_mib_strictly_above": 0,
+    "daily_headroom_mib_recommendation": 1024,
+    "restore_observed_start": "empty LM Studio / no standalone server"
+  },
+  "evaluation_status": "research complete with limitations; 256K memory/long Tool/Vision chain PASS, original coding and 192K/short selection failures retained; native/Goose acceptance pending",
+  "max_memory_gate_pass_context_tokens": 262144,
+  "max_successful_prompt_tokens_tested": 210623,
+  "daily_operating_context_tokens": null,
+  "trial_loader": {
+    "manifest": "scripts/standalone-turbo/runtime-manifests/BLUE-IQ4XS256K.json",
+    "goose_menu_choice": 13,
+    "blue_runtime_menu_choice": 6,
+    "runtime_context_tokens": 262144,
+    "client_context_tokens": 237568,
+    "max_output_tokens": 16384,
+    "growth_reserve_tokens": 8192,
+    "auto_compact_threshold": 0.6,
+    "persistent_goose_config_changed": false,
+    "acceptance": "user-approved60% trial; static/deployment verification only; Goose Desktop compaction pending"
+  },
+  "all_quality_gates_pass": false,
+  "unchanged_baseline": "Q5 Vision 96K Production; Q6 Current/Reference/Safe; Global client settings",
+  "research": "research/2026-10-06-blue-q4-vision-context.md",
+  "results": "benchmarks/results/2026-10-06-blue-q4-vision-context.md"
+}

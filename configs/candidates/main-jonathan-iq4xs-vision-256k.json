@@ -1,0 +1,21 @@
+{
+  "schema_version":1,
+  "profile_id":"candidate-main-jonathan-iq4xs-vision-256k",
+  "status":"Candidate",
+  "operational_role":"explicit-only MAIN extended-context trial, not Current or Production promotion",
+  "host":{"computer_name":"DESKTOP-5NPLIIV","ip":"192.168.0.100","gpu":"RTX 5090 32GB"},
+  "model":{
+    "repository":"JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+    "revision":"45d0fc0ad6cfcf9eeee6008ddaea925536409b18",
+    "quantization":"IQ4_XS","vision":true,
+    "sha256":"53adc4bbed67044d662273356bbf3a50fdec667ac21bbf18d13e5815fbccc7f5",
+    "projector_sha256":"5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c"
+  },
+  "runtime_manifest":"scripts/standalone-turbo/runtime-manifests/RTX5090-IQ4XS256K.json",
+  "runtime_context_tokens":262144,
+  "goose_input_tokens":237568,"output_tokens":16384,"input_growth_reserve_tokens":8192,
+  "goose_compaction_threshold":0.6,
+  "deepseek_provider":"main-local",
+  "qualification_report":"benchmarks/results/2026-10-11-main-iq4xs256k-qualification.md",
+  "full_256k_input_quality":"not tested"
+}

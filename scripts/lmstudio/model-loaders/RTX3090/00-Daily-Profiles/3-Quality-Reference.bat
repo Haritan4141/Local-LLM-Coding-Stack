@@ -3,10 +3,10 @@ setlocal
 chcp 65001 >nul
 title BLUE Qwen3.8 Quality Reference
 
-powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Atsuki\Codex-RTX3090-Setup\standalone-turbo\Stop-ManagedTurbo.ps1" -Profile BLUE -AllowNotRunning
+powershell -NoProfile -ExecutionPolicy Bypass -File "C:\Users\Atsuki\Codex-RTX3090-Setup\standalone-turbo\Release-ManagedRuntime.ps1" -Profile BLUE
 set "RC=%ERRORLEVEL%"
 if not "%RC%"=="0" (
-    echo [ERROR] Managed BLUE Turbo could not be stopped safely. Quality Reference was not loaded.
+    echo [ERROR] Managed BLUE runtime could not be released safely. Quality Reference was not loaded.
     pause
     exit /b %RC%
 )

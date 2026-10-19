@@ -1,6 +1,6 @@
 # Model Registry
 
-Last updated: 2026-08-25
+Documentation reconciled: 2026-10-19. Baseline selection and qualification dates remain those of the linked evidence; today's runtime audit is not a new benchmark or promotion.
 
 ## Registry
 
@@ -9,17 +9,25 @@ Last updated: 2026-08-25
 | `current-qwen38-27b-uncensored-q6k` | Current | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K | Text coding, MTP | Stable at 96K; measured MTP ON/OFF speed supplied |
 | `candidate-jonathan-q6k-vision` | Candidate / RTX5090 Quality-Performance Reference | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K + official F16 projector | Vision, text coding, MTP | Phase 1/1.5 selected 64K MTP4/Q8/batch2048 Balanced Reference; permanent MTP2/Q8 Safe and explicit Q4 Coding-Fast retained; not deprecated |
 | `candidate-jonathan-q5km-vision` | Candidate / RTX5090 Recommended Production | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q5_K_M + official F16 projector | Vision, tool use, lower-VRAM 96K | Final MTP/batch/capacity/quality gates passed at 96K MTP3/Q8/batch1024; lifecycle Current remains Q6_K |
+| `candidate-qwen38-q5km-quick-response-64k-8k` | Candidate / MAIN + BLUE Quick Response | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q5_K_M + F16 projector | 64K runtime / 8K output, MTP1, Reasoning Low/2048 | Initial MAIN load and alias repair recorded 2026-09-07; end-to-end Desktop Vision acceptance after alias repair and full quality/performance qualification remain pending |
+| `candidate-main-jonathan-iq4xs-vision-256k` | Candidate / MAIN extended context | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | IQ4_XS + F16 projector | Standalone sm120 / 262,144 context | 2026-10-11 short API/CLI and memory acceptance only; long-input, compaction and Desktop quality pending; not running at 2026-10-19 audit |
 | `candidate-hauhaucs-aggressive-mtp` | Candidate | `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` | Q6_K_P primary; Q5_K_P fallback | Vision + embedded MTP; custom-patch FastMTP | Local evaluation complete; promotion not recommended |
 | `candidate-rtx3090-jonathan-q4km` | Candidate / Remote Node Fallback | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q4_K_M | Text coding, embedded MTP, separate Vision projector | Evaluation complete; retained as BLUE 32K fallback |
 | `candidate-rtx3090-hauhaucs-aggressive-q4kp` | Candidate / Remote Node Optional | `HauhauCS/Qwen3.8-27B-Uncensored-HauhauCS-Aggressive-MTP-GGUF` | Q4_K_P | Vision + embedded MTP; stock LM Studio path | Evaluation complete; retain for optional/direct Vision use |
 | `candidate-rtx3090-dual-jonathan-q5km-vision-96k` | Candidate / BLUE Recommended Production | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q5_K_M + F16 projector | Dual-GPU Vision, embedded MTP, 96K | Strict gate, Text/Coding/Vision/Tool/76,880-token quality, and fresh Q6 comparison PASS; MTP3/Q8/batch1024 at 259W selected |
+| `candidate-blue-jonathan-q4km-vision-extended-context` | Candidate / isolated research | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q4_K_M + F16 projector | BLUE dual-GPU Vision / extended context | 256K memory PASS; original coding/tool-enabled retrieval FAIL retained; no Production/Current/client adoption |
+| `candidate-blue-jonathan-iq4xs-vision-extended-context` | Candidate / explicit extended-context trial loader | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | IQ4_XS + F16 projector | BLUE dual-GPU Vision / memory-saving comparison | Prior256K/209K long Tool+Vision chain PASS; failures retained; Goose menu13 trial available, no Production/Current promotion; Desktop acceptance Pending |
 | `candidate-rtx3090-dual-jonathan-q6k-vision` | Candidate / BLUE Quality-Performance Reference | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | Q6_K + F16 projector | Dual-GPU Vision, embedded MTP, 64K | Phase 1/1.5 selected MTP3/Q8/batch1024 Balanced at 259W; MTP2/Q8/batch512 Safe and explicit Q4 Coding-Fast retained; 370W stays separate |
 | `candidate-rx9070xt-jonathan-iq4xs-96k` | Candidate / RED Remote Node Recommended | `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF` | IQ4_XS text/tool | ROCm, embedded MTP, 96K Q4 KV | 64K/96K load, MTP A/B, 70,082-token input, exact Tool Calling and Goose path PASS; Shared-dependent |
 | `watch-hauhaucs-balanced-mtp` | Watch | HauhauCS Balanced-MTP-GGUF (provisional reference) | TBD | Expected balanced MTP profile | Publication and exact repository not yet confirmed |
 
+## MAIN extended-context Candidate (2026-10-11)
+
+`candidate-main-jonathan-iq4xs-vision-256k`: explicit-only IQ4_XS + F16 Vision, pinned BLUE artifact revision; standalone sm120 runtime262144, Goose input237568/output16384/reserve8192/compact0.6, DeepSeek `main-local`. Not Current/Production promotion. Qualification: `benchmarks/results/2026-10-11-main-iq4xs256k-qualification.md`.
+
 ## Current: current-qwen38-27b-uncensored-q6k
 
-- Role: stable daily driver
+- Role: retained sole lifecycle Current / known-good baseline; not the loaded model at the 2026-10-19 audit
 - Repository: `JonathanColetti/Qwen3.8-27B-Uncensored-GGUF`
 - Selected variant: `Q6_K`
 - Runtime: LM Studio

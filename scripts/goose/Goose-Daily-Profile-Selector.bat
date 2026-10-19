@@ -13,15 +13,19 @@ echo  [1] Stable - Q5KM Vision 96K / Output 16K
 echo  [2] Stable - Q5KM Vision 96K / Output 32K
 echo  [3] Turbo  - Q5KM Vision 96K / Output 16K
 echo  [4] Turbo  - Q5KM Vision 96K / Output 32K
-echo  [5] Quality Reference - Q6K Vision 64K / Output 32K
+echo  [5] Quick Response - Q5KM Vision 64K / Output 8K ^(Candidate^)
+echo  [6] Quality Reference - Q6K Vision 64K / Output 32K
+echo  [14] Extended Context - IQ4XS Vision 256K / Output 16K ^(Candidate^)
 echo.
 echo  BLUE RTX3090+RTX3060
 echo.
-echo  [6] Stable - Q5KM Vision 96K / Output 16K
-echo  [7] Stable - Q5KM Vision 96K / Output 32K
-echo  [8] Turbo  - Q5KM Vision 96K / Output 16K
-echo  [9] Turbo  - Q5KM Vision 96K / Output 32K
-echo  [10] Quality Reference - Q6K Vision 64K / Output 32K
+echo  [7] Stable - Q5KM Vision 96K / Output 16K
+echo  [8] Stable - Q5KM Vision 96K / Output 32K
+echo  [9] Turbo  - Q5KM Vision 96K / Output 16K
+echo  [10] Turbo  - Q5KM Vision 96K / Output 32K
+echo  [11] Quick Response - Q5KM Vision 64K / Output 8K ^(Candidate^)
+echo  [12] Quality Reference - Q6K Vision 64K / Output 32K
+echo  [13] Extended Context - IQ4XS Vision 256K / Output 16K ^(Candidate^)
 echo  [0] Cancel
 echo.
 
@@ -36,12 +40,16 @@ if "%PROFILE_CHOICE%"=="1" set "PROFILE_NAME=MAIN-Stable16K"
 if "%PROFILE_CHOICE%"=="2" set "PROFILE_NAME=MAIN-Stable32K"
 if "%PROFILE_CHOICE%"=="3" set "PROFILE_NAME=MAIN-Turbo16K"
 if "%PROFILE_CHOICE%"=="4" set "PROFILE_NAME=MAIN-Turbo32K"
-if "%PROFILE_CHOICE%"=="5" set "PROFILE_NAME=MAIN-Quality32K"
-if "%PROFILE_CHOICE%"=="6" set "PROFILE_NAME=BLUE-Stable16K"
-if "%PROFILE_CHOICE%"=="7" set "PROFILE_NAME=BLUE-Stable32K"
-if "%PROFILE_CHOICE%"=="8" set "PROFILE_NAME=BLUE-Turbo16K"
-if "%PROFILE_CHOICE%"=="9" set "PROFILE_NAME=BLUE-Turbo32K"
-if "%PROFILE_CHOICE%"=="10" set "PROFILE_NAME=BLUE-Quality32K"
+if "%PROFILE_CHOICE%"=="5" set "PROFILE_NAME=MAIN-Quick8K"
+if "%PROFILE_CHOICE%"=="6" set "PROFILE_NAME=MAIN-Quality32K"
+if "%PROFILE_CHOICE%"=="7" set "PROFILE_NAME=BLUE-Stable16K"
+if "%PROFILE_CHOICE%"=="8" set "PROFILE_NAME=BLUE-Stable32K"
+if "%PROFILE_CHOICE%"=="9" set "PROFILE_NAME=BLUE-Turbo16K"
+if "%PROFILE_CHOICE%"=="10" set "PROFILE_NAME=BLUE-Turbo32K"
+if "%PROFILE_CHOICE%"=="11" set "PROFILE_NAME=BLUE-Quick8K"
+if "%PROFILE_CHOICE%"=="12" set "PROFILE_NAME=BLUE-Quality32K"
+if "%PROFILE_CHOICE%"=="13" set "PROFILE_NAME=BLUE-Extended256K16K"
+if "%PROFILE_CHOICE%"=="14" set "PROFILE_NAME=MAIN-Extended256K16K"
 if "%PROFILE_CHOICE%"=="0" exit /b 0
 
 if not defined PROFILE_NAME (

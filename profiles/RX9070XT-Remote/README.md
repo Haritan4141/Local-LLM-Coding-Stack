@@ -1,5 +1,7 @@
 # RED RX 9070 XT Remote LLM Node
 
+家庭内PC名はGREENです。REDは本projectの旧labelであり、既存API IDの`-red`を含め識別子は変更しません。2026-10-19にhostname / IPv4とLM Studio processを確認しましたが、port1234は待受なし、loaded stateは`UNVERIFIED`です。以下の設定・測定値は2026-08の確認記録です。[現在状態](../../CURRENT_STATE.md)を参照してください。
+
 MAINのGoose、Zoo Code、Kilo Code等から家庭内LAN経由で利用するAMD LM Studio nodeです。RTX5090 localhost CurrentおよびBLUE nodeとは別のBase URLとAPI identifierを使用します。
 
 | Item | Value |

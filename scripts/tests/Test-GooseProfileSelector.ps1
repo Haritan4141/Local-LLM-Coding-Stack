@@ -72,7 +72,7 @@ try {
         }
     }
 
-    & cmd.exe /d /c "call `"$dailyEntry`" 11" *> $null
+    & cmd.exe /d /c "call `"$dailyEntry`" 99" *> $null
     if ($LASTEXITCODE -ne 2) {
         throw "Goose Daily invalid-selection regression expected exit 2, observed $LASTEXITCODE."
     }
@@ -83,17 +83,21 @@ try {
         '2' = 'MAIN-Stable32K'
         '3' = 'MAIN-Turbo16K'
         '4' = 'MAIN-Turbo32K'
-        '5' = 'MAIN-Quality32K'
-        '6' = 'BLUE-Stable16K'
-        '7' = 'BLUE-Stable32K'
-        '8' = 'BLUE-Turbo16K'
-        '9' = 'BLUE-Turbo32K'
-        '10' = 'BLUE-Quality32K'
+        '5' = 'MAIN-Quick8K'
+        '6' = 'MAIN-Quality32K'
+        '7' = 'BLUE-Stable16K'
+        '8' = 'BLUE-Stable32K'
+        '9' = 'BLUE-Turbo16K'
+        '10' = 'BLUE-Turbo32K'
+        '11' = 'BLUE-Quick8K'
+        '12' = 'BLUE-Quality32K'
+        '13' = 'BLUE-Extended256K16K'
+        '14' = 'MAIN-Extended256K16K'
     }
     foreach ($entry in $expectedMenuMappings.GetEnumerator()) {
         Assert-Contains -Text $dailyText -Expected "if `"%PROFILE_CHOICE%`"==`"$($entry.Key)`" set `"PROFILE_NAME=$($entry.Value)`""
     }
-    foreach ($expected in @('Start-GooseDailyProfile.ps1', '[3] Turbo', '[4] Turbo', '[5] Quality Reference', '[8] Turbo', '[9] Turbo', '[10] Quality Reference')) {
+    foreach ($expected in @('Start-GooseDailyProfile.ps1', '[3] Turbo', '[4] Turbo', '[5] Quick Response', '[6] Quality Reference', '[9] Turbo', '[10] Turbo', '[11] Quick Response', '[12] Quality Reference', '[13] Extended Context')) {
         Assert-Contains -Text $dailyText -Expected $expected
     }
     if ($dailyText -match '(?im)^\s*(lms|node|ssh|nvidia-smi)\b') {
@@ -114,6 +118,12 @@ try {
         '-MaxOutputTokens',
         'MAIN-Turbo32K',
         'BLUE-Turbo32K',
+        'MAIN-Quick8K',
+        'BLUE-Quick8K',
+        'RTX5090-Quick',
+        'BLUE-Quick',
+        'BLUE-IQ4XS256K',
+        'BLUE-Extended256K16K',
         'Test-ManagedTurbo.ps1',
         'Set-GooseProfile.ps1',
         '/api/v1/models',
@@ -336,7 +346,7 @@ try {
         throw 'Goose config changed during the invalid BLUE provider fail-closed test.'
     }
 
-    Write-Host 'Goose Daily integration test passed: 10-option menu, Cancel/invalid, orchestration guards, MAIN/BLUE Stable/Turbo16K/Turbo32K/Quality mappings, backups and endpoint fail-closed behavior verified.' -ForegroundColor Green
+    Write-Host 'Goose Daily integration test passed: 14-option menu, Cancel/invalid, orchestration guards, MAIN/BLUE Stable/Turbo/Quick/Quality/Extended mappings, backups and endpoint fail-closed behavior verified.' -ForegroundColor Green
 } finally {
     Remove-TestArtifacts
 }

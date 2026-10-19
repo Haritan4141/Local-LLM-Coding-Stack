@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)][ValidateSet('RTX5090', 'BLUE')][string]$Profile,
-    [switch]$AllowNotRunning
+    [Parameter(Mandatory)][ValidateSet('RTX5090', 'BLUE', 'RTX5090-Quick', 'BLUE-Quick', 'BLUE-IQ4XS256K', 'RTX5090-IQ4XS256K')][string]$Profile,
+    [switch]$AllowNotRunning,
+    [switch]$AllowLegacyApiAlias
 )
 
 Set-StrictMode -Version Latest
@@ -37,7 +38,18 @@ if ($null -eq $process) {
     throw 'Managed Turbo PID is no longer running; stale state was archived.'
 }
 
-Assert-ManagedTurboProcess -State $state -Manifest $manifest -RequireListener | Out-Null
+if ($AllowLegacyApiAlias -and -not (Test-TurboLegacyApiAlias -Manifest $manifest -Alias ([string]$state.api_model_alias))) {
+    throw "Managed state alias '$($state.api_model_alias)' is not a declared legacy Quick alias. No process was stopped."
+}
+Assert-ManagedTurboProcess -State $state -Manifest $manifest -RequireListener -AllowLegacyApiAlias:$AllowLegacyApiAlias | Out-Null
+if ($manifest.profile_class -eq 'extended-context') {
+    $response = Invoke-RestMethod -Uri 'http://127.0.0.1:18080/slots' -TimeoutSec 10
+    $slots = @($response | ForEach-Object { $_ })
+    if ($slots.Count -ne 1 -or $null -eq $slots[0].PSObject.Properties['is_processing'] -or
+        $slots[0].is_processing -ne $false) {
+        throw 'Extended Context has active/unknown prediction state. No process was stopped.'
+    }
+}
 Stop-Process -Id ([int]$state.pid)
 $deadline = (Get-Date).AddSeconds(45)
 do {

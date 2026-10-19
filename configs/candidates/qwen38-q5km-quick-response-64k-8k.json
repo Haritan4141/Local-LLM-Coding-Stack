@@ -1,0 +1,91 @@
+{
+  "$schema": "../profile.schema.json",
+  "profile_version": 1,
+  "profile_id": "candidate-qwen38-q5km-quick-response-64k-8k",
+  "status": "Candidate",
+  "captured_date": "2026-09-07",
+  "operational_role": "Quick Response",
+  "baseline_profile": "jonathan-q5km-vision.json",
+  "model": {
+    "repository": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF",
+    "variant": "Q5_K_M + vision-f16 projector",
+    "file_name": "Qwen3.8-27B-Uncensored-Q5_K_M.gguf",
+    "external_path": null,
+    "size_bytes": 19535701408,
+    "sha256": "24780644a95f759a9aeeb228c3d852028f2fd40ce0b74d68134246ec4a959547",
+    "vision_projector": {
+      "file_name": "mmproj-Qwen3.8-27B-Uncensored-vision-f16.gguf",
+      "size_bytes": 927606912,
+      "sha256": "5ac423f8a29059dc24e51bc6a43e9380dcd57a9347f28b62591e0b3f60b7081c"
+    }
+  },
+  "context_profiles": [
+    {
+      "name": "Quick Response",
+      "runtime_context_tokens": 65536,
+      "goose_client_context_tokens": 57344,
+      "max_output_tokens": 8192,
+      "status": "candidate-static-only"
+    }
+  ],
+  "effective_settings": {
+    "runtime": "official pinned llama.cpp",
+    "kv_cache": { "k": "Q8_0", "v": "Q8_0" },
+    "flash_attention": true,
+    "gpu_offload": "all",
+    "parallel": 1,
+    "eval_batch_size": 1024,
+    "ubatch_size": 512,
+    "mtp": { "enabled": true, "max_draft_tokens": 1 },
+    "prompt_cache": { "enabled": true, "reuse_min_tokens": 0 },
+    "reasoning": {
+      "mode": "on",
+      "effort": "low",
+      "budget_tokens": 2048,
+      "preserve": false
+    },
+    "vision": true,
+    "auto_compact_threshold": 0.3,
+    "temperature": 0
+  },
+  "targets": [
+    {
+      "name": "MAIN RTX5090",
+      "runtime_profile": "RTX5090-Quick",
+      "endpoint": "http://127.0.0.1:18080/v1",
+      "api_identifier": "qwen3.8-27b-uncensored-vision-q5km-quick-gpt-4o",
+      "api_identifier_role": "Friendly local identity; only the trailing gpt-4o token supplies Goose v1.49 canonical Vision capability metadata",
+      "served_model_identity": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF Q5_K_M Vision",
+      "legacy_api_identifiers": [
+        "gpt-4o",
+        "qwen3.8-27b-uncensored-q5km-quick"
+      ],
+      "power_limit_w": 402
+    },
+    {
+      "name": "BLUE RTX3090+RTX3060",
+      "runtime_profile": "BLUE-Quick",
+      "blue_endpoint": "http://127.0.0.1:18080/v1",
+      "main_tunnel_endpoint": "http://127.0.0.1:18081/v1",
+      "api_identifier": "qwen3.8-27b-uncensored-vision-q5km-blue-quick-gpt-4o",
+      "api_identifier_role": "Friendly local identity; only the trailing gpt-4o token supplies Goose v1.49 canonical Vision capability metadata",
+      "served_model_identity": "JonathanColetti/Qwen3.8-27B-Uncensored-GGUF Q5_K_M Vision",
+      "legacy_api_identifiers": [
+        "gpt-4o",
+        "qwen3.8-27b-uncensored-q5km-blue-quick"
+      ],
+      "power_limits_w": { "rtx3090": 259, "rtx3060": 170 }
+    }
+  ],
+  "evaluation_status": {
+    "runtime_cli_support": "verified read-only on MAIN and BLUE",
+    "static_repository_validation": "passed 2026-09-07",
+    "blue_payload_sync": "Vision manifest/common/release files were first synchronized with backup before-quick-vision-20260907-162040; the Goose capability alias correction (BLUE-Quick manifest, common, release and stop) was synchronized with backup before-goose-vision-alias-20260907-171616; the friendly local display alias manifest was synchronized on DESKTOP-L9HAM1G / 192.168.0.104 with backup before-friendly-goose-alias-20260907-180735 and matching SHA-256; no runtime was started or stopped",
+    "runtime_load": "the earlier MAIN text-only revision loaded and reached health/idle on 2026-09-07; a later Vision runtime reported Vision true but Goose v1.49 omitted the attachment due to alias capability metadata; a canonical gpt-4o alias then passed startup but exposed the misleading gpt-4o label, so new target-specific friendly aliases retain only a trailing gpt-4o capability token; end-to-end image recognition remains unqualified on MAIN and BLUE",
+    "api_identifier_compatibility": "new Quick starts expose a Qwen/Jonathan-derived identity ending in gpt-4o so Goose v1.49 maps it to canonical Vision metadata; gpt-4o and the original Quick aliases remain accepted only by the ownership-validated Release migration path",
+    "lifecycle_recovery": "MAIN orphan PID 65172 recovered by exact history/process/API match and released safely; BLUE fix hash-synchronized without runtime start",
+    "latency": "not measured",
+    "quality": "not measured",
+    "promotion": "blocked pending isolated runtime A/B; Stable and Turbo remain unchanged"
+  }
+}
