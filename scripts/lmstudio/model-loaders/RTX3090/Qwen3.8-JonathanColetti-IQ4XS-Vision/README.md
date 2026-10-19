@@ -2,7 +2,9 @@
 
 Extended-context trial, not Production/Current. Uses qualified official standalone llama.cpp, not LM Studio native loading. Q5 Stable/Turbo and Q6 Reference/Safe remain unchanged.
 
-## Use from MAIN
+2026-10-19運用追記: DeepSeek + BLUE256Kはユーザー確認済みDaily Preferred Workflowです。下記Goose手順は別Clientの明示選択手順として保持します。現在正常なDeepSeek sessionを使う際にReleaseやGoose起動を行う必要はありません。Runtime / model lifecycleはCandidateのまま、Q5 / Q6 fallbackを保持します。最新監査は`research/2026-10-19-blue256k-daily-audit.md`、DeepSeek Client手順は`Local-AI-Agent-Stack/docs/deepseek-blue256k-daily-20261019.md`を参照してください。
+
+## Use from MAIN（Gooseを明示選択する場合）
 
 1. Finish generated/queued work and completely exit Goose Desktop.
 2. If another BLUE model/runtime is active, open `00-BLUE-Daily-Profiles-REMOTE.bat` → `[5] Release`. Active predictions, unknown owners and identity mismatches are refused; never force-stop them.

@@ -7,6 +7,7 @@ This repository is the source of truth for local model selection, LM Studio / st
 ## Current baseline
 
 - `current-qwen38-27b-uncensored-q6k` is the only `Current` model.
+- User-selected Daily Preferred Runtime / User Confirmed is DeepSeek Harness + BLUE IQ4_XS Vision 256K. Preserve this working preference; do not switch back to 96K or another model because of historical benchmarks. Q5_K_M Vision 96K remains Historical Recommended Production / manual fallback, and Q6 lifecycle Current / Reference / Safe remain intact. Client selection and context accounting belong to `Local-AI-Agent-Stack`; runtime audit and deployment drift are in `research/2026-10-19-blue256k-daily-audit.md`. Daily preference does not promote the Candidate or certify unmeasured quality.
 - `candidate-hauhaucs-aggressive-mtp` is an evaluated `Candidate`; its 2026-08-20 comparison did not meet the promotion gate, so it must not replace Current.
 - A future HauhauCS Balanced-MTP release is `Watch`, not an available or validated model.
 - `configs/current/` preserves the sole lifecycle Current baseline; the dated live section of `CURRENT_STATE.md` describes observed operation. Loaded runtime, saved client default, Recommended Production role, and lifecycle Current are separate facts. An active Candidate does not imply promotion.

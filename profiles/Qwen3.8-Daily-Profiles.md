@@ -1,5 +1,7 @@
 # Daily Profiles
 
+2026-10-19 daily preference: DeepSeek + BLUE IQ4_XS Vision256K is the User-selected Daily Preferred Workflow. The selectable Stable Q5 entries below retain their Historical Recommended Production / manual fallback role; the menus and Goose Coding Agent settings are unchanged. See [runtime audit](../research/2026-10-19-blue256k-daily-audit.md). Runtime-only menus do not change DeepSeek defaults or its selected session.
+
 2026-10-19 audit: these are selectable managed profiles, not a list of currently loaded models. BLUE IQ4_XS256K was active; MAIN standalone was absent. See [current state](../CURRENT_STATE.md) for live observations and saved Client defaults. The runtime-only menus do not select a DeepSeek model.
 
 2026-10-11 MAIN extended Candidate: shared Goose menu `[14]` / `MAIN-Extended256K16K` / manifest `RTX5090-IQ4XS256K`.
@@ -30,7 +32,7 @@ Goose daily integrated entry: `scripts/lmstudio/model-loaders/00-Goose-Daily-Pro
 
 | Profile | Backend / model | Effective settings | Endpoint / power | Launcher | Intended use |
 |---|---|---|---|---|---|
-| Stable | LM Studio / Jonathan Q5_K_M Vision | 98,304 context; MTP3; Q8_0/Q8_0; batch1024; ubatch512; parallel1; Vision | `http://127.0.0.1:1234/v1`; 402 W | `scripts/lmstudio/model-loaders/RTX5090/00-Daily-Profiles/1-Stable.bat` | Recommended everyday default and recovery |
+| Stable | LM Studio / Jonathan Q5_K_M Vision | 98,304 context; MTP3; Q8_0/Q8_0; batch1024; ubatch512; parallel1; Vision | `http://127.0.0.1:1234/v1`; 402 W | `scripts/lmstudio/model-loaders/RTX5090/00-Daily-Profiles/1-Stable.bat` | Historical Q5 Recommended Production / manual recovery |
 | Turbo | official pinned llama.cpp / same Q5_K_M Vision | 98,304 context; MTP3; Q8_0/Q8_0; batch1024; ubatch512; parallel1; Vision | `http://127.0.0.1:18080/v1`; 402 W | `scripts/lmstudio/model-loaders/RTX5090/00-Daily-Profiles/2-Turbo.bat` | Explicit fast Coding, Agent, Vision, long generation |
 | Quick Response | official pinned llama.cpp / same Q5_K_M + F16 projector | 65,536 context; MTP1; Q8_0/Q8_0; Reasoning Low/2048; prompt cache; parallel1; Vision | `http://127.0.0.1:18080/v1`; 402 W | `scripts/lmstudio/model-loaders/RTX5090/00-Daily-Profiles/Quick-Response.bat` | Candidate for low-latency chat with image input |
 | Quality Reference | LM Studio / Jonathan Q6_K Vision Balanced | 65,536 context; MTP4; Q8_0/Q8_0; batch2048; ubatch512; parallel1; Vision | `http://127.0.0.1:1234/v1`; 402 W | `scripts/lmstudio/model-loaders/RTX5090/00-Daily-Profiles/3-Quality-Reference.bat` | Compare a questionable Q5 output |
@@ -46,7 +48,7 @@ Root one-click: `scripts/lmstudio/model-loaders/00-RTX5090-Daily-Profiles.bat`
 
 | Profile | Backend / model | Effective settings | Endpoint / power | MAIN remote launcher | Intended use |
 |---|---|---|---|---|---|
-| Stable | LM Studio / Jonathan Q5_K_M Vision | 98,304 context; MTP3; Q8_0/Q8_0; batch1024; ubatch512; parallel1; Vision | BLUE `http://192.168.0.104:1234/v1`; 259 W / 170 W | `scripts/lmstudio/model-loaders/RTX3090/00-Daily-Profiles/1-Stable_REMOTE.bat` | Recommended everyday node default and recovery |
+| Stable | LM Studio / Jonathan Q5_K_M Vision | 98,304 context; MTP3; Q8_0/Q8_0; batch1024; ubatch512; parallel1; Vision | BLUE `http://192.168.0.104:1234/v1`; 259 W / 170 W | `scripts/lmstudio/model-loaders/RTX3090/00-Daily-Profiles/1-Stable_REMOTE.bat` | Historical Q5 Recommended Production / manual node recovery |
 | Turbo | official pinned llama.cpp / same Q5_K_M Vision | 98,304 context; MTP3; Q8_0/Q8_0; batch1024; ubatch512; parallel1; Vision | BLUE 18080; MAIN `http://127.0.0.1:18081/v1` tunnel; 259 W / 170 W | `scripts/lmstudio/model-loaders/RTX3090/00-Daily-Profiles/2-Turbo_REMOTE.bat` | Explicit fast Coding, Agent, Vision, long generation |
 | Quick Response | official pinned llama.cpp / same Q5_K_M + F16 projector | 65,536 context; MTP1; Q8_0/Q8_0; Reasoning Low/2048; prompt cache; parallel1; Vision | BLUE 18080; MAIN `http://127.0.0.1:18081/v1`; 259 W / 170 W | `scripts/lmstudio/model-loaders/RTX3090/00-Daily-Profiles/Quick-Response_REMOTE.bat` | Candidate for low-latency chat with image input |
 | Quality Reference | LM Studio / Jonathan Q6_K Vision Balanced | 65,536 context; MTP3; Q8_0/Q8_0; batch1024; ubatch512; parallel1; Vision | BLUE `http://192.168.0.104:1234/v1`; 259 W / 170 W | `scripts/lmstudio/model-loaders/RTX3090/00-Daily-Profiles/3-Quality-Reference_REMOTE.bat` | Compare a questionable Q5 output |

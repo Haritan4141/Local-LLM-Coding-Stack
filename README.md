@@ -6,13 +6,13 @@ MAIN / BLUE / GREENのlocal LLM、LM Studio / standalone llama.cpp、起動profi
 
 ## 現在の構成と確認範囲
 
-2026-10-19の実機監査では、BLUE（RTX3090 + RTX3060）のstandalone llama.cppでIQ4_XS Vision 256K Candidateが稼働し、MAINの既存SSH forward `127.0.0.1:18081`経由で到達しました。runtime contextは262,144、parallelは1です。MAIN側のstandalone `:18080`は待受なし、MAIN / BLUEのLM Studio loaded instancesは0でした。これは観測時点の状態であり、CandidateのCurrent昇格や長時間品質保証ではありません。
+**DeepSeek Harness + BLUE IQ4_XS Vision256KがUser-selected Daily Preferred Workflowです。** ユーザーは現在の日常使用で問題がなく、大きなcontextが普段使いに適すると明示確認しました。正常な256K構成を維持し、過去のBenchmarkを理由に96Kや別モデルへ自動変更しません。
 
-MAINにはGoose Desktop 1.52.0とDeepSeek Harness（実行ファイルProductVersion `0.2.1.0`）があります。観測時はDeepSeekが起動中、Gooseは未起動でした。DeepSeekの保存既定値は`deepseek-account / deepseek-flash`で、local MAIN / BLUE routeは別途設定されています。保存設定と実際のsession選択は区別します。
+2026-10-19の追加監査でBLUE（RTX3090 + RTX3060）のstandalone llama.cpp、IQ4_XS本体 / F16 projector / runtime SHA、262,144 context、parallel1、既存MAIN loopback18081 → BLUE loopback18080を確認しました。設定変更・推論試験・deployは行っていません。Clientの接続選択・token accounting・image / compactionは`Local-AI-Agent-Stack/docs/deepseek-blue256k-daily-20261019.md`を参照します。保存defaultと実sessionは別に確認します。
 
-唯一のrepository lifecycle `Current`は引き続きtext Q6_Kです。実測済みQ5_K_M Vision 96K Recommended Production、Q6 Vision Balanced / Safe、Quick 64K Candidate、IQ4_XS 256K Candidateを別の役割として保持します。今日の実機状態は[CURRENT_STATE.md](CURRENT_STATE.md)、GitHub差分・公開対象・検証と未確認事項は[2026-10-19監査](research/2026-10-19-current-configuration-audit.md)を参照してください。
+唯一のrepository lifecycle `Current`はtext Q6_Kのままです。Q5_K_M Vision96KはHistorical Recommended Production / 手動fallback、Q6 Vision Balanced / Safeも保持します。BLUE256Kのdaily preferenceは技術lifecycle Candidateの昇格や、最大context・長時間loop・compaction品質の新規PASSを意味しません。GooseのCoding Agent役割も別に維持します。
 
-監査中、`lms ps`がMAINのLM Studioを起動する副作用を生じました。モデルload/unloadや既存BLUE runtimeの操作は行っていません。以降はLMS CLIを使わず既存APIのGETだけで確認しました。詳細と影響範囲は監査記録に残しています。
+最新の実機・配置コード差分・運用方針は[CURRENT_STATE.md](CURRENT_STATE.md)と[日常運用追加監査](research/2026-10-19-blue256k-daily-audit.md)を参照してください。[同日初回監査](research/2026-10-19-current-configuration-audit.md)に記録した`lms ps`のMAIN起動副作用は履歴として保持し、今回の無変更監査ではLMS CLIを使用しません。
 
 ## 保持するQ6 Current baseline（2026-08）
 
@@ -76,7 +76,7 @@ Main PC: VS Code -> Zoo Code
 
 BLUE Recommended ProductionのAPI identifierは`qwen3.8-27b-uncensored-vision-q5km-blue`です。Q6 Referenceは`qwen3.8-27b-uncensored-vision-blue`を保持し、localhost CurrentのIDを流用しません。Kilo CodeにはBLUE Standard16K / Long32Kを追加し、既定localhost modelは変更していません。Zoo CodeのBLUE profileは正式なUIから追加する作業をpendingとします。
 
-BLUEの普段使いはJonathan Q5_K_M Vision / 96K / Q8_0 / MTP3 / eval batch1024 / RTX3090→RTX3060 dual GPUのRecommended Productionです。Q6 Balanced 64KはQuality/Performance Reference、既存MTP2 / batch512 loaderはSafeとして永久保持し、Q4_0 / MTP3 / batch512はCoding-Fastとして明示選択時だけ使用します。Q5 96KはStrict Shared gateにPASSしました。Q6は80K～88Kをcapacity evidenceとして保持し、96K/128KはShared gate FAILのためOperational loaderを作りません。RTX3090 Power Limitは259WをPrimary Operational、370Wを明示選択の独立Performance overrideとします。RTX3060は常に170Wです。loaderはGPU名・PCI Bus IDで照合したUUIDへ設定し、成功確認後にモデルをロードします。
+BLUEに保持するHistorical Recommended Production / 手動fallbackはJonathan Q5_K_M Vision / 96K / Q8_0 / MTP3 / eval batch1024 / RTX3090→RTX3060 dual GPUのRecommended Productionです。Q6 Balanced 64KはQuality/Performance Reference、既存MTP2 / batch512 loaderはSafeとして永久保持し、Q4_0 / MTP3 / batch512はCoding-Fastとして明示選択時だけ使用します。Q5 96KはStrict Shared gateにPASSしました。Q6は80K～88Kをcapacity evidenceとして保持し、96K/128KはShared gate FAILのためOperational loaderを作りません。RTX3090 Power Limitは259WをPrimary Operational、370Wを明示選択の独立Performance overrideとします。RTX3060は常に170Wです。loaderはGPU名・PCI Bus IDで照合したUUIDへ設定し、成功確認後にモデルをロードします。
 
 Q5 96K qualificationはText/Coding/Vision/Tool Calling/76,880-token入力とfresh Q6 comparisonにPASSしました。Q6 64K Referenceのshort generationは26.13 tok/s、MTP acceptance 79.41%、Vision fixture 7/7です。Long32Kはnative APIで30,803 output tokensを自然完了し、Kilo実経路でも29,001 tokensを生成しました。Standard16K / Long32KはPower Limitから独立したclient profileとして維持します。MAINのREMOTE launcherは`pc5700x / 192.168.0.104 / DESKTOP-L9HAM1G`を照合してBLUEだけを起動します。Q4_K_M / 32Kはfallback、HauhauCS Q4_K_Pはoptional Candidateとして保持します。詳細は`profiles/RTX3090-Remote/`、Q5選定結果は`benchmarks/results/2026-08-25-blue-q5km-vision-96k-qualification.md`、Q6 Referenceは`benchmarks/results/2026-08-24-blue-q6k-vision-64k-operational-default.md`、Power A/Bは`benchmarks/results/2026-08-24-blue-rtx3090-power-limit-ab.md`、Shared原因は`research/2026-08-24-blue-shared-gpu-memory-investigation.md`に記録します。
 

@@ -1,5 +1,7 @@
 # BLUE Remote LLM Node
 
+2026-10-19運用方針: **DeepSeek + BLUE IQ4_XS Vision256K = Daily Preferred Runtime / User Confirmed**。ユーザーの日常利用は正常との報告を受け、この選択を優先します。Q5_K_M Vision96KはHistorical Recommended Production / 手動fallback、Q6 Current / Reference / Safeは保持します。[追加監査・運用上の境界](../../research/2026-10-19-blue256k-daily-audit.md)を参照してください。以下の96K推奨説明は保持する既存profileの役割です。
+
 2026-10-19実機確認: BLUEはstandalone IQ4_XS Vision256K Candidateで稼働、LM Studio loaded instancesは0。LM Studio実行ファイルは0.4.25.0。以下のLM Studio推奨構成・測定値は主に2026-08のbaselineであり、今日ロード中のprofileではありません。[現在状態](../../CURRENT_STATE.md)と[監査記録](../../research/2026-10-19-current-configuration-audit.md)を参照してください。
 
 MAINのVS Code / Kilo Code / Zoo Code等から家庭内LAN経由で利用する独立LM Studio nodeです。RTX5090 localhost環境とは別のBase URLとAPI identifierを使用します。BLUEのRecommended Production roleはrepository-wide Currentを増やしません。
@@ -32,7 +34,7 @@ MAINのVS Code / Kilo Code / Zoo Code等から家庭内LAN経由で利用する�
 - Q5_K_M 96K qualification/promotionではFirewall、SSH、SMB、server bind、driver、Power Limit、BIOS、LM Studio global GPU設定を変更していません。
 - 2026-08-24のPower Limit A/B採用時はRTX3090のPrimaryだけを370Wから259Wへ変更しました。RTX3060、Firewall、server bind、driver、BIOS、LM Studio global GPU設定は変更していません。
 
-## Operational Recommended
+## Historical Recommended Production / 手動fallback
 
 | Item | Value |
 |---|---|
@@ -113,7 +115,7 @@ installer exitは0で、CBS/Windows Updateのreboot-required keyはありませ�
 
 既存Q4_K_M loaderは削除・上書きしていません。Q4_K_M 32Kは、3060を空けたい場合やQ6_K Visionで問題が出た場合のfallbackです。
 
-Q4_K_M loaderはPower Limitを変更せず、現在選択されている259Wまたは370Wを継承します。通常の復帰先はQ5_K_M Vision 96K / 259W Primaryです。
+Q4_K_M loaderはPower Limitを変更せず、現在選択されている259Wまたは370Wを継承します。旧Q4 profileからの手動復帰先としてQ5_K_M Vision96K / 259Wを保持します。現在の日常優先BLUE256Kを自動的に置き換える指示ではありません。
 
 2026-08-24に拡張managed loaderとの後方互換性を実機確認し、Q4_K_M 32KのQ8_0/Q8_0、full offload、MTP draft 2、parallel 1がPASSしました。確認後はQ6_K Vision 64KをREMOTE launcherで復帰・再監査しています。
 

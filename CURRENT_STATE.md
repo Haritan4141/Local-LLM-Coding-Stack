@@ -2,7 +2,17 @@
 
 Documentation reconciled: 2026-10-19 (Asia/Tokyo). Historical observations retain the dates shown below.
 
-## 実機状態（2026-10-19T17:42–17:48+09:00）
+## Daily Preferred Runtime / User Confirmed（2026-10-19）
+
+ユーザーはDeepSeek HarnessからBLUEのIQ4_XS Vision256Kを日常使用し、現在問題なく使えていると明示報告した。大きなcontextを優先するこの構成を**User-selected Daily Preferred Workflow**として扱う。以前の96K構成へ自動的に戻さない。
+
+- 実機再確認18:27–18:29 JST: BLUE `pc5700x / DESKTOP-L9HAM1G / 192.168.0.104`、Ryzen7 5700X、RTX3090 + RTX3060、既存standalone processは2026-10-18T19:31:16+09:00から継続。IQ4_XS本体・F16 projector・runtime実ファイルのSHAが管理recordと一致。262,144 context / parallel1 / Q8 KV / MTP3 / batch1024 / ubatch256 / split75:25 / Reasoning OFF、PL259W / 170Wを確認した。
+- MAIN既存loopback18081 → BLUE loopback18080は同じaliasへ到達。今回の読み取りsnapshotでは1 slot idle、Shared合計約3.613GiB、per-GPU約1.830 / 1.783GiBで過去Strict Gate内。これは長時間測定・新しいBenchmarkではない。
+- Repository Model Lifecycle Currentはtext Q6_Kのまま。MAIN / BLUE Q5_K_M Vision96Kは**Historical Recommended Production / 手動fallback**として保持し、Q6 Reference / Safeも変更しない。IQ4_XSの技術lifecycleはCandidate、過去のTool/Coding失敗・未測定の最大context品質等は維持する。
+- DeepSeekの実session選択、保存default、effective input / compaction / image設計は`Local-AI-Agent-Stack/docs/deepseek-blue256k-daily-20261019.md`を正とする。GooseのCoding Agent役割・設定は別のまま保持する。
+- 今回はruntime / Global設定変更0を条件に監査。配置済み5スクリプトの差分と将来の承認範囲は[追加監査](research/2026-10-19-blue256k-daily-audit.md)へ記録する。
+
+## 同日初回監査のsnapshot（2026-10-19T17:42–17:48+09:00）
 
 | 対象 | 今回確認した状態 | 根拠 / 限界 |
 |---|---|---|
